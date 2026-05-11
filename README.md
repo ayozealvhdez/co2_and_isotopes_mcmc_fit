@@ -47,7 +47,7 @@ When no low-frequency component is included, this term is set to zero.
 
 ### Bayesian fitting
 
-The model is fitted using a Bayesian MCMC approach. Derived quantities and uncertainty bands should be computed by propagating joint posterior samples, preserving parameter correlations.
+The model is fitted using a Bayesian MCMC approach. Derived quantities and uncertainty bands should be computed by propagating joint posterior samples, preserving parameter correlations. A sufficiently large sample of these joint posteriors are saved after each run.
 
 ## Repository structure
 
