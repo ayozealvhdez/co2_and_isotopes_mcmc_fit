@@ -216,26 +216,26 @@ ax21.set_xlim(1985,2025)
 ax12.errorbar(d13c_time, d13c_observed, yerr=d13c_yerr, **data_style)
 ax12.plot(d13c_decimal_year_grid, d13c_p50, "b-", lw=0.8)
 ax12.fill_between(d13c_decimal_year_grid, d13c_p16, d13c_p84, color="b", alpha=0.25, linewidth=0)
-ax12.set_ylabel(r"$\delta^{13}$C-CO$_2$ (‰)", fontsize=14)
+ax12.set_ylabel(r"$\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=14)
 
 # Lower-middle panel: delta13C residuals
 ax22.axhline(0, color="0.5", lw=1.0, linestyle="--")
 ax22.errorbar(d13c_time, d13c_residuals, yerr=d13c_yerr, **residual_style)
 ax22.set_xlabel("Year", fontsize=14)
-ax22.set_ylabel("Residuals (‰)", fontsize=13)
+ax22.set_ylabel(r"Residuals ($\perthousand$)", fontsize=13)
 ax22.set_xlim(1985,2025)
 
 # Upper-right panel: delta14C observed data and fitted model
 ax13.errorbar(d14c_time, d14c_observed, yerr=d14c_yerr, **data_style)
 ax13.plot(d14c_decimal_year_grid, d14c_p50, "b-", lw=0.8)
 ax13.fill_between(d14c_decimal_year_grid, d14c_p16, d14c_p84, color="b", alpha=0.25, linewidth=0)
-ax13.set_ylabel(r"$\Delta^{14}$C-CO$_2$ (‰)", fontsize=14)
+ax13.set_ylabel(r"$\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=14)
 
 # Lower-right panel: delta14C residuals
 ax23.axhline(0, color="0.5", lw=1.0, linestyle="--")
 ax23.errorbar(d14c_time, d14c_residuals, yerr=d14c_yerr, **residual_style)
 ax23.set_xlabel("Year", fontsize=14)
-ax23.set_ylabel("Residuals (‰)", fontsize=13)
+ax23.set_ylabel(r"Residuals ($\perthousand$)", fontsize=13)
 ax23.set_xlim(1985,2025)
 
 # Axis formatting

@@ -149,7 +149,7 @@ ax1.plot(
     linewidth=0.8,
     zorder=2,
 )
-ax1.set_ylabel(r"$\Delta^{14}$C (‰)", size=20)
+ax1.set_ylabel(r"$\Delta^{14}$C ($\perthousand$)", size=20)
 ax1.tick_params(axis="both", labelsize=18, direction="in", top=True, right=True, length=6)
 ax1.minorticks_on()
 ax1.tick_params(which="minor", direction="in", top=True, right=True, length=3, width=0.8)
@@ -169,7 +169,7 @@ ax2.errorbar(
     capthick=0.8,
 )
 ax2.set_xlabel("Year", size=20)
-ax2.set_ylabel(r"$\Delta^{14}$C - $f(t)$ (‰)", size=20)
+ax2.set_ylabel(r"$\Delta^{14}$C - $f(t)$ ($\perthousand$)", size=20)
 ax2.tick_params(axis="both", labelsize=18, direction="in", top=True, right=True, length=6)
 ax2.minorticks_on()
 ax2.tick_params(which="minor", direction="in", top=True, right=True, length=3, width=0.8)

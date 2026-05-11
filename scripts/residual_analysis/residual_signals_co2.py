@@ -1,7 +1,7 @@
 """
-Compare the Lomb–Scargle periodograms of the residuals obtained from two previous MCMC runs of co2 in the 'fmin' to 'fmax' yr^-1 frequency range.
+Compare the Lomb-Scargle periodograms of the residuals obtained from two previous MCMC runs of co2 in the 'fmin' to 'fmax' yr^-1 frequency range.
 
-This script reads the file 'best_fit_and_residuals.txt' from the 'results' subdirectory of two selected runs and computes the Lomb–Scargle periodogram of the residuals for each run,
+This script reads the file 'best_fit_and_residuals.txt' from the 'results' subdirectory of two selected runs and computes the Lomb-Scargle periodogram of the residuals for each run,
 together with the sampling-window periodogram.
 
 The periodograms are typically computed from runs without low-frequency harmonics, because the goal is to identify which slow periods may need to be included.
@@ -14,7 +14,7 @@ To select which runs are compared, specify the matching configurations in the 'S
 The run used to estimate the red-noise parameters is selected independently in the 'RUN USED TO ESTIMATE RED-NOISE PARAMETERS' block.
 
 The script stores the following plot in results_and_plots/comparisons/co2_residual_periodograms:
-- Lomb–Scargle periodograms of the residuals from 'SELECTED RUN 1' and 'SELECTED RUN 2', with sampling-window effects and approximate FAP thresholds.
+- Lomb-Scargle periodograms of the residuals from 'SELECTED RUN 1' and 'SELECTED RUN 2', with sampling-window effects and approximate FAP thresholds.
 """
 
 
@@ -85,7 +85,7 @@ samples_per_peak = 10
 lomb_scargle_normalization = "standard"
 
 fap_levels = [0.1587, 0.00135, 3.17e-5] # FAP Levels to be used for the preliminary FAP calculation, to find significant peaks. Default are 1-5 sigma.
-sigma_labels = ["1σ", "3σ", "4σ"]
+sigma_labels = [r"$1\sigma$", r"$3\sigma$", r"$4\sigma$"]
 
 n_simulations_for_fap = 10000 # Number of simulated noise realizations used for empirical FAP estimation
 
@@ -139,7 +139,7 @@ print("-------------------------------------------------------")
 
 
 
-print(f"Step 2: Compute the Lomb–Scargle periodogram for {run_1_label}")
+print(f"Step 2: Compute the Lomb-Scargle periodogram for {run_1_label}")
 ls_1 = LombScargle(t_1, residuals_1, fit_mean=True, center_data=True, normalization=lomb_scargle_normalization)
 frequency_1, power_1 = ls_1.autopower(minimum_frequency=fmin, maximum_frequency=fmax, samples_per_peak=samples_per_peak)
 levels_1 = ls_1.false_alarm_level(fap_levels, method="baluev", minimum_frequency=fmin, maximum_frequency=fmax, samples_per_peak=samples_per_peak) # Approximate FAP thresholds
@@ -149,7 +149,7 @@ w_frequency_1, w_power_1 = ls_win_1.autopower(minimum_frequency=fmin, maximum_fr
 print("-------------------------------------------------------")
 
 
-print(f"Step 3: Compute the Lomb–Scargle periodogram for {run_2_label}")
+print(f"Step 3: Compute the Lomb-Scargle periodogram for {run_2_label}")
 ls_2 = LombScargle(t_2, residuals_2, fit_mean=True, center_data=True, normalization=lomb_scargle_normalization)
 frequency_2, power_2 = ls_2.autopower(minimum_frequency=fmin, maximum_frequency=fmax, samples_per_peak=samples_per_peak)
 levels_2 = ls_2.false_alarm_level(fap_levels, method="baluev", minimum_frequency=fmin, maximum_frequency=fmax, samples_per_peak=samples_per_peak) # Approximate FAP thresholds
@@ -289,7 +289,7 @@ ax.plot(w_frequency_1, w_power_1, linestyle=":", lw=0.6, color=color_1)
 ax.plot(w_frequency_2, w_power_2, linestyle=":", lw=0.6, color=color_2)
 
 ax.set_xlabel("Frequency (yr$^{-1}$)", fontsize=18)
-ax.set_ylabel("Lomb–Scargle power", fontsize=18)
+ax.set_ylabel("Lomb-Scargle power", fontsize=18)
 ax.tick_params(
     axis="both",
     direction="in",

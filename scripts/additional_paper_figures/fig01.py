@@ -195,12 +195,12 @@ ax1.set_ylabel("CO$_2$ (ppm)", fontsize=16)
 # Middle panel: delta13C observed data
 ax2.errorbar(d13c_mlo_time, d13c_mlo_observed, yerr=d13c_mlo_yerr, **mlo_style, label="MLO")
 ax2.errorbar(d13c_izo_time, d13c_izo_observed, yerr=d13c_izo_yerr, **izo_style, label="IZO")
-ax2.set_ylabel(r"$\delta^{13}$C-CO$_2$ (‰)", fontsize=16)
+ax2.set_ylabel(r"$\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=16)
 
 # Lower panel: delta14C observed data
 ax3.errorbar(d14c_izo_time, d14c_izo_observed, yerr=d14c_izo_yerr, **izo_style, label="IZO")
 ax3.set_xlabel("Year", fontsize=16)
-ax3.set_ylabel(r"$\Delta^{14}$C-CO$_2$ (‰)", fontsize=16)
+ax3.set_ylabel(r"$\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=16)
 
 # Axis formatting
 for ax in (ax1, ax2, ax3):

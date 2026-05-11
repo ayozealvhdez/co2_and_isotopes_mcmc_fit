@@ -1,7 +1,7 @@
 """
-Compute the Lomb–Scargle periodogram of the residuals obtained from a previous MCMC run of delta14C in the 'fmin' to 'fmax' yr^-1 frequency range.
+Compute the Lomb-Scargle periodogram of the residuals obtained from a previous MCMC run of delta14C in the 'fmin' to 'fmax' yr^-1 frequency range.
 
-This script reads the file 'best_fit_and_residuals.txt' from the 'results' subdirectory of one selected run and computes the Lomb–Scargle periodogram of the residuals,
+This script reads the file 'best_fit_and_residuals.txt' from the 'results' subdirectory of one selected run and computes the Lomb-Scargle periodogram of the residuals,
 together with the sampling-window periodogram.
 
 The periodogram is typically computed from a run without low-frequency harmonics, because the goal is to identify which slow periods may need to be included.
@@ -14,7 +14,7 @@ To select which run is analysed, specify the matching configuration in the 'SELE
 The run used to estimate the red-noise parameters is selected independently in the 'RUN USED TO ESTIMATE RED-NOISE PARAMETERS' block.
 
 The script stores the following plot in results_and_plots/comparisons/delta14c_residual_periodograms:
-- Lomb–Scargle periodogram of the residuals from the selected fit, with sampling-window effect and approximate FAP thresholds.
+- Lomb-Scargle periodogram of the residuals from the selected fit, with sampling-window effect and approximate FAP thresholds.
 """
 
 
@@ -71,8 +71,8 @@ samples_per_peak = 10
 lomb_scargle_normalization = "standard"
 
 # Approximate FAP thresholds used only to identify candidate peaks
-fap_levels = [0.1587, 0.00135, 3.17e-5]   # 1σ, 3σ, 4σ
-sigma_labels = ["1σ", "3σ", "4σ"]
+fap_levels = [0.1587, 0.00135, 3.17e-5]   # 1 sigma, 3 sigma, 4 sigma
+sigma_labels = [r"$1\sigma$", r"$3\sigma$", r"$4\sigma$"]
 
 n_simulations_for_fap = 10000
 
@@ -121,7 +121,7 @@ print("-------------------------------------------------------")
 
 
 
-print(f"Step 2: Compute the Lomb–Scargle periodogram for {run_label}")
+print(f"Step 2: Compute the Lomb-Scargle periodogram for {run_label}")
 
 ls = LombScargle(t, residuals, fit_mean=True, center_data=True, normalization=lomb_scargle_normalization)
 frequency, power = ls.autopower(minimum_frequency=fmin, maximum_frequency=fmax, samples_per_peak=samples_per_peak)
@@ -134,7 +134,7 @@ print("-------------------------------------------------------")
 
 
 print(f"Step 3: Identify candidate peaks for {run_label}")
-threshold = levels[1]   # 3σ approximate threshold
+threshold = levels[1]   # 3 sigma approximate threshold
 peaks_idx, _ = find_peaks(power, height=threshold)
 
 df = np.median(np.diff(frequency))
@@ -241,7 +241,7 @@ for fit in fits:
 ax.plot(w_frequency, w_power, linestyle=":", lw=0.6, color=color, label="Sampling window")
 
 ax.set_xlabel("Frequency (yr$^{-1}$)", fontsize=18)
-ax.set_ylabel("Lomb–Scargle power", fontsize=18)
+ax.set_ylabel("Lomb-Scargle power", fontsize=18)
 ax.tick_params(axis="both", direction="in", top=True, bottom=True, left=True, right=True, labelsize=18, length=6, width=1)
 ax.minorticks_on()
 ax.tick_params(which="minor", direction="in", top=True, bottom=True, left=True, right=True, length=3, width=0.8)

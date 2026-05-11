@@ -248,11 +248,11 @@ tau_mean = np.nan
 try:
     tau = sampler.get_autocorr_time(tol=0)  # tol=0 -> no smoothing
     for i, t in enumerate(tau):
-        print(f"τ({param_names[i]}): {t:.1f}")
+        print(f"tau({param_names[i]}): {t:.1f}")
     tau_mean = np.mean(tau)
     print(f"-> mean autocorrelation time: {tau_mean:.1f}")
 except emcee.autocorr.AutocorrError:
-    print("Could not compute τ: the chain has not converged yet or is too short.")
+    print("Could not compute tau: the chain has not converged yet or is too short.")
 print("-------------------------------------------------------")
 
 
@@ -263,7 +263,7 @@ medians = np.median(flat_samples, axis=0)
 sigmas = np.std(flat_samples, axis=0)
 
 for name, m, s in zip(param_names, medians, sigmas):
-    print(f"{name:>3}: {m:.4f} ± {s:.4f}")
+    print(f"{name:>3}: {m:.4f} +/- {s:.4f}")
 
 
 fit_summary_filename = f"fit_summary_{model_tag_str}.txt"
@@ -342,7 +342,7 @@ print("dof =", len(co2) - ndim)
 
 chi2, dof, chi2_dof = calculate_chi2(co2, yerr, y_fit, n_parameters=ndim)
 
-print(f"Reduced χ² (MCMC best fit): {chi2_dof:.3f}")
+print(f"Reduced chi2 (MCMC best fit): {chi2_dof:.3f}")
 print("-------------------------------------------------------")
 
 
