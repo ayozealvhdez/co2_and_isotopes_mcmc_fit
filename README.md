@@ -178,8 +178,6 @@ data/delta14c/
 
 The scripts assume that input files follow the expected naming conventions and column formats used in the project.
 
-If this repository is used by other researchers, the relevant data sources, download instructions and preprocessing notes should be documented either here or in the README files inside the corresponding data subdirectories.
-
 
 
 

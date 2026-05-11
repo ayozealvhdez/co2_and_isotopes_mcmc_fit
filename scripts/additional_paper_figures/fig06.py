@@ -1,22 +1,21 @@
 """
-For the three observables (CO2, delta13C, delta14C), plot the long-term components p(t) inferred for the fitted records.
+Plot the time evolution of the annual peak-to-trough seasonal amplitude.
 
 Panels, from left to right:
 - CO2 mole fraction.
 - delta13C-CO2.
 - delta14C-CO2.
 
-The IZO long-term components are shown in black, with shaded regions indicating
-68% confidence intervals derived from joint posterior Monte Carlo draws.
+For each posterior sample and each year, the seasonal component s(t) is
+evaluated on a daily grid and the annual amplitude is computed as
+max(s) - min(s). The plotted points are posterior medians, and error bars show
+the 16th-84th percentile range derived from joint posterior Monte Carlo draws.
 
-The corresponding MLO long-term components are shown in semitransparent red
-where an equivalent MLO record is available.
+The IZO amplitudes are shown in black. The corresponding MLO amplitudes are
+shown in semitransparent red where an equivalent MLO record is available.
 
 The script reads:
 - 'samples_for_MC.txt', containing posterior samples drawn from the MCMC chains.
-
-Only the polynomial coefficients are used, because this figure shows p(t), not
-the full fitted model f(t).
 """
 
 
@@ -26,9 +25,11 @@ the full fitted model f(t).
 # -------------------------------------------------------
 
 import os
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 
+from functions.grids import daily_grid_for_year
 from functions.paths import find_project_root, run_results_directory, comparison_directory
 
 
@@ -85,54 +86,121 @@ d14c_izo_timezero = 1985.0
 
 
 # -------------------------------------------------------
-# ----------------- GRIDS CONFIGURATION -----------------
+# ---------------- GRID CONFIGURATION -------------------
 # -------------------------------------------------------
 
-co2_range = (1985, 2025)
-d13c_range = (1992, 2025)
-d14c_range = (1985, 2024)
+co2_years = np.arange(1985, 2025)
+d13c_years = np.arange(1992, 2025)
+d14c_years = np.arange(1985, 2024)
 
-xlim_min = 1985
-xlim_max = 2025
-
-n_grid = 1000
+xlim_min = 1984
+xlim_max = 2026
 
 
 
 # -------------------------------------------------------
-# ---------- FUNCTION TO COMPUTE LONG-TERM BAND ---------
+# ------- FUNCTION TO COMPUTE SEASONAL AMPLITUDES -------
 # -------------------------------------------------------
 
-def compute_polynomial_band(samples, decimal_year_grid, timezero, polynomial_degree):
+def seasonal_component_from_samples(samples, x, polynomial_degree, include_slow_harmonics, slow_harmonics):
     """
-    Compute the posterior median and 68% band of the polynomial p(t).
+    Evaluate the seasonal component s(t) for all posterior samples.
     """
-    x_grid = decimal_year_grid - timezero
-    polynomial_coeffs = samples[:, :polynomial_degree + 1]
-    polynomial_curves = np.zeros((len(samples), len(decimal_year_grid)))
+    idx = polynomial_degree + 1
 
-    for i in range(polynomial_degree + 1):
-        polynomial_curves += polynomial_coeffs[:, i, None] * x_grid[None, :]**i
+    if include_slow_harmonics and len(slow_harmonics) > 0:
+        idx += 2 * len(slow_harmonics)
 
-    p16 = np.percentile(polynomial_curves, 16, axis=0)
-    p50 = np.percentile(polynomial_curves, 50, axis=0)
-    p84 = np.percentile(polynomial_curves, 84, axis=0)
+    seasonal_coeffs = samples[:, idx:idx + 10]
 
-    return p16, p50, p84
+    b1 = seasonal_coeffs[:, 0, None]
+    c1 = seasonal_coeffs[:, 1, None]
+    bp1 = seasonal_coeffs[:, 2, None]
+    cp1 = seasonal_coeffs[:, 3, None]
+    b2 = seasonal_coeffs[:, 4, None]
+    c2 = seasonal_coeffs[:, 5, None]
+    b3 = seasonal_coeffs[:, 6, None]
+    c3 = seasonal_coeffs[:, 7, None]
+    b4 = seasonal_coeffs[:, 8, None]
+    c4 = seasonal_coeffs[:, 9, None]
+
+    seasonal = (
+        (b1 + bp1 * x[None, :]) * np.sin(2.0 * np.pi * x)[None, :]
+        + (c1 + cp1 * x[None, :]) * np.cos(2.0 * np.pi * x)[None, :]
+        + b2 * np.sin(2.0 * np.pi * 2 * x)[None, :]
+        + c2 * np.cos(2.0 * np.pi * 2 * x)[None, :]
+        + b3 * np.sin(2.0 * np.pi * 3 * x)[None, :]
+        + c3 * np.cos(2.0 * np.pi * 3 * x)[None, :]
+        + b4 * np.sin(2.0 * np.pi * 4 * x)[None, :]
+        + c4 * np.cos(2.0 * np.pi * 4 * x)[None, :]
+    )
+
+    return seasonal
 
 
-def set_tight_ylim(ax, curves, extra_fraction=0.04):
+def compute_annual_amplitude_band(samples, years, timezero, polynomial_degree, include_slow_harmonics, slow_harmonics):
     """
-    Set y limits from the plotted curves with a small margin.
+    Compute annual peak-to-trough amplitude percentiles from posterior samples.
     """
-    ymin = min(np.nanmin(curve) for curve in curves)
+    p16_all = []
+    p50_all = []
+    p84_all = []
+
+    for year in years:
+        decimal_year_grid = daily_grid_for_year(int(year))
+        x_grid = decimal_year_grid - timezero
+
+        seasonal = seasonal_component_from_samples(
+            samples,
+            x_grid,
+            polynomial_degree,
+            include_slow_harmonics,
+            slow_harmonics,
+        )
+
+        amplitudes = np.max(seasonal, axis=1) - np.min(seasonal, axis=1)
+        p16, p50, p84 = np.percentile(amplitudes, [16, 50, 84])
+
+        p16_all.append(p16)
+        p50_all.append(p50)
+        p84_all.append(p84)
+
+    return np.asarray(p16_all), np.asarray(p50_all), np.asarray(p84_all)
+
+
+def plot_amplitude_with_errorbars(ax, years, p16, p50, p84, color, alpha, label):
+    """
+    Plot posterior median amplitudes with 16th-84th percentile error bars.
+    """
+    yerr = [p50 - p16, p84 - p50]
+
+    ax.errorbar(
+        years,
+        p50,
+        yerr=yerr,
+        fmt="o",
+        color=color,
+        ecolor=color,
+        alpha=alpha,
+        markersize=4,
+        elinewidth=1.1,
+        capsize=3,
+        capthick=1.0,
+        label=label,
+    )
+
+
+def set_amplitude_ylim(ax, curves, extra_fraction=0.08):
+    """
+    Set y limits for amplitude panels with a small upper margin.
+    """
+    ymin = 0.0
     ymax = max(np.nanmax(curve) for curve in curves)
-    yrange = ymax - ymin
 
-    if yrange == 0:
-        yrange = max(abs(ymin), 1.0)
+    if ymax == 0:
+        ymax = 1.0
 
-    ax.set_ylim(ymin - extra_fraction * yrange, ymax + extra_fraction * yrange)
+    ax.set_ylim(ymin, ymax * (1.0 + extra_fraction))
 
 
 
@@ -162,10 +230,10 @@ d13c_mlo_samples_path = os.path.join(d13c_mlo_results_dir, "samples_for_MC.txt")
 
 d14c_izo_samples_path = os.path.join(d14c_izo_results_dir, "samples_for_MC.txt")
 
-plot_dir = comparison_directory(project_root, "fig04_longterm_components")
+plot_dir = comparison_directory(project_root, "fig06_seasonal_amplitude_evolution")
 os.makedirs(plot_dir, exist_ok=True)
 
-output_path = os.path.join(plot_dir, "fig04.png")
+output_path = os.path.join(plot_dir, "fig06.png")
 
 
 
@@ -192,19 +260,19 @@ print("-------------------------------------------------------")
 
 
 
-print("Step 2: Compute long-term components and 68% confidence bands")
+print("Step 2: Compute annual peak-to-trough amplitudes")
+start = time.time()
 
-co2_decimal_year_grid = np.linspace(co2_range[0], co2_range[1], n_grid)
-co2_izo_p16, co2_izo_p50, co2_izo_p84 = compute_polynomial_band(co2_izo_samples, co2_decimal_year_grid, co2_izo_timezero, co2_izo_polynomial_degree)
-co2_mlo_p16, co2_mlo_p50, co2_mlo_p84 = compute_polynomial_band(co2_mlo_samples, co2_decimal_year_grid, co2_mlo_timezero, co2_mlo_polynomial_degree)
+co2_izo_p16, co2_izo_p50, co2_izo_p84 = compute_annual_amplitude_band(co2_izo_samples, co2_years, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_slow_harmonics)
+co2_mlo_p16, co2_mlo_p50, co2_mlo_p84 = compute_annual_amplitude_band(co2_mlo_samples, co2_years, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_slow_harmonics)
 
-d13c_decimal_year_grid = np.linspace(d13c_range[0], d13c_range[1], n_grid)
-d13c_izo_p16, d13c_izo_p50, d13c_izo_p84 = compute_polynomial_band(d13c_izo_samples, d13c_decimal_year_grid, d13c_izo_timezero, d13c_izo_polynomial_degree)
-d13c_mlo_p16, d13c_mlo_p50, d13c_mlo_p84 = compute_polynomial_band(d13c_mlo_samples, d13c_decimal_year_grid, d13c_mlo_timezero, d13c_mlo_polynomial_degree)
+d13c_izo_p16, d13c_izo_p50, d13c_izo_p84 = compute_annual_amplitude_band(d13c_izo_samples, d13c_years, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_slow_harmonics)
+d13c_mlo_p16, d13c_mlo_p50, d13c_mlo_p84 = compute_annual_amplitude_band(d13c_mlo_samples, d13c_years, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_slow_harmonics)
 
-d14c_decimal_year_grid = np.linspace(d14c_range[0], d14c_range[1], n_grid)
-d14c_izo_p16, d14c_izo_p50, d14c_izo_p84 = compute_polynomial_band(d14c_izo_samples, d14c_decimal_year_grid, d14c_izo_timezero, d14c_izo_polynomial_degree)
+d14c_izo_p16, d14c_izo_p50, d14c_izo_p84 = compute_annual_amplitude_band(d14c_izo_samples, d14c_years, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_slow_harmonics)
 
+end = time.time()
+print(f"Total processing time: {(end - start)/60:.2f} minutes")
 print("-------------------------------------------------------")
 
 
@@ -214,52 +282,23 @@ print("Step 3: Plot the figure")
 fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(13.5, 4.6), sharex=False)
 fig.subplots_adjust(wspace=0.34)
 
-izo_line_style = dict(color="k", linewidth=1.4, zorder=5)
-izo_limit_style = dict(color="k", linewidth=0.55, alpha=0.75, zorder=4)
-izo_band_style = dict(color="0.45", alpha=0.35, linewidth=0, zorder=2)
+plot_amplitude_with_errorbars(ax1, co2_years, co2_mlo_p16, co2_mlo_p50, co2_mlo_p84, color="r", alpha=0.45, label="MLO")
+plot_amplitude_with_errorbars(ax1, co2_years, co2_izo_p16, co2_izo_p50, co2_izo_p84, color="k", alpha=1.0, label="IZO")
+ax1.set_ylabel(r"$A_{\mathrm{seasonal}}$ CO$_2$ (ppm)", fontsize=15)
+ax1.set_xlabel("Year", fontsize=15)
 
-mlo_line_style = dict(color="r", linewidth=1.2, alpha=0.48, zorder=3)
-mlo_limit_style = dict(color="r", linewidth=0.45, alpha=0.38, zorder=2)
-mlo_band_style = dict(color="r", alpha=0.16, linewidth=0, zorder=1)
+plot_amplitude_with_errorbars(ax2, d13c_years, d13c_mlo_p16, d13c_mlo_p50, d13c_mlo_p84, color="r", alpha=0.45, label="MLO")
+plot_amplitude_with_errorbars(ax2, d13c_years, d13c_izo_p16, d13c_izo_p50, d13c_izo_p84, color="k", alpha=1.0, label="IZO")
+ax2.set_ylabel(r"$A_{\mathrm{seasonal}}$ $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=15)
+ax2.set_xlabel("Year", fontsize=15)
 
-# Upper panel: CO2 long-term component
-ax1.fill_between(co2_decimal_year_grid, co2_mlo_p16, co2_mlo_p84, **mlo_band_style)
-ax1.plot(co2_decimal_year_grid, co2_mlo_p16, **mlo_limit_style)
-ax1.plot(co2_decimal_year_grid, co2_mlo_p84, **mlo_limit_style)
-ax1.plot(co2_decimal_year_grid, co2_mlo_p50, **mlo_line_style, label="MLO")
-ax1.fill_between(co2_decimal_year_grid, co2_izo_p16, co2_izo_p84, **izo_band_style)
-ax1.plot(co2_decimal_year_grid, co2_izo_p16, **izo_limit_style)
-ax1.plot(co2_decimal_year_grid, co2_izo_p84, **izo_limit_style)
-ax1.plot(co2_decimal_year_grid, co2_izo_p50, **izo_line_style, label="IZO")
-ax1.set_ylabel("$p(t)$ CO$_2$ (ppm)", fontsize=16)
-ax1.set_xlabel("Year", fontsize=16)
-set_tight_ylim(ax1, [co2_izo_p16, co2_izo_p84, co2_mlo_p16, co2_mlo_p84])
-
-# Middle panel: delta13C long-term component
-ax2.fill_between(d13c_decimal_year_grid, d13c_mlo_p16, d13c_mlo_p84, **mlo_band_style)
-ax2.plot(d13c_decimal_year_grid, d13c_mlo_p16, **mlo_limit_style)
-ax2.plot(d13c_decimal_year_grid, d13c_mlo_p84, **mlo_limit_style)
-ax2.plot(d13c_decimal_year_grid, d13c_mlo_p50, **mlo_line_style)
-ax2.fill_between(d13c_decimal_year_grid, d13c_izo_p16, d13c_izo_p84, **izo_band_style)
-ax2.plot(d13c_decimal_year_grid, d13c_izo_p16, **izo_limit_style)
-ax2.plot(d13c_decimal_year_grid, d13c_izo_p84, **izo_limit_style)
-ax2.plot(d13c_decimal_year_grid, d13c_izo_p50, **izo_line_style, label="IZO")
-ax2.set_ylabel(r"$p(t)$ $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=16)
-ax2.set_xlabel("Year", fontsize=16)
-set_tight_ylim(ax2, [d13c_izo_p16, d13c_izo_p84, d13c_mlo_p16, d13c_mlo_p84])
-
-# Lower panel: delta14C long-term component
-ax3.fill_between(d14c_decimal_year_grid, d14c_izo_p16, d14c_izo_p84, **izo_band_style)
-ax3.plot(d14c_decimal_year_grid, d14c_izo_p16, **izo_limit_style)
-ax3.plot(d14c_decimal_year_grid, d14c_izo_p84, **izo_limit_style)
-ax3.plot(d14c_decimal_year_grid, d14c_izo_p50, **izo_line_style, label="IZO")
-ax3.set_xlabel("Year", fontsize=16)
-ax3.set_ylabel(r"$p(t)$ $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=16)
-set_tight_ylim(ax3, [d14c_izo_p16, d14c_izo_p84])
+plot_amplitude_with_errorbars(ax3, d14c_years, d14c_izo_p16, d14c_izo_p50, d14c_izo_p84, color="k", alpha=1.0, label="IZO")
+ax3.set_ylabel(r"$A_{\mathrm{seasonal}}$ $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=15)
+ax3.set_xlabel("Year", fontsize=15)
 
 # Axis formatting
 for ax in (ax1, ax2, ax3):
-    ax.tick_params(axis="both", direction="in", top=True, right=True, labelsize=14, length=6, width=1)
+    ax.tick_params(axis="both", direction="in", top=True, right=True, labelsize=12, length=6, width=1)
     ax.minorticks_on()
     ax.tick_params(which="minor", direction="in", top=True, right=True, length=3, width=0.8)
     ax.set_xlim(xlim_min, xlim_max)
@@ -268,6 +307,8 @@ for ax in (ax1, ax2, ax3):
 fig.align_ylabels([ax1, ax2, ax3])
 
 ax1.legend(loc="best")
+ax2.legend(loc="best")
+ax3.legend(loc="best")
 
 fig.savefig(output_path, dpi=600, bbox_inches="tight", pad_inches=0.1)
 

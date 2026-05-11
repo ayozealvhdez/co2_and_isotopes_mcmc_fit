@@ -1,22 +1,25 @@
 """
-For the three observables (CO2, delta13C, delta14C), plot the long-term components p(t) inferred for the fitted records.
+Plot the mean seasonal components s(t) inferred for the fitted records.
 
 Panels, from left to right:
 - CO2 mole fraction.
 - delta13C-CO2.
 - delta14C-CO2.
 
-The IZO long-term components are shown in black, with shaded regions indicating
-68% confidence intervals derived from joint posterior Monte Carlo draws.
+The IZO mean seasonal components are shown in black, with shaded regions
+indicating 68% confidence intervals derived from joint posterior Monte Carlo
+draws.
 
-The corresponding MLO long-term components are shown in semitransparent red
+The corresponding MLO mean seasonal components are shown in semitransparent red
 where an equivalent MLO record is available.
 
 The script reads:
 - 'samples_for_MC.txt', containing posterior samples drawn from the MCMC chains.
 
-Only the polynomial coefficients are used, because this figure shows p(t), not
-the full fitted model f(t).
+For each posterior sample, the seasonal component is evaluated year by year and
+then averaged over complete years in the analysed period at each annual phase.
+This keeps the time-dependent first harmonic terms b1 + bp1*t and c1 + cp1*t in
+the calculation.
 """
 
 
@@ -88,51 +91,77 @@ d14c_izo_timezero = 1985.0
 # ----------------- GRIDS CONFIGURATION -----------------
 # -------------------------------------------------------
 
-co2_range = (1985, 2025)
-d13c_range = (1992, 2025)
-d14c_range = (1985, 2024)
+co2_years_for_mean = np.arange(1985, 2025)
+d13c_years_for_mean = np.arange(1992, 2025)
+d14c_years_for_mean = np.arange(1985, 2024)
 
-xlim_min = 1985
-xlim_max = 2025
-
-n_grid = 1000
+n_phase = 500
+phase_grid = np.linspace(0.0, 1.0, n_phase)
+month_grid = 12.0 * phase_grid
 
 
 
 # -------------------------------------------------------
-# ---------- FUNCTION TO COMPUTE LONG-TERM BAND ---------
+# ---------- FUNCTION TO COMPUTE SEASONAL BAND ----------
 # -------------------------------------------------------
 
-def compute_polynomial_band(samples, decimal_year_grid, timezero, polynomial_degree):
+def compute_mean_seasonal_band(samples, phase_grid, years_for_mean, timezero, polynomial_degree, include_slow_harmonics, slow_harmonics):
     """
-    Compute the posterior median and 68% band of the polynomial p(t).
+    Compute the posterior median and 68% band of the mean seasonal component.
     """
-    x_grid = decimal_year_grid - timezero
-    polynomial_coeffs = samples[:, :polynomial_degree + 1]
-    polynomial_curves = np.zeros((len(samples), len(decimal_year_grid)))
+    idx = polynomial_degree + 1
 
-    for i in range(polynomial_degree + 1):
-        polynomial_curves += polynomial_coeffs[:, i, None] * x_grid[None, :]**i
+    if include_slow_harmonics and len(slow_harmonics) > 0:
+        idx += 2 * len(slow_harmonics)
 
-    p16 = np.percentile(polynomial_curves, 16, axis=0)
-    p50 = np.percentile(polynomial_curves, 50, axis=0)
-    p84 = np.percentile(polynomial_curves, 84, axis=0)
+    seasonal_coeffs = samples[:, idx:idx + 10]
+
+    b1 = seasonal_coeffs[:, 0, None]
+    c1 = seasonal_coeffs[:, 1, None]
+    bp1 = seasonal_coeffs[:, 2, None]
+    cp1 = seasonal_coeffs[:, 3, None]
+    b2 = seasonal_coeffs[:, 4, None]
+    c2 = seasonal_coeffs[:, 5, None]
+    b3 = seasonal_coeffs[:, 6, None]
+    c3 = seasonal_coeffs[:, 7, None]
+    b4 = seasonal_coeffs[:, 8, None]
+    c4 = seasonal_coeffs[:, 9, None]
+
+    seasonal_curves = np.zeros((len(samples), len(phase_grid)))
+
+    for year in years_for_mean:
+        t_phase = year + phase_grid - timezero
+
+        seasonal_curves += (
+            (b1 + bp1 * t_phase[None, :]) * np.sin(2.0 * np.pi * t_phase)[None, :]
+            + (c1 + cp1 * t_phase[None, :]) * np.cos(2.0 * np.pi * t_phase)[None, :]
+            + b2 * np.sin(2.0 * np.pi * 2 * t_phase)[None, :]
+            + c2 * np.cos(2.0 * np.pi * 2 * t_phase)[None, :]
+            + b3 * np.sin(2.0 * np.pi * 3 * t_phase)[None, :]
+            + c3 * np.cos(2.0 * np.pi * 3 * t_phase)[None, :]
+            + b4 * np.sin(2.0 * np.pi * 4 * t_phase)[None, :]
+            + c4 * np.cos(2.0 * np.pi * 4 * t_phase)[None, :]
+        )
+
+    seasonal_curves /= len(years_for_mean)
+
+    p16 = np.percentile(seasonal_curves, 16, axis=0)
+    p50 = np.percentile(seasonal_curves, 50, axis=0)
+    p84 = np.percentile(seasonal_curves, 84, axis=0)
 
     return p16, p50, p84
 
 
-def set_tight_ylim(ax, curves, extra_fraction=0.04):
+def set_symmetric_ylim(ax, curves, extra_fraction=0.08):
     """
-    Set y limits from the plotted curves with a small margin.
+    Set symmetric y limits around zero from the plotted seasonal curves.
     """
-    ymin = min(np.nanmin(curve) for curve in curves)
-    ymax = max(np.nanmax(curve) for curve in curves)
-    yrange = ymax - ymin
+    max_abs = max(np.nanmax(np.abs(curve)) for curve in curves)
 
-    if yrange == 0:
-        yrange = max(abs(ymin), 1.0)
+    if max_abs == 0:
+        max_abs = 1.0
 
-    ax.set_ylim(ymin - extra_fraction * yrange, ymax + extra_fraction * yrange)
+    ax.set_ylim(-(1.0 + extra_fraction) * max_abs, (1.0 + extra_fraction) * max_abs)
 
 
 
@@ -162,10 +191,10 @@ d13c_mlo_samples_path = os.path.join(d13c_mlo_results_dir, "samples_for_MC.txt")
 
 d14c_izo_samples_path = os.path.join(d14c_izo_results_dir, "samples_for_MC.txt")
 
-plot_dir = comparison_directory(project_root, "fig04_longterm_components")
+plot_dir = comparison_directory(project_root, "fig05_mean_seasonal_components")
 os.makedirs(plot_dir, exist_ok=True)
 
-output_path = os.path.join(plot_dir, "fig04.png")
+output_path = os.path.join(plot_dir, "fig05.png")
 
 
 
@@ -192,18 +221,15 @@ print("-------------------------------------------------------")
 
 
 
-print("Step 2: Compute long-term components and 68% confidence bands")
+print("Step 2: Compute mean seasonal components and 68% confidence bands")
 
-co2_decimal_year_grid = np.linspace(co2_range[0], co2_range[1], n_grid)
-co2_izo_p16, co2_izo_p50, co2_izo_p84 = compute_polynomial_band(co2_izo_samples, co2_decimal_year_grid, co2_izo_timezero, co2_izo_polynomial_degree)
-co2_mlo_p16, co2_mlo_p50, co2_mlo_p84 = compute_polynomial_band(co2_mlo_samples, co2_decimal_year_grid, co2_mlo_timezero, co2_mlo_polynomial_degree)
+co2_izo_p16, co2_izo_p50, co2_izo_p84 = compute_mean_seasonal_band(co2_izo_samples, phase_grid, co2_years_for_mean, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_slow_harmonics)
+co2_mlo_p16, co2_mlo_p50, co2_mlo_p84 = compute_mean_seasonal_band(co2_mlo_samples, phase_grid, co2_years_for_mean, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_slow_harmonics)
 
-d13c_decimal_year_grid = np.linspace(d13c_range[0], d13c_range[1], n_grid)
-d13c_izo_p16, d13c_izo_p50, d13c_izo_p84 = compute_polynomial_band(d13c_izo_samples, d13c_decimal_year_grid, d13c_izo_timezero, d13c_izo_polynomial_degree)
-d13c_mlo_p16, d13c_mlo_p50, d13c_mlo_p84 = compute_polynomial_band(d13c_mlo_samples, d13c_decimal_year_grid, d13c_mlo_timezero, d13c_mlo_polynomial_degree)
+d13c_izo_p16, d13c_izo_p50, d13c_izo_p84 = compute_mean_seasonal_band(d13c_izo_samples, phase_grid, d13c_years_for_mean, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_slow_harmonics)
+d13c_mlo_p16, d13c_mlo_p50, d13c_mlo_p84 = compute_mean_seasonal_band(d13c_mlo_samples, phase_grid, d13c_years_for_mean, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_slow_harmonics)
 
-d14c_decimal_year_grid = np.linspace(d14c_range[0], d14c_range[1], n_grid)
-d14c_izo_p16, d14c_izo_p50, d14c_izo_p84 = compute_polynomial_band(d14c_izo_samples, d14c_decimal_year_grid, d14c_izo_timezero, d14c_izo_polynomial_degree)
+d14c_izo_p16, d14c_izo_p50, d14c_izo_p84 = compute_mean_seasonal_band(d14c_izo_samples, phase_grid, d14c_years_for_mean, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_slow_harmonics)
 
 print("-------------------------------------------------------")
 
@@ -211,7 +237,7 @@ print("-------------------------------------------------------")
 
 print("Step 3: Plot the figure")
 
-fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(13.5, 4.6), sharex=False)
+fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(13.5, 4.6), sharex=True)
 fig.subplots_adjust(wspace=0.34)
 
 izo_line_style = dict(color="k", linewidth=1.4, zorder=5)
@@ -222,52 +248,59 @@ mlo_line_style = dict(color="r", linewidth=1.2, alpha=0.48, zorder=3)
 mlo_limit_style = dict(color="r", linewidth=0.45, alpha=0.38, zorder=2)
 mlo_band_style = dict(color="r", alpha=0.16, linewidth=0, zorder=1)
 
-# Upper panel: CO2 long-term component
-ax1.fill_between(co2_decimal_year_grid, co2_mlo_p16, co2_mlo_p84, **mlo_band_style)
-ax1.plot(co2_decimal_year_grid, co2_mlo_p16, **mlo_limit_style)
-ax1.plot(co2_decimal_year_grid, co2_mlo_p84, **mlo_limit_style)
-ax1.plot(co2_decimal_year_grid, co2_mlo_p50, **mlo_line_style, label="MLO")
-ax1.fill_between(co2_decimal_year_grid, co2_izo_p16, co2_izo_p84, **izo_band_style)
-ax1.plot(co2_decimal_year_grid, co2_izo_p16, **izo_limit_style)
-ax1.plot(co2_decimal_year_grid, co2_izo_p84, **izo_limit_style)
-ax1.plot(co2_decimal_year_grid, co2_izo_p50, **izo_line_style, label="IZO")
-ax1.set_ylabel("$p(t)$ CO$_2$ (ppm)", fontsize=16)
-ax1.set_xlabel("Year", fontsize=16)
-set_tight_ylim(ax1, [co2_izo_p16, co2_izo_p84, co2_mlo_p16, co2_mlo_p84])
+# Upper panel: CO2 mean seasonal component
+ax1.fill_between(month_grid, co2_mlo_p16, co2_mlo_p84, **mlo_band_style)
+ax1.plot(month_grid, co2_mlo_p16, **mlo_limit_style)
+ax1.plot(month_grid, co2_mlo_p84, **mlo_limit_style)
+ax1.plot(month_grid, co2_mlo_p50, **mlo_line_style, label="MLO")
+ax1.fill_between(month_grid, co2_izo_p16, co2_izo_p84, **izo_band_style)
+ax1.plot(month_grid, co2_izo_p16, **izo_limit_style)
+ax1.plot(month_grid, co2_izo_p84, **izo_limit_style)
+ax1.plot(month_grid, co2_izo_p50, **izo_line_style, label="IZO")
+ax1.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
+ax1.set_ylabel("$s(t)$ CO$_2$ (ppm)", fontsize=16)
+ax1.set_xlabel("Month", fontsize=16)
+set_symmetric_ylim(ax1, [co2_izo_p16, co2_izo_p84, co2_mlo_p16, co2_mlo_p84])
 
-# Middle panel: delta13C long-term component
-ax2.fill_between(d13c_decimal_year_grid, d13c_mlo_p16, d13c_mlo_p84, **mlo_band_style)
-ax2.plot(d13c_decimal_year_grid, d13c_mlo_p16, **mlo_limit_style)
-ax2.plot(d13c_decimal_year_grid, d13c_mlo_p84, **mlo_limit_style)
-ax2.plot(d13c_decimal_year_grid, d13c_mlo_p50, **mlo_line_style)
-ax2.fill_between(d13c_decimal_year_grid, d13c_izo_p16, d13c_izo_p84, **izo_band_style)
-ax2.plot(d13c_decimal_year_grid, d13c_izo_p16, **izo_limit_style)
-ax2.plot(d13c_decimal_year_grid, d13c_izo_p84, **izo_limit_style)
-ax2.plot(d13c_decimal_year_grid, d13c_izo_p50, **izo_line_style, label="IZO")
-ax2.set_ylabel(r"$p(t)$ $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=16)
-ax2.set_xlabel("Year", fontsize=16)
-set_tight_ylim(ax2, [d13c_izo_p16, d13c_izo_p84, d13c_mlo_p16, d13c_mlo_p84])
+# Middle panel: delta13C mean seasonal component
+ax2.fill_between(month_grid, d13c_mlo_p16, d13c_mlo_p84, **mlo_band_style)
+ax2.plot(month_grid, d13c_mlo_p16, **mlo_limit_style)
+ax2.plot(month_grid, d13c_mlo_p84, **mlo_limit_style)
+ax2.plot(month_grid, d13c_mlo_p50, **mlo_line_style, label='MLO')
+ax2.fill_between(month_grid, d13c_izo_p16, d13c_izo_p84, **izo_band_style)
+ax2.plot(month_grid, d13c_izo_p16, **izo_limit_style)
+ax2.plot(month_grid, d13c_izo_p84, **izo_limit_style)
+ax2.plot(month_grid, d13c_izo_p50, **izo_line_style, label='IZO')
+ax2.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
+ax2.set_ylabel(r"$s(t)$ $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=16)
+ax2.set_xlabel("Month", fontsize=16)
+set_symmetric_ylim(ax2, [d13c_izo_p16, d13c_izo_p84, d13c_mlo_p16, d13c_mlo_p84])
 
-# Lower panel: delta14C long-term component
-ax3.fill_between(d14c_decimal_year_grid, d14c_izo_p16, d14c_izo_p84, **izo_band_style)
-ax3.plot(d14c_decimal_year_grid, d14c_izo_p16, **izo_limit_style)
-ax3.plot(d14c_decimal_year_grid, d14c_izo_p84, **izo_limit_style)
-ax3.plot(d14c_decimal_year_grid, d14c_izo_p50, **izo_line_style, label="IZO")
-ax3.set_xlabel("Year", fontsize=16)
-ax3.set_ylabel(r"$p(t)$ $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=16)
-set_tight_ylim(ax3, [d14c_izo_p16, d14c_izo_p84])
+# Lower panel: delta14C mean seasonal component
+ax3.fill_between(month_grid, d14c_izo_p16, d14c_izo_p84, **izo_band_style)
+ax3.plot(month_grid, d14c_izo_p16, **izo_limit_style)
+ax3.plot(month_grid, d14c_izo_p84, **izo_limit_style)
+ax3.plot(month_grid, d14c_izo_p50, **izo_line_style, label='IZO')
+ax3.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
+ax3.set_xlabel("Month", fontsize=16)
+ax3.set_ylabel(r"$s(t)$ $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=16)
+set_symmetric_ylim(ax3, [d14c_izo_p16, d14c_izo_p84])
 
 # Axis formatting
 for ax in (ax1, ax2, ax3):
     ax.tick_params(axis="both", direction="in", top=True, right=True, labelsize=14, length=6, width=1)
     ax.minorticks_on()
     ax.tick_params(which="minor", direction="in", top=True, right=True, length=3, width=0.8)
-    ax.set_xlim(xlim_min, xlim_max)
+    ax.set_xlim(0, 12)
+    ax.set_xticks([0, 3, 6, 9, 12])
+    ax.set_xticklabels(["Jan", "Apr", "Jul", "Oct", "Jan"])
     ax.set_box_aspect(1)
 
 fig.align_ylabels([ax1, ax2, ax3])
 
 ax1.legend(loc="best")
+ax2.legend(loc="best")
+ax3.legend(loc="best")
 
 fig.savefig(output_path, dpi=600, bbox_inches="tight", pad_inches=0.1)
 
