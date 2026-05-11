@@ -1,0 +1,381 @@
+"""
+Fit a CO2 record to the model given by Equation 1 in Alvarez-Hernandez et al. (2026) using the emcee sampler.
+
+The polynomial degree can be set using 'polynomial_degree'. The low-frequency term l(t) can be activated or deactivated using the boolean variable 'include_slow_harmonics'.
+The code can be used with hourly, daily, or monthly averaged data. The input data file must be located in the 'data/co2' directory.
+Time zero must be defined, since the fit is done on centered dates, such as: t = decimal_year - timezero.
+
+The script stores the output in:
+results_and_plots/co2/<site_acronym.lower()>/<data_frequency>/<model_tag>/
+
+Numerical outputs are stored in the 'results' subdirectory:
+- File 'best_fit_and_residuals.txt', containing the data along with the best fit and residuals.
+- File 'fit_summary_<model_tag>.txt', summarising the fit results and model configuration.
+- File 'samples_for_MC.txt', containing up to <number_of_saved_samples> parameter vectors randomly drawn from the posterior.
+
+Plots are stored in the 'plots' subdirectory:
+- Trace plots of all parameters.
+- Corner plot of the parameter distributions.
+"""
+
+
+
+#-------------------------------------------------------
+#--------------- PACKAGES AND FUNCTIONS ----------------
+#-------------------------------------------------------
+
+import emcee
+import os
+import numpy as np
+import time
+from functools import partial
+
+from functions.wdcgg_co2_data_load import load_wdcgg_series
+from functions.wdcgg_co2_data_filtering import filter_positive_values, filter_qcflag, filter_dates_by_month_range
+from functions.wdcgg_co2_data_timeaxis import recenter_timestamps, to_decimal_year
+
+from functions.chi2 import calculate_chi2
+from functions.mcmc_probability import log_prior, log_probability
+from functions.mcmc_plots import save_trace_plots, save_corner_plot
+from functions.model import model
+from functions.paths import find_project_root, model_tag, run_results_directory, run_plots_directory
+
+
+
+# -------------------------------------------------------
+# -------------------- DATA TO FIT ----------------------
+# -------------------------------------------------------
+site_acronym = "MLO" # Used to name the directories where results and plots will be stored
+input_file = "co2_mensual_mlo-wdcgg_1974-2024.txt"
+
+data_frequency = "monthly"   # options: "hourly", "daily", "monthly"
+recenter_time_axis = True # shift timestamps to the exact midpoint of the averaging period
+
+project_root = find_project_root(__file__)
+data_directory = os.path.join(project_root, "data", "co2")
+input_path = os.path.join(data_directory, input_file)
+
+
+
+#-------------------------------------------------------
+#----------------- RUN CONFIGURATION -------------------
+#-------------------------------------------------------
+timezero = 1985.0  # Reference epoch used to define x = decimal_year - timezero
+
+start_month = "1985-01"
+end_month = "2024-12"
+
+nwalkers = 128
+nsteps = 100000
+discard = int(0.5 * nsteps)  # burn-in
+
+corner_mode = "reduced"   # options: "reduced", "full"
+
+number_of_saved_samples = 50000
+
+
+
+#-------------------------------------------------------
+#----------------- MODEL CONFIGURATION -----------------
+#-------------------------------------------------------
+polynomial_degree = 2  # Degree of the polynomial trend. Options: 1, 2, 3
+
+include_slow_harmonics = True
+base_period_slow_harmonics = 30   # Base period (years) used for the low-frequency harmonic terms
+slow_harmonics = [2,3,4,7,8]  # Harmonic orders included for the low-frequency component
+
+
+
+#-------------------------------------------------------
+#---------------- PRIORS CONFIGURATION -----------------
+#-------------------------------------------------------
+if polynomial_degree not in [1, 2, 3]:
+    raise ValueError("polynomial_degree must be 1, 2, or 3")
+
+a0_range = (300, 400)
+a1_range = (0, 5)
+a2_range = (-0.1, 0.1)
+a3_range = (-0.01, 0.01)
+
+polynomial_ranges = [a0_range, a1_range]
+
+if polynomial_degree >= 2:
+    polynomial_ranges.append(a2_range)
+
+if polynomial_degree >= 3:
+    polynomial_ranges.append(a3_range)
+
+
+if include_slow_harmonics and len(slow_harmonics) > 0:
+    # Order: (bLk, cLk) in the same order as slow_harmonics
+    slow_harmonic_ranges = []
+    for k in slow_harmonics:
+        slow_harmonic_ranges.extend([(-2, 2), (-2, 2)])
+else:
+    slow_harmonic_ranges = []
+    slow_harmonics = []
+
+
+harmonic_ranges = [
+    (-5, 5), (-5, 5),     # b1, c1
+    (-1, 1), (-1, 1),     # bp1, cp1
+    (-5, 5), (-5, 5),     # b2, c2
+    (-1, 1), (-1, 1),     # b3, c3
+    (-0.5, 0.5), (-0.5, 0.5)  # b4, c4
+]
+
+
+
+#-------------------------------------------------------
+#---------------- OUTPUT DIRECTORIES -------------------
+#-------------------------------------------------------
+model_tag_str = model_tag(include_slow_harmonics, base_period_slow_harmonics, slow_harmonics, polynomial_degree=polynomial_degree)
+frequency_tag = data_frequency.lower()
+
+results_dir = run_results_directory(project_root, "co2", site_acronym, frequency_tag, include_slow_harmonics, base_period_slow_harmonics, slow_harmonics, polynomial_degree=polynomial_degree)
+plots_dir = run_plots_directory(project_root, "co2", site_acronym, frequency_tag, include_slow_harmonics, base_period_slow_harmonics, slow_harmonics, polynomial_degree=polynomial_degree)
+os.makedirs(results_dir, exist_ok=True)
+os.makedirs(plots_dir, exist_ok=True)
+
+
+
+#-------------------------------------------------------
+#-------------------- MAIN WORKFLOW --------------------
+#-------------------------------------------------------
+
+print("Step 1: Load the series")
+dates, co2, stds, nvalues, qcflags, scale = load_wdcgg_series(input_path,data_frequency=data_frequency)
+print("-------------------------------------------------------")
+
+
+
+print(f"Step 2: Filter the data: remove negative values, correct non-positive standard deviations, and keep only data between {start_month} and {end_month}")
+dates, co2, stds, nvalues, qcflags, scale = filter_positive_values(dates, co2, stds, nvalues, qcflags, scale)
+dates, co2, stds, nvalues, qcflags, scale = filter_dates_by_month_range(dates, co2, stds, nvalues, qcflags, scale, start_month, end_month)
+
+# Optional: enable this line to keep only data passing the selected QC criterion (QCflag == 1; i.e. background)
+# dates, co2, stds, nvalues, qcflags, scale = filter_qcflag(dates, co2, stds, nvalues, qcflags, scale)
+
+stds[stds <= 0] = np.mean(stds[stds > 0])  # Replace non-positive standard deviations by the mean of the valid positive ones to avoid zero/negative values in the likelihood evaluation
+print("-------------------------------------------------------")
+
+
+
+print(f"Step 3: Recenter timestamps if chosen, convert dates to decimal years, and define t_0 = {timezero}")
+if recenter_time_axis:
+    dates = recenter_timestamps(dates, data_frequency)
+
+decimal_year_dates = to_decimal_year(dates)
+
+x = decimal_year_dates - timezero
+y = co2
+yerr = stds
+print("-------------------------------------------------------")
+
+
+
+print("Step 4: Initialize walkers by sampling uniformly within the prior ranges")
+all_priors = [
+    *polynomial_ranges,
+    *slow_harmonic_ranges,
+    *harmonic_ranges
+]
+
+ndim = len(all_priors)
+
+# param_names is built depending on whether slow harmonics are included
+param_names = [f"a{i}" for i in range(polynomial_degree + 1)]
+
+if include_slow_harmonics and len(slow_harmonics) > 0:
+    for k in slow_harmonics:
+        param_names.extend([f"bL{k}", f"cL{k}"])
+
+param_names.extend(['b1', 'c1', 'bp1', 'cp1',
+                    'b2', 'c2', 'b3', 'c3', 'b4', 'c4'])
+
+
+
+# Initialize walkers uniformly within the prior ranges
+np.random.seed(42)  # For reproducibility
+p0 = np.zeros((nwalkers, ndim))
+for i in range(nwalkers):
+    while True:
+        candidate = np.array([
+            np.random.uniform(low, high)
+            for (low, high) in all_priors
+        ])
+        if np.isfinite(log_prior(candidate,
+                                 polynomial_degree=polynomial_degree,
+                                 polynomial_ranges=polynomial_ranges,
+                                 slow_harmonic_ranges=slow_harmonic_ranges,
+                                 harmonic_ranges=harmonic_ranges,
+                                 slow_harmonics=slow_harmonics)):
+            p0[i] = candidate
+            break
+print("-------------------------------------------------------")
+
+
+
+print("Step 5: Run the MCMC sampling")
+# Create a version of log_prob that uses the parameter ranges defined above
+log_prob = partial(
+    log_probability,
+    polynomial_degree=polynomial_degree,
+    polynomial_ranges=polynomial_ranges,
+    slow_harmonic_ranges=slow_harmonic_ranges,
+    harmonic_ranges=harmonic_ranges,
+    include_slow_harmonics=include_slow_harmonics,
+    base_period_slow_harmonics=base_period_slow_harmonics,
+    slow_harmonics=slow_harmonics
+)
+
+# Pass log_prob to the sampler as the log-probability function required by emcee
+sampler = emcee.EnsembleSampler(nwalkers, ndim, log_prob, args=(x, y, yerr))
+
+
+start = time.time()
+sampler.run_mcmc(p0, nsteps, progress=True)
+end = time.time()
+
+print(f"Total sampling time: {(end - start)/60:.2f} minutes")
+print("-------------------------------------------------------")
+
+
+
+print("Step 6: Compute the autocorrelation time")
+tau_mean = np.nan
+
+try:
+    tau = sampler.get_autocorr_time(tol=0)  # tol=0 -> no smoothing
+    for i, t in enumerate(tau):
+        print(f"τ({param_names[i]}): {t:.1f}")
+    tau_mean = np.mean(tau)
+    print(f"-> mean autocorrelation time: {tau_mean:.1f}")
+except emcee.autocorr.AutocorrError:
+    print("Could not compute τ: the chain has not converged yet or is too short.")
+print("-------------------------------------------------------")
+
+
+
+print("Step 7: Print and save parameter values from their posterior distributions (median and standard deviation)")
+flat_samples = sampler.get_chain(discard=discard, flat=True)
+medians = np.median(flat_samples, axis=0)
+sigmas = np.std(flat_samples, axis=0)
+
+for name, m, s in zip(param_names, medians, sigmas):
+    print(f"{name:>3}: {m:.4f} ± {s:.4f}")
+
+
+fit_summary_filename = f"fit_summary_{model_tag_str}.txt"
+fit_summary_path = os.path.join(results_dir, fit_summary_filename)
+
+rows = np.array(list(zip(param_names, medians, sigmas)), dtype=object)
+
+np.savetxt(
+    fit_summary_path,
+    rows,
+    fmt=["%s", "%.6f", "%.6f"],
+    delimiter="\t",
+    header="# Parameter\tMedian\tSigma",
+    comments=""
+)
+
+
+print(f"Medians and standard deviations saved to: {fit_summary_path}")
+print("-------------------------------------------------------")
+
+
+
+print("Step 8: Trace plots")
+save_trace_plots(sampler, param_names, plots_dir)
+print("-------------------------------------------------------")
+
+
+
+print("Step 9: Corner plot")
+save_corner_plot(flat_samples, param_names, include_slow_harmonics, slow_harmonics, plots_dir, polynomial_degree=polynomial_degree, mode=corner_mode)
+print("-------------------------------------------------------")
+
+
+
+print("Step 10: Compute and save best-fit and residuals")
+# Evaluate the model at each timestamp using the posterior medians as the reference parameter values
+x_fit = decimal_year_dates - timezero
+y_fit = model(x_fit, *medians,
+              polynomial_degree=polynomial_degree,
+              include_slow_harmonics=include_slow_harmonics,
+              base_period_slow_harmonics=base_period_slow_harmonics,
+              slow_harmonics=slow_harmonics)
+
+residuals = co2 - y_fit
+
+best_fit_and_residuals_path = os.path.join(results_dir, "best_fit_and_residuals.txt")
+header_cols = "# decimal_year\tobserved\tyerr\tnvalues\tfit\tresidual"
+np.savetxt(
+    best_fit_and_residuals_path,
+    np.column_stack([decimal_year_dates, co2, yerr, nvalues, y_fit, residuals]),
+    header=header_cols,
+    fmt=["%.6f", "%.6f", "%.6f", "%d", "%.6f", "%.6f"],
+    delimiter="\t",
+    comments="",
+)
+print("-------------------------------------------------------")
+
+
+
+print(f"Step 11: Save up to {number_of_saved_samples} random samples from the posterior distributions for uncertainty calculations")
+N_draws = min(number_of_saved_samples, len(flat_samples))  # Use number_of_saved_samples samples, or all available samples if fewer are available
+idx_draw = np.random.choice(len(flat_samples), size=N_draws, replace=False)
+samples_drawn = flat_samples[idx_draw]
+
+header_cols = "# " + "\t".join(param_names)
+samples_path = os.path.join(results_dir, "samples_for_MC.txt")
+np.savetxt(samples_path, samples_drawn, header=header_cols, fmt="%.6f", delimiter="\t", comments="")
+print("-------------------------------------------------------")
+
+
+
+print("Step 12: Compute the reduced chi-squared of the MCMC fit")
+print("N =", len(co2))
+print("ndim =", ndim)
+print("dof =", len(co2) - ndim)
+
+chi2, dof, chi2_dof = calculate_chi2(co2, yerr, y_fit, n_parameters=ndim)
+
+print(f"Reduced χ² (MCMC best fit): {chi2_dof:.3f}")
+print("-------------------------------------------------------")
+
+
+
+print(f"Step 13: Save fit metrics to {fit_summary_path}")
+
+# Slow-harmonic configuration (save the flag and, if applicable, its configuration parameters)
+include_slow_harmonics_int = int(include_slow_harmonics)  # 0 or 1
+base_period_slow_harmonics_to_save = base_period_slow_harmonics if include_slow_harmonics else np.nan
+slow_harmonics_to_save = str(slow_harmonics) if (include_slow_harmonics and len(slow_harmonics) > 0) else "[]"
+
+rows_metrics = np.array([
+    ["chi2",          chi2,          np.nan],
+    ["dof",           dof,           np.nan],
+    ["reduced_chi2", chi2_dof, np.nan],
+    ["timezero",      timezero,      np.nan],
+    ["polynomial_degree", polynomial_degree, np.nan],
+    ["polynomial_ranges", np.nan, str(polynomial_ranges)],
+    ["nwalkers",      nwalkers,      np.nan],
+    ["nsteps",        nsteps,        np.nan],
+    ["discard",       discard,       np.nan],
+    ["tau_mean",      tau_mean,      np.nan],
+    ["include_slow_harmonics", include_slow_harmonics_int, np.nan],
+    ["base_period_slow_harmonics", base_period_slow_harmonics_to_save, np.nan],
+    ["slow_harmonics", np.nan, slow_harmonics_to_save],
+], dtype=object)
+
+with open(fit_summary_path, "a") as f:
+    np.savetxt(f, rows_metrics, fmt=["%s", "%.6f", "%s"], delimiter="\t")
+
+print(f"Metrics appended to: {fit_summary_path}")
+print("-------------------------------------------------------")
+
+
+
+
