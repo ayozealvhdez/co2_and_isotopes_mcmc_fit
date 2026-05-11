@@ -9,6 +9,7 @@ generators used for empirical false-alarm calculations.
 import numpy as np
 
 from functions.lombscargle_fap import (
+    compute_peak_exceedance_percentage,
     estimate_red_noise_ar1_parameters,
     simulate_red_noise_ar1,
     simulate_white_noise,
@@ -58,3 +59,132 @@ def test_ar1_parameter_estimate_recovers_known_positive_autocorrelation():
     assert np.isfinite(sigma)
     assert alpha > 0.0
     assert sigma >= 0.0
+
+
+def fap_test_inputs():
+    """Return a small deterministic setup for empirical FAP tests."""
+    timestamps = np.linspace(0.0, 20.0, 41)
+    residuals_for_noise_parameters = np.asarray([
+        0.20, 0.10, 0.15, 0.05, -0.02, -0.06, -0.04, 0.01,
+        0.08, 0.12, 0.06, -0.01, -0.05, -0.03, 0.02, 0.07,
+        0.11, 0.05, -0.02, -0.07, -0.04,
+    ])
+
+    return timestamps, residuals_for_noise_parameters
+
+
+def test_peak_exceedance_white_noise_extreme_thresholds():
+    """Check that empirical FAP gives exact limits for white noise."""
+    timestamps, residuals_for_noise_parameters = fap_test_inputs()
+
+    exceed_all = compute_peak_exceedance_percentage(
+        timestamps=timestamps,
+        residuals_for_noise_parameters=residuals_for_noise_parameters,
+        peak_power=-np.inf,
+        peak_frequency=0.20,
+        peak_frequency_sigma=0.03,
+        noise_type="white",
+        n_simulations=5,
+        samples_per_peak=2,
+        rng_seed=123,
+    )
+
+    exceed_none = compute_peak_exceedance_percentage(
+        timestamps=timestamps,
+        residuals_for_noise_parameters=residuals_for_noise_parameters,
+        peak_power=np.inf,
+        peak_frequency=0.20,
+        peak_frequency_sigma=0.03,
+        noise_type="white",
+        n_simulations=5,
+        samples_per_peak=2,
+        rng_seed=123,
+    )
+
+    assert exceed_all == 100.0
+    assert exceed_none == 0.0
+
+
+def test_peak_exceedance_red_noise_extreme_thresholds():
+    """Check that empirical FAP gives exact limits for AR(1) red noise."""
+    timestamps, residuals_for_noise_parameters = fap_test_inputs()
+
+    exceed_all = compute_peak_exceedance_percentage(
+        timestamps=timestamps,
+        residuals_for_noise_parameters=residuals_for_noise_parameters,
+        peak_power=-np.inf,
+        peak_frequency=0.20,
+        peak_frequency_sigma=0.03,
+        noise_type="red",
+        n_simulations=5,
+        samples_per_peak=2,
+        rng_seed=456,
+    )
+
+    exceed_none = compute_peak_exceedance_percentage(
+        timestamps=timestamps,
+        residuals_for_noise_parameters=residuals_for_noise_parameters,
+        peak_power=np.inf,
+        peak_frequency=0.20,
+        peak_frequency_sigma=0.03,
+        noise_type="red",
+        n_simulations=5,
+        samples_per_peak=2,
+        rng_seed=456,
+    )
+
+    assert exceed_all == 100.0
+    assert exceed_none == 0.0
+
+
+def test_peak_exceedance_decreases_for_larger_peak_power():
+    """Check that exceedance is monotonic with the selected peak power."""
+    timestamps, residuals_for_noise_parameters = fap_test_inputs()
+
+    low_threshold_exceedance = compute_peak_exceedance_percentage(
+        timestamps=timestamps,
+        residuals_for_noise_parameters=residuals_for_noise_parameters,
+        peak_power=0.0,
+        peak_frequency=0.20,
+        peak_frequency_sigma=0.03,
+        noise_type="white",
+        n_simulations=10,
+        samples_per_peak=2,
+        rng_seed=789,
+    )
+
+    high_threshold_exceedance = compute_peak_exceedance_percentage(
+        timestamps=timestamps,
+        residuals_for_noise_parameters=residuals_for_noise_parameters,
+        peak_power=1.0,
+        peak_frequency=0.20,
+        peak_frequency_sigma=0.03,
+        noise_type="white",
+        n_simulations=10,
+        samples_per_peak=2,
+        rng_seed=789,
+    )
+
+    assert 0.0 <= high_threshold_exceedance <= low_threshold_exceedance <= 100.0
+
+
+def test_peak_exceedance_rejects_unknown_noise_type():
+    """Check that invalid noise models are rejected explicitly."""
+    timestamps, residuals_for_noise_parameters = fap_test_inputs()
+
+    try:
+        compute_peak_exceedance_percentage(
+            timestamps=timestamps,
+            residuals_for_noise_parameters=residuals_for_noise_parameters,
+            peak_power=0.1,
+            peak_frequency=0.20,
+            peak_frequency_sigma=0.03,
+            noise_type="pink",
+            n_simulations=1,
+            samples_per_peak=2,
+            rng_seed=123,
+        )
+    except ValueError as exc:
+        assert "noise_type" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for an unknown noise type")
