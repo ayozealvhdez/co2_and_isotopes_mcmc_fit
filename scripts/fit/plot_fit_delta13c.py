@@ -34,7 +34,7 @@ from functions.paths import find_project_root, run_results_directory, run_plots_
 # -------------------------------------------------------
 site_acronym = "IZO"
 recompute_monthly_series = True
-polynomial_degree = 3
+polynomial_degree = 2
 include_slow_harmonics = True
 base_period_slow_harmonics = 30
 slow_harmonics = [2, 3]

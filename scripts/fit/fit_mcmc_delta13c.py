@@ -82,7 +82,7 @@ number_of_saved_samples = 50000
 polynomial_degree = 2  # Degree of the polynomial trend. Options: 1, 2, 3
 
 include_slow_harmonics = True
-base_period_slow_harmonics = 3   # Base period (years) used for the low-frequency harmonic terms
+base_period_slow_harmonics = 30  # Base period (years) used for the low-frequency harmonic terms
 slow_harmonics = [2, 3]  # Harmonic orders included for the low-frequency component
 
 
