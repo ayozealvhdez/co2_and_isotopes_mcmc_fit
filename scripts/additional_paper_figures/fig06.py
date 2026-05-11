@@ -284,16 +284,16 @@ fig.subplots_adjust(wspace=0.34)
 
 plot_amplitude_with_errorbars(ax1, co2_years, co2_mlo_p16, co2_mlo_p50, co2_mlo_p84, color="r", alpha=0.45, label="MLO")
 plot_amplitude_with_errorbars(ax1, co2_years, co2_izo_p16, co2_izo_p50, co2_izo_p84, color="k", alpha=1.0, label="IZO")
-ax1.set_ylabel(r"$A_{\mathrm{seasonal}}$ CO$_2$ (ppm)", fontsize=15)
+ax1.set_ylabel("$s(t)$ amplitude CO$_2$ (ppm)", fontsize=15)
 ax1.set_xlabel("Year", fontsize=15)
 
 plot_amplitude_with_errorbars(ax2, d13c_years, d13c_mlo_p16, d13c_mlo_p50, d13c_mlo_p84, color="r", alpha=0.45, label="MLO")
 plot_amplitude_with_errorbars(ax2, d13c_years, d13c_izo_p16, d13c_izo_p50, d13c_izo_p84, color="k", alpha=1.0, label="IZO")
-ax2.set_ylabel(r"$A_{\mathrm{seasonal}}$ $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=15)
+ax2.set_ylabel(r"$s(t)$ amplitude $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=15)
 ax2.set_xlabel("Year", fontsize=15)
 
 plot_amplitude_with_errorbars(ax3, d14c_years, d14c_izo_p16, d14c_izo_p50, d14c_izo_p84, color="k", alpha=1.0, label="IZO")
-ax3.set_ylabel(r"$A_{\mathrm{seasonal}}$ $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=15)
+ax3.set_ylabel(r"$s(t)$ amplitude $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=15)
 ax3.set_xlabel("Year", fontsize=15)
 
 # Axis formatting

@@ -123,7 +123,7 @@ d13c_best_fit_and_residuals_path = os.path.join(d13c_results_dir, "best_fit_and_
 d14c_samples_path = os.path.join(d14c_results_dir, "samples_for_MC.txt")
 d14c_best_fit_and_residuals_path = os.path.join(d14c_results_dir, "best_fit_and_residuals.txt")
 
-plot_dir = comparison_directory(project_root, "all_observables_fitted")
+plot_dir = comparison_directory(project_root, "fig03_all_observables_fitted")
 os.makedirs(plot_dir, exist_ok=True)
 
 output_path = os.path.join(plot_dir, "fig03.png")

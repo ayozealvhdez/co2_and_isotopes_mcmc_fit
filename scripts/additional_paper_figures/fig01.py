@@ -149,7 +149,7 @@ d13c_mlo_file = os.path.join(d13c_mlo_results_dir, "best_fit_and_residuals.txt")
 
 d14c_izo_file = os.path.join(d14c_izo_results_dir, "best_fit_and_residuals.txt")
 
-plot_dir = comparison_directory(project_root, "fig01_records")
+plot_dir = comparison_directory(project_root, "fig01_all_paper_records")
 os.makedirs(plot_dir, exist_ok=True)
 
 combined_output = os.path.join(plot_dir, "fig01.png")
