@@ -7,12 +7,12 @@ normalization term, and the posterior as the sum of prior and likelihood.
 
 import numpy as np
 
-import context  # noqa: F401
 from functions.mcmc_probability import log_likelihood, log_prior, log_probability
 from functions.model import model
 
 
 def test_log_likelihood_matches_normalized_gaussian_expression():
+    """Check the Gaussian log-likelihood, including its normalization term."""
     x = np.asarray([0.0, 0.25, 0.5])
     yerr = np.asarray([0.2, 0.3, 0.4])
     params = np.asarray([
@@ -54,6 +54,7 @@ def test_log_likelihood_matches_normalized_gaussian_expression():
 
 
 def test_log_prior_accepts_complete_parameter_vector_inside_ranges():
+    """Check that a complete parameter vector inside all bounds has log-prior 0."""
     params = np.asarray([
         350.0,
         2.0,
@@ -98,6 +99,7 @@ def test_log_prior_accepts_complete_parameter_vector_inside_ranges():
 
 
 def test_log_prior_rejects_parameter_outside_any_range():
+    """Check that one parameter outside its allowed range rejects the sample."""
     params = np.zeros(13)
     params[0] = 999.0
 
@@ -114,6 +116,7 @@ def test_log_prior_rejects_parameter_outside_any_range():
 
 
 def test_log_prior_rejects_inconsistent_range_lengths():
+    """Check that inconsistent prior-range lists are rejected."""
     params = np.zeros(13)
 
     bad_polynomial_ranges = log_prior(
@@ -138,6 +141,7 @@ def test_log_prior_rejects_inconsistent_range_lengths():
 
 
 def test_log_probability_returns_minus_infinity_when_prior_rejects():
+    """Check that the posterior is -inf when the prior rejects the sample."""
     x = np.asarray([0.0, 0.25])
     y = np.asarray([1.0, 1.1])
     yerr = np.asarray([0.1, 0.1])
@@ -161,6 +165,7 @@ def test_log_probability_returns_minus_infinity_when_prior_rejects():
 
 
 def test_log_probability_equals_likelihood_for_valid_flat_prior():
+    """Check that a valid flat prior leaves the posterior equal to the likelihood."""
     x = np.asarray([0.0, 0.25])
     y = np.asarray([1.0, 1.1])
     yerr = np.asarray([0.1, 0.1])

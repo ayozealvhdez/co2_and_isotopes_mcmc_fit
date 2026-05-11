@@ -9,25 +9,23 @@ without importing them, avoiding MCMC runs, file writes and plotting side effect
 import ast
 from pathlib import Path
 
-import context
-
 
 FIT_SCRIPTS = {
-    "co2": context.PROJECT_ROOT / "scripts" / "fit" / "fit_mcmc_co2.py",
-    "delta13c": context.PROJECT_ROOT / "scripts" / "fit" / "fit_mcmc_delta13c.py",
-    "delta14c": context.PROJECT_ROOT / "scripts" / "fit" / "fit_mcmc_delta14c.py",
+    "co2": PROJECT_ROOT / "scripts" / "fit" / "fit_mcmc_co2.py",
+    "delta13c": PROJECT_ROOT / "scripts" / "fit" / "fit_mcmc_delta13c.py",
+    "delta14c": PROJECT_ROOT / "scripts" / "fit" / "fit_mcmc_delta14c.py",
 }
 
 PLOT_SCRIPTS = {
-    "co2": context.PROJECT_ROOT / "scripts" / "fit" / "plot_fit_co2.py",
-    "delta13c": context.PROJECT_ROOT / "scripts" / "fit" / "plot_fit_delta13c.py",
-    "delta14c": context.PROJECT_ROOT / "scripts" / "fit" / "plot_fit_delta14c.py",
+    "co2": PROJECT_ROOT / "scripts" / "fit" / "plot_fit_co2.py",
+    "delta13c": PROJECT_ROOT / "scripts" / "fit" / "plot_fit_delta13c.py",
+    "delta14c": PROJECT_ROOT / "scripts" / "fit" / "plot_fit_delta14c.py",
 }
 
 RESIDUAL_SCRIPTS = {
-    "co2": context.PROJECT_ROOT / "scripts" / "residual_analysis" / "residual_signals_co2.py",
-    "delta13c": context.PROJECT_ROOT / "scripts" / "residual_analysis" / "residual_signals_delta13c.py",
-    "delta14c": context.PROJECT_ROOT / "scripts" / "residual_analysis" / "residual_signals_delta14c.py",
+    "co2": PROJECT_ROOT / "scripts" / "residual_analysis" / "residual_signals_co2.py",
+    "delta13c": PROJECT_ROOT / "scripts" / "residual_analysis" / "residual_signals_delta13c.py",
+    "delta14c": PROJECT_ROOT / "scripts" / "residual_analysis" / "residual_signals_delta14c.py",
 }
 
 PAPER_MODEL_CONFIG = {
@@ -71,6 +69,7 @@ def literal_assignments(script_path):
 
 
 def test_fit_scripts_use_common_timezero_and_paper_model_configuration():
+    """Check that fit scripts use the model configuration described in the paper."""
     for observable, script_path in FIT_SCRIPTS.items():
         values = literal_assignments(script_path)
         expected = PAPER_MODEL_CONFIG[observable]
@@ -83,6 +82,7 @@ def test_fit_scripts_use_common_timezero_and_paper_model_configuration():
 
 
 def test_fit_scripts_keep_sampler_settings_traceable():
+    """Check basic MCMC settings while allowing temporary nsteps reductions."""
     for script_path in FIT_SCRIPTS.values():
         values = literal_assignments(script_path)
         text = Path(script_path).read_text(encoding="utf-8")
@@ -93,6 +93,7 @@ def test_fit_scripts_keep_sampler_settings_traceable():
 
 
 def test_fit_scripts_build_parameter_names_in_model_order():
+    """Check that saved parameter names follow the model parameter order."""
     for script_path in FIT_SCRIPTS.values():
         text = Path(script_path).read_text(encoding="utf-8")
 
@@ -103,6 +104,7 @@ def test_fit_scripts_build_parameter_names_in_model_order():
 
 
 def test_fit_scripts_save_required_numerical_outputs():
+    """Check that fit scripts write the expected numerical output files."""
     required_outputs = [
         "fit_summary_",
         "best_fit_and_residuals.txt",
@@ -118,6 +120,7 @@ def test_fit_scripts_save_required_numerical_outputs():
 
 
 def test_plot_scripts_use_same_model_configuration_as_final_fits():
+    """Check that plot scripts use the same model configuration as the final fits."""
     for observable, script_path in PLOT_SCRIPTS.items():
         values = literal_assignments(script_path)
         expected = PAPER_MODEL_CONFIG[observable]
@@ -130,6 +133,7 @@ def test_plot_scripts_use_same_model_configuration_as_final_fits():
 
 
 def test_residual_scripts_use_expected_frequency_range_and_fap_levels():
+    """Check the residual-analysis frequency range and approximate FAP levels."""
     for script_path in RESIDUAL_SCRIPTS.values():
         values = literal_assignments(script_path)
 
@@ -141,6 +145,7 @@ def test_residual_scripts_use_expected_frequency_range_and_fap_levels():
 
 
 def test_residual_scripts_use_baluev_thresholds_and_sampling_windows():
+    """Check that residual scripts use Baluev thresholds and sampling windows."""
     for script_path in RESIDUAL_SCRIPTS.values():
         text = Path(script_path).read_text(encoding="utf-8")
 

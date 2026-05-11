@@ -11,14 +11,13 @@ from pathlib import Path
 
 import numpy as np
 
-import context
 from functions.model import model
 
 
 PLOT_SCRIPT_PATHS = [
-    context.PROJECT_ROOT / "scripts" / "fit" / "plot_fit_co2.py",
-    context.PROJECT_ROOT / "scripts" / "fit" / "plot_fit_delta13c.py",
-    context.PROJECT_ROOT / "scripts" / "fit" / "plot_fit_delta14c.py",
+    PROJECT_ROOT / "scripts" / "fit" / "plot_fit_co2.py",
+    PROJECT_ROOT / "scripts" / "fit" / "plot_fit_delta13c.py",
+    PROJECT_ROOT / "scripts" / "fit" / "plot_fit_delta14c.py",
 ]
 
 
@@ -42,6 +41,7 @@ def posterior_percentile_band(x, samples, polynomial_degree, slow_harmonics=None
 
 
 def test_row_wise_posterior_propagation_preserves_joint_samples():
+    """Check that uncertainty bands are computed from complete posterior rows."""
     x = np.asarray([0.0, 0.25, 0.5])
     sample_low = np.asarray([1.0, 0.0, 0.0, -2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     sample_high = np.asarray([3.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
@@ -64,6 +64,7 @@ def test_row_wise_posterior_propagation_preserves_joint_samples():
 
 
 def test_plot_scripts_evaluate_model_for_each_joint_sample():
+    """Check that plotting scripts evaluate the model for each saved sample."""
     for script_path in PLOT_SCRIPT_PATHS:
         text = script_path.read_text(encoding="utf-8")
 
@@ -75,6 +76,7 @@ def test_plot_scripts_evaluate_model_for_each_joint_sample():
 
 
 def test_plot_scripts_read_saved_joint_samples_not_parameter_sigmas():
+    """Check that plotting scripts use saved posterior samples, not parameter sigmas."""
     for script_path in PLOT_SCRIPT_PATHS:
         text = script_path.read_text(encoding="utf-8")
 
