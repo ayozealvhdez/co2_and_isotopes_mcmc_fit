@@ -1,8 +1,10 @@
 # co2_and_isotopes_mcmc_fit
 
-Reusable Python code for fitting atmospheric CO2, δ13C-CO2 and Δ14C-CO2 time series using the flexible Bayesian MCMC model framework described in Álvarez-Hernández et al. (2026).
+Reusable Python code for fitting atmospheric CO2, δ13C-CO2 and Δ14C-CO2 time series using the flexible model framework described in Álvarez-Hernández et al. (2026). The fits are performed with a Bayesian MCMC approach using the `emcee` sampler.
 
-The repository contains both general-purpose analysis tools and paper-specific scripts. The reusable scripts are intended to help fit, diagnose and visualise atmospheric carbon time series using a common parametric framework. The paper-specific scripts are included separately to support transparency and reproducibility of the figures and results presented in Álvarez-Hernández et al. (2026).
+The repository contains both general-purpose analysis tools and paper-specific scripts. The reusable scripts are intended to fit, diagnose and visualise CO2, δ13C-CO2 and Δ14C-CO2 time series using the same modelling approach as in Álvarez-Hernández et al. (2026).
+
+The paper-specific scripts are included separately to support transparency and reproducibility of the figures and results presented in Álvarez-Hernández et al. (2026).
 
 ## Scientific purpose
 
@@ -25,13 +27,13 @@ where:
 - `l(t)` is an optional low-frequency component representing interannual variability.
 - `t` is expressed in decimal years, with `t = 0` corresponding to 1985.0 in the default framework.
 
-The same general formulation can be applied to CO2, δ13C-CO2 and Δ14C-CO2, while allowing observable-specific configurations depending on temporal coverage, sampling density and residual spectral structure.
+The same general formulation can be applied to CO2, δ13C-CO2 and Δ14C-CO2, while allowing observable-specific configurations.
 
 ## Model overview
 
 ### Long-term component
 
-The long-term component is represented by a low-order polynomial. The polynomial degree can be selected according to the observable and the scientific use case.
+The long-term component is represented by a low-order polynomial. The polynomial degree can be selected (1, 2, or 3) according to the observable and the scientific use case.
 
 ### Seasonal component
 
@@ -118,7 +120,7 @@ data/
   delta14c/
 ```
 
-Place the required input files in the corresponding subdirectories before running the fitting or plotting scripts.
+Place the required input files in the corresponding subdirectories before running the fitting or plotting scripts. The expected formats are WDCGG for CO2, NOAA GML for δ13C-CO2 and Heidelberg Radiocarbon Laboratory format for Δ14C-CO2. For other formats, the data-reading logic in the scripts must be modified.
 
 ### `functions/`
 
@@ -152,13 +154,13 @@ These are mainly intended for residuals obtained after fitting the model without
 
 Scripts used to generate paper-specific figures.
 
-These scripts are included for transparency and reproducibility of Álvarez-Hernández et al. (2026). They are not intended as general reusable tools.
+These scripts are included for transparency and reproducibility of Álvarez-Hernández et al. (2026). They are not intended as general reusable tools, although they may be useful as templates for similar analyses.
 
 ### `results_and_plots/`
 
-Output directory for figures, fitted results and run products.
+Output directory for figures, fitted results and run products. It is created by the scripts when executed.
 
-This directory is intentionally ignored by Git. Long MCMC runs can generate large files, and results should not be committed automatically unless explicitly intended.
+These files can be large, so this directory is intentionally ignored by Git.
 
 ## Data policy
 
@@ -177,6 +179,10 @@ data/delta14c/
 The scripts assume that input files follow the expected naming conventions and column formats used in the project.
 
 If this repository is used by other researchers, the relevant data sources, download instructions and preprocessing notes should be documented either here or in the README files inside the corresponding data subdirectories.
+
+
+
+
 
 ## Installation
 
@@ -213,16 +219,6 @@ Install the required dependencies:
 pip install -r requirements.txt
 ```
 
-## Requirements
-
-The required Python packages are listed in:
-
-```text
-requirements.txt
-```
-
-The code is written as a scientific Python project and mainly relies on standard tools such as NumPy, SciPy, Matplotlib and MCMC-related packages.
-
 ## Basic workflow
 
 A typical workflow is:
@@ -231,7 +227,8 @@ A typical workflow is:
 2. Configure and run the relevant fitting script from `scripts/fit/`.
 3. Inspect the generated fit diagnostics.
 4. Analyse residuals using the scripts in `scripts/residual_analysis/`, if needed.
-5. Generate paper-specific figures using scripts in `scripts/additional_paper_figures/`, when reproducing the paper results.
+5. Reconfigure and rerun the relevant fitting script using the information from the residual analysis, if needed.
+6. Optionally, when reproducing the paper results, generate paper-specific figures using the scripts in `scripts/additional_paper_figures/`.
 
 ## Running the fits
 
@@ -295,92 +292,7 @@ Example:
 python scripts/residual_analysis/residual_signals_co2.py
 ```
 
-## Reproducing paper figures
 
-Paper-specific scripts are stored in:
-
-```text
-scripts/additional_paper_figures/
-```
-
-These scripts reproduce selected figures from Álvarez-Hernández et al. (2026). They are included for transparency and reproducibility, but they are not designed as general reusable analysis tools.
-
-## Output files
-
-Output files are written to:
-
-```text
-results_and_plots/
-```
-
-Typical outputs may include:
-
-- fitted model values;
-- residuals;
-- MCMC posterior samples or posterior summaries;
-- diagnostic plots;
-- trace plots;
-- corner plots;
-- paper figures.
-
-The `results_and_plots/` directory is ignored by Git to avoid committing large or temporary run outputs.
-
-## Reproducibility notes
-
-For reproducible analyses, each relevant run should document:
-
-- input files;
-- model configuration;
-- polynomial degree;
-- seasonal harmonics;
-- low-frequency base period and harmonics;
-- MCMC settings;
-- random seed, when used;
-- output directory;
-- date of the run.
-
-Scientific reproducibility and traceability are prioritised over compactness or excessive code abstraction.
-
-## Coding style
-
-The code follows a simple scientific-Python style:
-
-- procedural code where possible;
-- explicit arrays and loops;
-- simple helper functions;
-- NumPy-based operations;
-- Matplotlib for plotting;
-- minimal unnecessary abstraction;
-- descriptive variable names;
-- comments used mainly to clarify scientific or technical logic.
-
-The preferred plot style includes inward ticks, minor ticks and high-resolution output, for example:
-
-```python
-ax.minorticks_on()
-ax.tick_params(axis="both", which="major", direction="in", top=True, right=True, labelsize=13, length=5)
-ax.tick_params(axis="both", which="minor", direction="in", top=True, right=True, length=2.5)
-fig.tight_layout()
-fig.savefig(plot_path, dpi=300)
-```
-
-## Scientific caution
-
-Changes to the following parts of the code may affect scientific results and should be treated carefully:
-
-- mathematical model definition;
-- likelihood function;
-- prior limits;
-- MCMC configuration;
-- uncertainty propagation;
-- time-axis definitions;
-- filtering criteria;
-- calibration assumptions;
-- units;
-- output definitions;
-- residual calculations.
-
-Code-quality refactors should preserve numerical results unless a methodological change is explicitly intended.
 
 ## Citation
 
@@ -392,12 +304,8 @@ If you use this code or the model framework, please cite:
 
 Full citation information will be added once the paper is published or publicly available.
 
-## License
 
-License information should be added before public release.
-
-If the repository is made public, choose a license appropriate for scientific code reuse, such as MIT, BSD-3-Clause or GPL, depending on the intended level of openness and redistribution conditions.
 
 ## Contact
 
-For questions about this repository, please contact the repository maintainer.
+For questions about this repository, please contact the repository maintainer through GitHub.
