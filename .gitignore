@@ -26,6 +26,9 @@ Thumbs.db
 *.bak
 *.swp
 
+# Local helper scripts not intended for version control
+functions/.wdcgg_data_scaletransf.py
+
 # Project outputs
 results_and_plots/
 

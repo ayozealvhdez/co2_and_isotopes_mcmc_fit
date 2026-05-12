@@ -271,6 +271,9 @@ try:
     print(f"-> mean autocorrelation time: {tau_mean:.1f}")
 except emcee.autocorr.AutocorrError:
     print("Could not compute tau: the chain has not converged yet or is too short.")
+
+acceptance_fraction = np.mean(sampler.acceptance_fraction)
+print(f"Mean acceptance fraction: {acceptance_fraction:.3f}")
 print("-------------------------------------------------------")
 
 
@@ -352,7 +355,7 @@ samples_drawn = flat_samples[idx_draw]
 
 header_cols = "# " + "\t".join(param_names)
 samples_path = os.path.join(results_dir, "samples_for_MC.txt")
-np.savetxt(samples_path, samples_drawn, header=header_cols, fmt="%.6f", delimiter="\t", comments="")
+np.savetxt(samples_path, samples_drawn, header=header_cols, fmt="%.10f", delimiter="\t", comments="")
 print(f"Posterior samples saved to: {samples_path}")
 print("-------------------------------------------------------")
 
@@ -388,6 +391,7 @@ rows_metrics = np.array([
     ["nsteps", nsteps, np.nan],
     ["discard", discard, np.nan],
     ["tau_mean", tau_mean, np.nan],
+    ["acceptance_fraction", acceptance_fraction, np.nan],
     ["recompute_monthly_series", int(recompute_monthly_series), np.nan],
     ["include_slow_harmonics", include_slow_harmonics_int, np.nan],
     ["base_period_slow_harmonics", base_period_slow_harmonics_to_save, np.nan],

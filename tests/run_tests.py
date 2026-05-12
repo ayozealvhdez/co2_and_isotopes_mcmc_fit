@@ -8,33 +8,44 @@ Run the test suite.Each file named test_*.py is imported, and each function whos
 # -------------------------------------------------------
 
 import importlib.util
+import os
 import sys
 import traceback
-from pathlib import Path
 
 
 # -------------------------------------------------------
 # ---------------------- PATHS --------------------------
 # -------------------------------------------------------
 
-current_file = Path(__file__).resolve()
-test_dir = current_file.parent
+current_file = os.path.abspath(__file__)
+test_dir = os.path.dirname(current_file)
 
 PROJECT_ROOT = None
 
-for parent in current_file.parents:
-    if (parent / "functions").is_dir() and (parent / "scripts").is_dir():
-        PROJECT_ROOT = parent
+current_dir = test_dir
+while True:
+    if os.path.isdir(os.path.join(current_dir, "functions")) and os.path.isdir(os.path.join(current_dir, "scripts")):
+        PROJECT_ROOT = current_dir
         break
+
+    parent_dir = os.path.dirname(current_dir)
+    if parent_dir == current_dir:
+        break
+
+    current_dir = parent_dir
 
 if PROJECT_ROOT is None:
     raise RuntimeError("Project root not found.")
 
 
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-test_files = sorted(test_dir.glob("test_*.py"))
+test_files = []
+for filename in os.listdir(test_dir):
+    if filename.startswith("test_") and filename.endswith(".py"):
+        test_files.append(os.path.join(test_dir, filename))
+test_files.sort()
 
 
 # -------------------------------------------------------
@@ -54,7 +65,7 @@ n_failed = 0
 print("Step 2: Run tests")
 
 for module_path in test_files:
-    module_name = module_path.stem
+    module_name = os.path.splitext(os.path.basename(module_path))[0]
     spec = importlib.util.spec_from_file_location(module_name, module_path)
     module = importlib.util.module_from_spec(spec)
     module.PROJECT_ROOT = PROJECT_ROOT
@@ -68,7 +79,7 @@ for module_path in test_files:
 
     for test_name in test_names:
         test_function = getattr(module, test_name)
-        label = f"{module_path.name}::{test_name}"
+        label = f"{os.path.basename(module_path)}::{test_name}"
 
         try:
             test_function()

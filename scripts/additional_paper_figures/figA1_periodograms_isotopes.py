@@ -20,7 +20,6 @@ results_and_plots/comparisons/figA1_periodograms_isotopes/figA1.png
 
 import os
 import sys
-from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,12 +27,25 @@ from astropy.timeseries import LombScargle
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 
-PROJECT_ROOT_FOR_IMPORTS = next(
-    parent
-    for parent in Path(__file__).resolve().parents
-    if (parent / "functions").is_dir() and (parent / "scripts").is_dir()
-)
-sys.path.insert(0, str(PROJECT_ROOT_FOR_IMPORTS))
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root_for_imports = None
+current_dir = script_dir
+
+while True:
+    if os.path.isdir(os.path.join(current_dir, "functions")) and os.path.isdir(os.path.join(current_dir, "scripts")):
+        project_root_for_imports = current_dir
+        break
+
+    parent_dir = os.path.dirname(current_dir)
+    if parent_dir == current_dir:
+        break
+
+    current_dir = parent_dir
+
+if project_root_for_imports is None:
+    raise RuntimeError("Project root not found.")
+
+sys.path.insert(0, project_root_for_imports)
 
 from functions.paths import find_project_root, run_results_directory, comparison_directory
 from functions.utilities import gauss
@@ -153,7 +165,7 @@ def fit_candidate_peaks(frequency, power, levels):
     peaks_idx, _ = find_peaks(power, height=threshold)
 
     df = np.median(np.diff(frequency))
-    fits = []
+    fitted_frequencies = []
 
     for pk in peaks_idx:
         i0 = max(0, pk - 5)
@@ -167,12 +179,11 @@ def fit_candidate_peaks(frequency, power, levels):
 
         try:
             popt, _ = curve_fit(gauss, x, y, p0=p0, bounds=bounds, maxfev=2000)
-            amplitude, mu, sigma = popt
-            fits.append({"mu": mu, "sigma": sigma})
+            fitted_frequencies.append(popt[1])
         except Exception:
-            fits.append({"mu": frequency[pk], "sigma": np.nan})
+            fitted_frequencies.append(frequency[pk])
 
-    return peaks_idx, fits
+    return peaks_idx, fitted_frequencies
 
 
 def print_candidate_peaks(label, frequency, peaks_idx):
@@ -188,7 +199,7 @@ def print_candidate_peaks(label, frequency, peaks_idx):
             print(f"  f = {f_pk:.4f} 1/yr  (period = {1/f_pk:.2f} yr)")
 
 
-def draw_peak_ticks(ax, fits, color):
+def draw_peak_ticks(ax, fitted_frequencies, color):
     """
     Draw the short upper ticks used in the residual-periodogram scripts.
     """
@@ -198,8 +209,8 @@ def draw_peak_ticks(ax, fits, color):
     bar_ymin = ymax - 0.06 * dy
     bar_ymax = ymax - 0.02 * dy
 
-    for fit in fits:
-        ax.vlines(fit["mu"], bar_ymin, bar_ymax, colors=color, lw=1.2, linestyle="-", zorder=3)
+    for frequency in fitted_frequencies:
+        ax.vlines(frequency, bar_ymin, bar_ymax, colors=color, lw=1.2, linestyle="-", zorder=3)
 
 
 def format_periodogram_axis(ax):
@@ -213,55 +224,74 @@ def format_periodogram_axis(ax):
     ax.set_xlim(fmin, fmax)
 
 
-def plot_delta13c_panel(ax, run_1, run_2, fits_1):
+def plot_delta13c_panel(
+        ax,
+        frequency_1,
+        power_1,
+        levels_1,
+        w_frequency_1,
+        w_power_1,
+        frequency_2,
+        power_2,
+        levels_2,
+        w_frequency_2,
+        w_power_2,
+        fitted_frequencies_1):
     """
     Reproduce the delta13C residual-periodogram plot in one subplot.
     """
-    ax.plot(run_1["frequency"], run_1["power"], lw=1.8, color=d13c_color_1, label=d13c_run_1_label)
-    ax.plot(run_2["frequency"], run_2["power"], lw=1.8, color=d13c_color_2, label=d13c_run_2_label)
+    ax.plot(frequency_1, power_1, lw=1.8, color=d13c_color_1, label=d13c_run_1_label)
+    ax.plot(frequency_2, power_2, lw=1.8, color=d13c_color_2, label=d13c_run_2_label)
 
     x_text = fmin + 0.93 * (fmax - fmin)
-    for level, label in zip(run_1["levels"], sigma_labels):
+    for level, label in zip(levels_1, sigma_labels):
         ax.axhline(level, linestyle="--", linewidth=0.9, color=d13c_color_1, alpha=0.6)
         ax.text(x_text, level, label, va="bottom", ha="left", fontsize=14, color=d13c_color_1)
 
-    for level in run_2["levels"]:
+    for level in levels_2:
         ax.axhline(level, linestyle="--", linewidth=0.9, color=d13c_color_2, alpha=0.6)
 
     ymax_plot = 1.08 * max(
-        np.max(run_1["power"]),
-        np.max(run_2["power"]),
-        np.max(run_1["levels"]),
-        np.max(run_2["levels"]),
+        np.max(power_1),
+        np.max(power_2),
+        np.max(levels_1),
+        np.max(levels_2),
     )
     ax.set_ylim(0, ymax_plot)
 
-    draw_peak_ticks(ax, fits_1, d13c_color_1)
+    draw_peak_ticks(ax, fitted_frequencies_1, d13c_color_1)
 
-    ax.plot(run_1["w_frequency"], run_1["w_power"], linestyle=":", lw=0.6, color=d13c_color_1)
-    ax.plot(run_2["w_frequency"], run_2["w_power"], linestyle=":", lw=0.6, color=d13c_color_2)
+    ax.plot(w_frequency_1, w_power_1, linestyle=":", lw=0.6, color=d13c_color_1)
+    ax.plot(w_frequency_2, w_power_2, linestyle=":", lw=0.6, color=d13c_color_2)
 
     format_periodogram_axis(ax)
     ax.legend(loc="upper right", fontsize=12)
 
 
-def plot_delta14c_panel(ax, run, fits):
+def plot_delta14c_panel(
+        ax,
+        frequency,
+        power,
+        levels,
+        w_frequency,
+        w_power,
+        fitted_frequencies):
     """
     Reproduce the delta14C residual-periodogram plot in one subplot.
     """
-    ax.plot(run["frequency"], run["power"], lw=1.8, color=d14c_color, label=d14c_run_label)
+    ax.plot(frequency, power, lw=1.8, color=d14c_color, label=d14c_run_label)
 
     x_text = fmin + 0.93 * (fmax - fmin)
-    for level, label in zip(run["levels"], sigma_labels):
+    for level, label in zip(levels, sigma_labels):
         ax.axhline(level, linestyle="--", linewidth=0.9, color=d14c_color, alpha=0.6)
         ax.text(x_text, level, label, va="bottom", ha="left", fontsize=14, color=d14c_color)
 
-    ymax_plot = 1.08 * max(np.max(run["power"]), np.max(run["levels"]))
+    ymax_plot = 1.08 * max(np.max(power), np.max(levels))
     ax.set_ylim(0, ymax_plot)
 
-    draw_peak_ticks(ax, fits, d14c_color)
+    draw_peak_ticks(ax, fitted_frequencies, d14c_color)
 
-    ax.plot(run["w_frequency"], run["w_power"], linestyle=":", lw=0.6, color=d14c_color, label="Sampling window")
+    ax.plot(w_frequency, w_power, linestyle=":", lw=0.6, color=d14c_color, label="Sampling window")
 
     format_periodogram_axis(ax)
 
@@ -356,8 +386,8 @@ print("-------------------------------------------------------")
 
 print(f"Step 3: Identify candidate peaks for {d13c_run_1_label} delta13C and {d14c_run_label} delta14C")
 
-d13c_peaks_idx_1, d13c_fits_1 = fit_candidate_peaks(d13c_frequency_1, d13c_power_1, d13c_levels_1)
-d14c_peaks_idx, d14c_fits = fit_candidate_peaks(d14c_frequency, d14c_power, d14c_levels)
+d13c_peaks_idx_1, d13c_fitted_frequencies_1 = fit_candidate_peaks(d13c_frequency_1, d13c_power_1, d13c_levels_1)
+d14c_peaks_idx, d14c_fitted_frequencies = fit_candidate_peaks(d14c_frequency, d14c_power, d14c_levels)
 
 print_candidate_peaks(f"{d13c_run_1_label} delta13C", d13c_frequency_1, d13c_peaks_idx_1)
 print_candidate_peaks(f"{d14c_run_label} delta14C", d14c_frequency, d14c_peaks_idx)
@@ -367,33 +397,32 @@ print("-------------------------------------------------------")
 
 print("Step 4: Plot Appendix Fig. A1")
 
-d13c_run_1 = {
-    "frequency": d13c_frequency_1,
-    "power": d13c_power_1,
-    "levels": d13c_levels_1,
-    "w_frequency": d13c_w_frequency_1,
-    "w_power": d13c_w_power_1,
-}
-d13c_run_2 = {
-    "frequency": d13c_frequency_2,
-    "power": d13c_power_2,
-    "levels": d13c_levels_2,
-    "w_frequency": d13c_w_frequency_2,
-    "w_power": d13c_w_power_2,
-}
-d14c_run = {
-    "frequency": d14c_frequency,
-    "power": d14c_power,
-    "levels": d14c_levels,
-    "w_frequency": d14c_w_frequency,
-    "w_power": d14c_w_power,
-}
-
 fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(9, 10.5), sharex=True)
 fig.subplots_adjust(hspace=0.08)
 
-plot_delta13c_panel(ax1, d13c_run_1, d13c_run_2, d13c_fits_1)
-plot_delta14c_panel(ax2, d14c_run, d14c_fits)
+plot_delta13c_panel(
+    ax1,
+    d13c_frequency_1,
+    d13c_power_1,
+    d13c_levels_1,
+    d13c_w_frequency_1,
+    d13c_w_power_1,
+    d13c_frequency_2,
+    d13c_power_2,
+    d13c_levels_2,
+    d13c_w_frequency_2,
+    d13c_w_power_2,
+    d13c_fitted_frequencies_1,
+)
+plot_delta14c_panel(
+    ax2,
+    d14c_frequency,
+    d14c_power,
+    d14c_levels,
+    d14c_w_frequency,
+    d14c_w_power,
+    d14c_fitted_frequencies,
+)
 
 ax2.set_xlabel("Frequency (yr$^{-1}$)", fontsize=18)
 

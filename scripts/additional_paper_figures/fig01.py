@@ -193,21 +193,18 @@ print("Step 2: Plot combined figure")
 fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, ncols=1, figsize=(16, 8.8), sharex=True)
 fig.subplots_adjust(hspace=0.05)
 
-izo_style = dict(fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
-mlo_style = dict(fmt="ro", alpha=0.35, markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
-
 # Upper panel: CO2 observed data
-ax1.errorbar(co2_mlo_time, co2_mlo_observed, yerr=co2_mlo_yerr, **mlo_style, label="MLO")
-ax1.errorbar(co2_izo_time, co2_izo_observed, yerr=co2_izo_yerr, **izo_style, label="IZO")
+ax1.errorbar(co2_mlo_time, co2_mlo_observed, yerr=co2_mlo_yerr, fmt="ro", alpha=0.35, markersize=3, elinewidth=0.8, capsize=2, capthick=0.8, label="MLO")
+ax1.errorbar(co2_izo_time, co2_izo_observed, yerr=co2_izo_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8, label="IZO")
 ax1.set_ylabel("CO$_2$ (ppm)", fontsize=16)
 
 # Middle panel: delta13C observed data
-ax2.errorbar(d13c_mlo_time, d13c_mlo_observed, yerr=d13c_mlo_yerr, **mlo_style, label="MLO")
-ax2.errorbar(d13c_izo_time, d13c_izo_observed, yerr=d13c_izo_yerr, **izo_style, label="IZO")
+ax2.errorbar(d13c_mlo_time, d13c_mlo_observed, yerr=d13c_mlo_yerr, fmt="ro", alpha=0.35, markersize=3, elinewidth=0.8, capsize=2, capthick=0.8, label="MLO")
+ax2.errorbar(d13c_izo_time, d13c_izo_observed, yerr=d13c_izo_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8, label="IZO")
 ax2.set_ylabel(r"$\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=16)
 
 # Lower panel: delta14C observed data
-ax3.errorbar(d14c_izo_time, d14c_izo_observed, yerr=d14c_izo_yerr, **izo_style, label="IZO")
+ax3.errorbar(d14c_izo_time, d14c_izo_observed, yerr=d14c_izo_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8, label="IZO")
 ax3.set_xlabel("Year", fontsize=16)
 ax3.set_ylabel(r"$\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=16)
 

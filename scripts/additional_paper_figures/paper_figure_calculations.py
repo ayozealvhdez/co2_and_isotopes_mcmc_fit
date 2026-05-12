@@ -56,7 +56,11 @@ def compute_mean_seasonal_band(
     Compute the posterior median and 68% band of the mean seasonal component.
     """
     seasonal_curves = np.zeros((len(samples), len(phase_grid)))
-    params_by_column = tuple(samples[:, i, None] for i in range(samples.shape[1]))
+
+    params_by_column = []
+    for i in range(samples.shape[1]):
+        params_by_column.append(samples[:, i, None])
+    params_by_column = tuple(params_by_column)
 
     for year in years_for_mean:
         x_phase = year + phase_grid - timezero
@@ -93,7 +97,11 @@ def seasonal_component_from_samples(
     Evaluate the seasonal component s(t) for all posterior samples.
     """
     x_for_all_samples = np.broadcast_to(x, (len(samples), len(x)))
-    params_by_column = tuple(samples[:, i, None] for i in range(samples.shape[1]))
+
+    params_by_column = []
+    for i in range(samples.shape[1]):
+        params_by_column.append(samples[:, i, None])
+    params_by_column = tuple(params_by_column)
 
     _, seasonal, _ = model_components(
         x_for_all_samples,
@@ -159,7 +167,11 @@ def build_monthly_midpoint_grid(start_year, end_year):
 
     decimal_years = to_decimal_year(midpoint_dates)
     midpoint_datetimes = midpoint_dates.astype("datetime64[s]").astype(object)
-    grid_keys = np.array([dt.year * 100 + dt.month for dt in midpoint_datetimes], dtype=int)
+
+    grid_keys = []
+    for dt in midpoint_datetimes:
+        grid_keys.append(dt.year * 100 + dt.month)
+    grid_keys = np.asarray(grid_keys, dtype=int)
 
     return midpoint_dates, decimal_years, grid_keys
 
@@ -177,7 +189,11 @@ def compute_low_frequency_band(
     """
     x = decimal_years - timezero
     x_for_all_samples = np.broadcast_to(x, (len(samples), len(x)))
-    params_by_column = tuple(samples[:, i, None] for i in range(samples.shape[1]))
+
+    params_by_column = []
+    for i in range(samples.shape[1]):
+        params_by_column.append(samples[:, i, None])
+    params_by_column = tuple(params_by_column)
 
     _, _, lf_curves, dlf_curves = model_components(
         x_for_all_samples,

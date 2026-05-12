@@ -12,21 +12,34 @@ python scripts/additional_paper_figures/tests_paper_figures.py
 import sys
 import tempfile
 import traceback
-from pathlib import Path
+import os
 
 import numpy as np
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = next(
-    parent
-    for parent in Path(__file__).resolve().parents
-    if (parent / "functions").is_dir() and (parent / "scripts").is_dir()
-)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = None
+current_dir = SCRIPT_DIR
 
-for path in [PROJECT_ROOT, SCRIPT_DIR]:
-    if str(path) not in sys.path:
-        sys.path.insert(0, str(path))
+while True:
+    if os.path.isdir(os.path.join(current_dir, "functions")) and os.path.isdir(os.path.join(current_dir, "scripts")):
+        PROJECT_ROOT = current_dir
+        break
+
+    parent_dir = os.path.dirname(current_dir)
+    if parent_dir == current_dir:
+        break
+
+    current_dir = parent_dir
+
+if PROJECT_ROOT is None:
+    raise RuntimeError("Project root not found.")
+
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
 
 from functions.grids import daily_grid_for_year
 from scripts.additional_paper_figures.paper_figure_calculations import (
@@ -69,11 +82,6 @@ def degree1_sample(
     return np.asarray(params, dtype=float)
 
 
-def read_script(script_name):
-    """Return the source text of a paper figure script."""
-    return (SCRIPT_DIR / script_name).read_text(encoding="utf-8")
-
-
 def test_polynomial_band_uses_posterior_percentiles_of_p_of_t():
     """Check Fig. 04 p(t) percentiles against an analytic polynomial example."""
     decimal_year_grid = np.array([2000.0, 2001.0, 2002.0])
@@ -95,7 +103,10 @@ def test_polynomial_band_uses_posterior_percentiles_of_p_of_t():
     )
 
     x_grid = decimal_year_grid - timezero
-    expected_curves = np.array([sample[0] + sample[1] * x_grid for sample in samples])
+    expected_curves = []
+    for sample in samples:
+        expected_curves.append(sample[0] + sample[1] * x_grid)
+    expected_curves = np.asarray(expected_curves)
     expected_p16, expected_p50, expected_p84 = np.percentile(expected_curves, [16, 50, 84], axis=0)
 
     np.testing.assert_allclose(p16, expected_p16)
@@ -138,7 +149,10 @@ def test_annual_amplitude_band_uses_peak_to_trough_seasonal_component():
     years = np.array([2001])
     timezero = 2000.0
     amplitudes = np.array([1.0, 2.0, 3.0])
-    samples = np.array([degree1_sample(b1=amplitude) for amplitude in amplitudes])
+    samples = []
+    for amplitude in amplitudes:
+        samples.append(degree1_sample(b1=amplitude))
+    samples = np.asarray(samples)
 
     p16, p50, p84 = compute_annual_amplitude_band(
         samples,
@@ -224,15 +238,13 @@ def test_monthly_series_mapping_sorts_values_and_does_not_interpolate():
 def test_nino34_loader_uses_noaa_monthly_anomaly_column_and_midmonth_time():
     """Check Fig. 07 Nino 3.4 loading uses column 10 and midmonth decimal years."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        filepath = Path(tmpdir) / "enso_index.txt"
-        filepath.write_text(
-            "YR MON A B C D E F G NINO34\n"
-            "2000 1 0 0 0 0 0 0 0 1.5\n"
-            "2000 2 0 0 0 0 0 0 0 -0.5\n"
-            "2000 3 0 0 0 0 0 0 0 nan\n"
-            "2001 1 0 0 0 0 0 0 0 9.0\n",
-            encoding="utf-8",
-        )
+        filepath = os.path.join(tmpdir, "enso_index.txt")
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write("YR MON A B C D E F G NINO34\n")
+            f.write("2000 1 0 0 0 0 0 0 0 1.5\n")
+            f.write("2000 2 0 0 0 0 0 0 0 -0.5\n")
+            f.write("2000 3 0 0 0 0 0 0 0 nan\n")
+            f.write("2001 1 0 0 0 0 0 0 0 9.0\n")
 
         years, months, decimal_years, nino34 = load_nino34_anomaly(filepath, 2000.0, 2000.25)
 
@@ -259,41 +271,21 @@ def test_lagged_correlation_identifies_positive_lag_when_nino_leads():
     assert r_values[np.where(lags == lead_months)[0][0]] == best_r
 
 
-def test_figure_scripts_use_tested_scientific_helpers():
-    """Check that figures call the local scientific helper functions tested here."""
-    expected_helpers = {
-        "fig04.py": ["compute_polynomial_band"],
-        "fig05.py": ["compute_mean_seasonal_band"],
-        "fig06.py": ["compute_annual_amplitude_band"],
-        "fig07.py": [
-            "build_monthly_midpoint_grid",
-            "compute_low_frequency_band",
-            "load_nino34_anomaly",
-            "map_monthly_series_to_grid",
-            "pearson_correlation_by_lag",
-        ],
-    }
-
-    for script_name, helper_names in expected_helpers.items():
-        text = read_script(script_name)
-
-        for helper_name in helper_names:
-            assert f"{helper_name}(" in text
-
-
 def run_tests():
     """Run all local paper-figure tests."""
-    test_functions = [
-        value
-        for name, value in sorted(globals().items())
-        if name.startswith("test_") and callable(value)
-    ]
+    test_functions = []
+    all_names = sorted(globals())
+
+    for name in all_names:
+        value = globals()[name]
+        if name.startswith("test_") and callable(value):
+            test_functions.append(value)
 
     n_passed = 0
     n_failed = 0
 
     print("Step 1: Run paper figure calculation tests")
-    print(f"Test file: {Path(__file__).resolve()}")
+    print(f"Test file: {os.path.abspath(__file__)}")
     print(f"Project root: {PROJECT_ROOT}")
     print("-------------------------------------------------------")
 

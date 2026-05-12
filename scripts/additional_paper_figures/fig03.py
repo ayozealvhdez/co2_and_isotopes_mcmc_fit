@@ -224,12 +224,10 @@ ax22 = fig.add_subplot(d13c_gs[1, 0], sharex=ax12)
 ax13 = fig.add_subplot(d14c_gs[0, 0])
 ax23 = fig.add_subplot(d14c_gs[1, 0], sharex=ax13)
 
-data_style = dict(fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
-residual_style = dict(fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 trend_color = "crimson"
 
 # Upper block: CO2 observed data and fitted model
-ax11.errorbar(co2_time, co2_observed, yerr=co2_yerr, **data_style, label="Observed data")
+ax11.errorbar(co2_time, co2_observed, yerr=co2_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8, label="Observed data")
 ax11.fill_between(co2_decimal_year_grid, co2_p16, co2_p84, color="b", alpha=0.25, linewidth=0, label="68% confidence band")
 ax11.fill_between(co2_decimal_year_grid, co2_trend_p16, co2_trend_p84, color=trend_color, alpha=0.16, linewidth=0, label=r"68% band for trend")
 ax11.plot(co2_decimal_year_grid, co2_p50, "b-", lw=0.8, label="Posterior median model")
@@ -238,13 +236,13 @@ ax11.set_ylabel("CO$_2$ (ppm)", fontsize=14)
 
 # CO2 residuals
 ax21.axhline(0, color="0.5", lw=1.0, linestyle="--")
-ax21.errorbar(co2_time, co2_residuals, yerr=co2_yerr, **residual_style)
+ax21.errorbar(co2_time, co2_residuals, yerr=co2_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax21.set_xlabel("Year", fontsize=14)
 ax21.set_ylabel("Residuals (ppm)", fontsize=13)
 ax21.set_xlim(1985,2025)
 
 # Lower-left block: delta13C observed data and fitted model
-ax12.errorbar(d13c_time, d13c_observed, yerr=d13c_yerr, **data_style)
+ax12.errorbar(d13c_time, d13c_observed, yerr=d13c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax12.fill_between(d13c_decimal_year_grid, d13c_p16, d13c_p84, color="b", alpha=0.25, linewidth=0)
 ax12.fill_between(d13c_decimal_year_grid, d13c_trend_p16, d13c_trend_p84, color=trend_color, alpha=0.16, linewidth=0)
 ax12.plot(d13c_decimal_year_grid, d13c_p50, "b-", lw=0.8)
@@ -253,13 +251,13 @@ ax12.set_ylabel(r"$\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=14)
 
 # delta13C residuals
 ax22.axhline(0, color="0.5", lw=1.0, linestyle="--")
-ax22.errorbar(d13c_time, d13c_residuals, yerr=d13c_yerr, **residual_style)
+ax22.errorbar(d13c_time, d13c_residuals, yerr=d13c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax22.set_xlabel("Year", fontsize=14)
 ax22.set_ylabel(r"Residuals ($\perthousand$)", fontsize=13)
 ax22.set_xlim(1985,2025)
 
 # Lower-right block: delta14C observed data and fitted model
-ax13.errorbar(d14c_time, d14c_observed, yerr=d14c_yerr, **data_style)
+ax13.errorbar(d14c_time, d14c_observed, yerr=d14c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax13.fill_between(d14c_decimal_year_grid, d14c_p16, d14c_p84, color="b", alpha=0.25, linewidth=0)
 ax13.fill_between(d14c_decimal_year_grid, d14c_trend_p16, d14c_trend_p84, color=trend_color, alpha=0.16, linewidth=0)
 ax13.plot(d14c_decimal_year_grid, d14c_p50, "b-", lw=0.8)
@@ -268,7 +266,7 @@ ax13.set_ylabel(r"$\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=14)
 
 # delta14C residuals
 ax23.axhline(0, color="0.5", lw=1.0, linestyle="--")
-ax23.errorbar(d14c_time, d14c_residuals, yerr=d14c_yerr, **residual_style)
+ax23.errorbar(d14c_time, d14c_residuals, yerr=d14c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax23.set_xlabel("Year", fontsize=14)
 ax23.set_ylabel(r"Residuals ($\perthousand$)", fontsize=13)
 ax23.set_xlim(1985,2025)

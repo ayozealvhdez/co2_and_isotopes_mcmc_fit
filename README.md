@@ -94,9 +94,14 @@ co2_and_isotopes_mcmc_fit/
     additional_paper_figures/
       fig01.py
       fig03.py
-
-    checks/
-      check_run_integrity.py
+      fig04.py
+      fig05.py
+      fig06.py
+      fig07.py
+      fig08.py
+      figA1_periodograms_isotopes.py
+      paper_figure_calculations.py
+      tests_paper_figures.py
 
   results_and_plots/
   requirements.txt
@@ -129,6 +134,8 @@ Reusable functions used by different scripts.
 These files contain model definitions, MCMC probability functions, plotting utilities, path handling, data loading, data filtering, time-axis utilities and residual-analysis tools.
 
 Functions are grouped by scientific or technical purpose.
+
+Local helper scripts for one-off data transformations are not part of the reusable code and are ignored by Git when listed in `.gitignore`.
 
 ### `scripts/fit/`
 
@@ -245,6 +252,14 @@ Each script is dedicated to one observable:
 - Δ14C-CO2.
 
 These scripts perform the Bayesian MCMC fit and generate the corresponding output products.
+
+The main numerical outputs include:
+
+- `fit_summary_<model_tag>.txt`, with posterior medians, posterior standard deviations, fit metrics and run configuration.
+- `best_fit_and_residuals.txt`, with observations, fit values and residuals.
+- `samples_for_MC.txt`, with joint posterior samples saved with 10 decimal places for posterior uncertainty propagation.
+
+The fit summary also stores the mean autocorrelation time, when it can be computed, and the mean MCMC acceptance fraction.
 
 Example:
 
