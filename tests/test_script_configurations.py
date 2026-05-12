@@ -1,9 +1,13 @@
 """
-Tests for scientific configurations written in executable scripts.
+Tests for reusable executable scripts.
 
 The fitting, plotting and residual-analysis scripts are currently script-style
 files with top-level execution. These tests therefore inspect their source code
 without importing them, avoiding MCMC runs, file writes and plotting side effects.
+
+The checks below avoid enforcing a particular paper configuration. User-editable
+settings such as the model structure, MCMC length, burn-in, selected run and
+periodogram range may change without breaking this reusable test suite.
 """
 
 import ast
@@ -28,84 +32,135 @@ RESIDUAL_SCRIPTS = {
     "delta14c": PROJECT_ROOT / "scripts" / "residual_analysis" / "residual_signals_delta14c.py",
 }
 
-PAPER_MODEL_CONFIG = {
-    "co2": {
-        "polynomial_degree": 2,
-        "base_period_slow_harmonics": 30,
-        "slow_harmonics": [2, 3, 4, 7, 8],
-    },
-    "delta13c": {
-        "polynomial_degree": 2,
-        "base_period_slow_harmonics": 30,
-        "slow_harmonics": [2, 3],
-    },
-    "delta14c": {
-        "polynomial_degree": 3,
-        "base_period_slow_harmonics": 30,
-        "slow_harmonics": [2],
-    },
-}
+MODEL_SETTING_NAMES = [
+    "timezero",
+    "polynomial_degree",
+    "include_slow_harmonics",
+    "base_period_slow_harmonics",
+    "slow_harmonics",
+]
+
+FIT_SETTING_NAMES = [
+    "site_acronym",
+    "input_file",
+    "start_month",
+    "end_month",
+    "nwalkers",
+    "nsteps",
+    "discard",
+    "corner_mode",
+    "number_of_saved_samples",
+]
+
+PLOT_GRID_SETTING_NAMES = [
+    "start_decimal_year_for_grid",
+    "end_decimal_year_for_grid",
+    "step_years_for_grid",
+]
+
+RESIDUAL_PERIODICITY_SETTING_NAMES = [
+    "fmin",
+    "fmax",
+    "samples_per_peak",
+    "lomb_scargle_normalization",
+    "fap_levels",
+    "n_simulations_for_fap",
+]
 
 
-def literal_assignments(script_path):
-    """Return top-level literal assignments from a script without executing it."""
-    tree = ast.parse(Path(script_path).read_text(encoding="utf-8"))
-    values = {}
+def read_script(script_path):
+    """Return the source text of a reusable script."""
+    return Path(script_path).read_text(encoding="utf-8")
+
+
+def assigned_names(script_path):
+    """Return top-level assigned variable names from a script without executing it."""
+    tree = ast.parse(read_script(script_path))
+    names = set()
 
     for node in tree.body:
         if not isinstance(node, ast.Assign):
             continue
 
-        try:
-            value = ast.literal_eval(node.value)
-        except (ValueError, SyntaxError):
-            continue
-
         for target in node.targets:
             if isinstance(target, ast.Name):
-                values[target.id] = value
+                names.add(target.id)
 
-    return values
-
-
-def test_fit_scripts_use_common_timezero_and_paper_model_configuration():
-    """Check that fit scripts use the model configuration described in the paper."""
-    for observable, script_path in FIT_SCRIPTS.items():
-        values = literal_assignments(script_path)
-        expected = PAPER_MODEL_CONFIG[observable]
-
-        assert values["timezero"] == 1985.0
-        assert values["include_slow_harmonics"] is True
-        assert values["polynomial_degree"] == expected["polynomial_degree"]
-        assert values["base_period_slow_harmonics"] == expected["base_period_slow_harmonics"]
-        assert values["slow_harmonics"] == expected["slow_harmonics"]
+    return names
 
 
-def test_fit_scripts_keep_sampler_settings_traceable():
-    """Check basic MCMC settings while allowing temporary nsteps reductions."""
+def assert_names_are_assigned(script_path, names):
+    """Check that each expected configuration name is assigned at top level."""
+    script_names = assigned_names(script_path)
+
+    for name in names:
+        assert name in script_names
+
+
+def assert_text_contains(script_path, required_strings):
+    """Check that each required code fragment appears in a script."""
+    text = read_script(script_path)
+
+    for required_string in required_strings:
+        assert required_string in text
+
+
+def test_fit_scripts_expose_user_editable_settings():
+    """Check that fit scripts keep their main user-editable settings explicit."""
     for script_path in FIT_SCRIPTS.values():
-        values = literal_assignments(script_path)
-        text = Path(script_path).read_text(encoding="utf-8")
+        assert_names_are_assigned(script_path, FIT_SETTING_NAMES)
+        assert_names_are_assigned(script_path, MODEL_SETTING_NAMES)
 
-        assert values["nwalkers"] == 128
-        assert values["nsteps"] > 0
-        assert "discard = int(0.5 * nsteps)" in text
+
+def test_fit_scripts_use_model_settings_in_paths_priors_and_model_calls():
+    """Check that fit scripts pass user-selected model settings to shared helpers."""
+    required_strings = [
+        "if polynomial_degree not in [1, 2, 3]:",
+        "model_tag(include_slow_harmonics",
+        "run_results_directory(project_root",
+        "run_plots_directory(project_root",
+        "polynomial_degree=polynomial_degree",
+        "include_slow_harmonics=include_slow_harmonics",
+        "base_period_slow_harmonics=base_period_slow_harmonics",
+        "slow_harmonics=slow_harmonics",
+    ]
+
+    for script_path in FIT_SCRIPTS.values():
+        assert_text_contains(script_path, required_strings)
+
+
+def test_fit_scripts_use_sampler_settings_without_fixed_values():
+    """Check that sampler settings are wired through without enforcing their values."""
+    required_strings = [
+        "p0 = np.zeros((nwalkers, ndim))",
+        "emcee.EnsembleSampler(nwalkers, ndim",
+        "sampler.run_mcmc(p0, nsteps",
+        "sampler.get_chain(discard=discard, flat=True)",
+        '["nwalkers"',
+        '["nsteps"',
+        '["discard"',
+    ]
+
+    for script_path in FIT_SCRIPTS.values():
+        assert_text_contains(script_path, required_strings)
 
 
 def test_fit_scripts_build_parameter_names_in_model_order():
     """Check that saved parameter names follow the model parameter order."""
-    for script_path in FIT_SCRIPTS.values():
-        text = Path(script_path).read_text(encoding="utf-8")
+    required_strings = [
+        'param_names = [f"a{i}" for i in range(polynomial_degree + 1)]',
+        'param_names.extend([f"bL{k}", f"cL{k}"])',
+        "['b1', 'c1', 'bp1', 'cp1'",
+        "'b2', 'c2', 'b3', 'c3', 'b4', 'c4']",
+    ]
 
-        assert 'param_names = [f"a{i}" for i in range(polynomial_degree + 1)]' in text
-        assert 'param_names.extend([f"bL{k}", f"cL{k}"])' in text
-        assert "['b1', 'c1', 'bp1', 'cp1'" in text
-        assert "'b2', 'c2', 'b3', 'c3', 'b4', 'c4']" in text
+    for script_path in FIT_SCRIPTS.values():
+        assert_text_contains(script_path, required_strings)
 
 
 def test_fit_scripts_save_required_numerical_outputs():
     """Check that fit scripts write the expected numerical output files."""
-    required_outputs = [
+    required_strings = [
         "fit_summary_",
         "best_fit_and_residuals.txt",
         "samples_for_MC.txt",
@@ -113,45 +168,59 @@ def test_fit_scripts_save_required_numerical_outputs():
     ]
 
     for script_path in FIT_SCRIPTS.values():
-        text = Path(script_path).read_text(encoding="utf-8")
-
-        for required_output in required_outputs:
-            assert required_output in text
+        assert_text_contains(script_path, required_strings)
 
 
-def test_plot_scripts_use_same_model_configuration_as_final_fits():
-    """Check that plot scripts use the same model configuration as the final fits."""
-    for observable, script_path in PLOT_SCRIPTS.items():
-        values = literal_assignments(script_path)
-        expected = PAPER_MODEL_CONFIG[observable]
-
-        assert values["timezero"] == 1985.0
-        assert values["include_slow_harmonics"] is True
-        assert values["polynomial_degree"] == expected["polynomial_degree"]
-        assert values["base_period_slow_harmonics"] == expected["base_period_slow_harmonics"]
-        assert values["slow_harmonics"] == expected["slow_harmonics"]
+def test_plot_scripts_expose_selected_run_and_grid_settings():
+    """Check that plot scripts keep selected-run and plotting-grid settings explicit."""
+    for script_path in PLOT_SCRIPTS.values():
+        assert_names_are_assigned(script_path, ["site_acronym"])
+        assert_names_are_assigned(script_path, MODEL_SETTING_NAMES)
+        assert_names_are_assigned(script_path, PLOT_GRID_SETTING_NAMES)
 
 
-def test_residual_scripts_use_expected_frequency_range_and_fap_levels():
-    """Check the residual-analysis frequency range and approximate FAP levels."""
+def test_plot_scripts_use_selected_settings_to_read_and_evaluate_runs():
+    """Check that plot scripts use selected settings when reading and evaluating runs."""
+    required_strings = [
+        "run_results_directory(project_root",
+        "run_plots_directory(project_root",
+        "samples_for_MC.txt",
+        "best_fit_and_residuals.txt",
+        "x_fit_grid = grid_decimal_dates - timezero",
+        "for pars in samples",
+        "polynomial_degree=polynomial_degree",
+        "include_slow_harmonics=include_slow_harmonics",
+        "base_period_slow_harmonics=base_period_slow_harmonics",
+        "slow_harmonics=slow_harmonics",
+    ]
+
+    for script_path in PLOT_SCRIPTS.values():
+        assert_text_contains(script_path, required_strings)
+
+
+def test_residual_scripts_expose_periodogram_settings():
+    """Check that residual-analysis scripts keep periodogram settings explicit."""
     for script_path in RESIDUAL_SCRIPTS.values():
-        values = literal_assignments(script_path)
-
-        assert values["fmin"] == 0.025
-        assert values["fmax"] == 0.5
-        assert values["samples_per_peak"] == 10
-        assert values["lomb_scargle_normalization"] == "standard"
-        assert values["fap_levels"] == [0.1587, 0.00135, 3.17e-5]
+        assert_names_are_assigned(script_path, RESIDUAL_PERIODICITY_SETTING_NAMES)
 
 
-def test_residual_scripts_use_baluev_thresholds_and_sampling_windows():
-    """Check that residual scripts use Baluev thresholds and sampling windows."""
+def test_residual_scripts_use_configured_periodogram_settings():
+    """Check that residual-analysis scripts pass configured settings to periodogram calls."""
+    required_strings = [
+        "run_results_directory(project_root",
+        "LombScargle(",
+        "autopower(minimum_frequency=fmin, maximum_frequency=fmax, samples_per_peak=samples_per_peak)",
+        'false_alarm_level(fap_levels, method="baluev"',
+        "np.ones_like",
+        "center_data=False",
+        "fit_mean=False",
+        "find_peaks",
+        "curve_fit(gauss",
+        "compute_peak_exceedance_percentage(",
+        "n_simulations=n_simulations_for_fap",
+        "samples_per_peak=samples_per_peak",
+        "normalization=lomb_scargle_normalization",
+    ]
+
     for script_path in RESIDUAL_SCRIPTS.values():
-        text = Path(script_path).read_text(encoding="utf-8")
-
-        assert 'method="baluev"' in text
-        assert "np.ones_like" in text
-        assert "center_data=False" in text
-        assert "fit_mean=False" in text
-        assert "find_peaks" in text
-        assert "curve_fit(gauss" in text
+        assert_text_contains(script_path, required_strings)

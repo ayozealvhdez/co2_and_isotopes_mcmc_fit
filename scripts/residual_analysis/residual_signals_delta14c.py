@@ -4,11 +4,13 @@ Compute the Lomb-Scargle periodogram of the residuals obtained from a previous M
 This script reads the file 'best_fit_and_residuals.txt' from the 'results' subdirectory of one selected run and computes the Lomb-Scargle periodogram of the residuals,
 together with the sampling-window periodogram.
 
-The periodogram is typically computed from a run without low-frequency harmonics, because the goal is to identify which slow periods may need to be included.
+The periodogram is typically computed from a run without low-frequency harmonics, because the goal is to identify candidate low-frequency terms for l(t).
 The red-noise parameters used for the empirical FAP estimation are estimated from the residuals of this same run, since in this case low-frequency harmonics are not included.
 
 Candidate peaks above an approximate false-alarm threshold are identified and fitted with a Gaussian profile in a narrow frequency window around each peak. Their central frequencies, widths,
 powers, and empirical false-alarm probabilities under white-noise and red-noise simulations are printed to screen.
+
+This is an exploratory residual analysis for model design; candidate peaks should not be interpreted as definitive periodicities by themselves.
 
 To select which run is analysed, specify the matching configuration in the 'SELECTED RUN' block.
 The run used to estimate the red-noise parameters is selected independently in the 'RUN USED TO ESTIMATE RED-NOISE PARAMETERS' block.

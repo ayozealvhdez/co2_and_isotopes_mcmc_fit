@@ -16,6 +16,9 @@ shown in semitransparent red where an equivalent MLO record is available.
 
 The script reads:
 - 'samples_for_MC.txt', containing posterior samples drawn from the MCMC chains.
+
+The result is stored in:
+results_and_plots/comparisons/fig06_seasonal_amplitude_evolution/fig06.png
 """
 
 
@@ -29,8 +32,8 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from functions.grids import daily_grid_for_year
 from functions.paths import find_project_root, run_results_directory, comparison_directory
+from scripts.additional_paper_figures.paper_figure_calculations import compute_annual_amplitude_band
 
 
 
@@ -96,76 +99,6 @@ d14c_years = np.arange(1985, 2024)
 xlim_min = 1984
 xlim_max = 2026
 
-
-
-# -------------------------------------------------------
-# ------- FUNCTION TO COMPUTE SEASONAL AMPLITUDES -------
-# -------------------------------------------------------
-
-def seasonal_component_from_samples(samples, x, polynomial_degree, include_slow_harmonics, slow_harmonics):
-    """
-    Evaluate the seasonal component s(t) for all posterior samples.
-    """
-    idx = polynomial_degree + 1
-
-    if include_slow_harmonics and len(slow_harmonics) > 0:
-        idx += 2 * len(slow_harmonics)
-
-    seasonal_coeffs = samples[:, idx:idx + 10]
-
-    b1 = seasonal_coeffs[:, 0, None]
-    c1 = seasonal_coeffs[:, 1, None]
-    bp1 = seasonal_coeffs[:, 2, None]
-    cp1 = seasonal_coeffs[:, 3, None]
-    b2 = seasonal_coeffs[:, 4, None]
-    c2 = seasonal_coeffs[:, 5, None]
-    b3 = seasonal_coeffs[:, 6, None]
-    c3 = seasonal_coeffs[:, 7, None]
-    b4 = seasonal_coeffs[:, 8, None]
-    c4 = seasonal_coeffs[:, 9, None]
-
-    seasonal = (
-        (b1 + bp1 * x[None, :]) * np.sin(2.0 * np.pi * x)[None, :]
-        + (c1 + cp1 * x[None, :]) * np.cos(2.0 * np.pi * x)[None, :]
-        + b2 * np.sin(2.0 * np.pi * 2 * x)[None, :]
-        + c2 * np.cos(2.0 * np.pi * 2 * x)[None, :]
-        + b3 * np.sin(2.0 * np.pi * 3 * x)[None, :]
-        + c3 * np.cos(2.0 * np.pi * 3 * x)[None, :]
-        + b4 * np.sin(2.0 * np.pi * 4 * x)[None, :]
-        + c4 * np.cos(2.0 * np.pi * 4 * x)[None, :]
-    )
-
-    return seasonal
-
-
-def compute_annual_amplitude_band(samples, years, timezero, polynomial_degree, include_slow_harmonics, slow_harmonics):
-    """
-    Compute annual peak-to-trough amplitude percentiles from posterior samples.
-    """
-    p16_all = []
-    p50_all = []
-    p84_all = []
-
-    for year in years:
-        decimal_year_grid = daily_grid_for_year(int(year))
-        x_grid = decimal_year_grid - timezero
-
-        seasonal = seasonal_component_from_samples(
-            samples,
-            x_grid,
-            polynomial_degree,
-            include_slow_harmonics,
-            slow_harmonics,
-        )
-
-        amplitudes = np.max(seasonal, axis=1) - np.min(seasonal, axis=1)
-        p16, p50, p84 = np.percentile(amplitudes, [16, 50, 84])
-
-        p16_all.append(p16)
-        p50_all.append(p50)
-        p84_all.append(p84)
-
-    return np.asarray(p16_all), np.asarray(p50_all), np.asarray(p84_all)
 
 
 def plot_amplitude_with_errorbars(ax, years, p16, p50, p84, color, alpha, label):
@@ -263,13 +196,13 @@ print("-------------------------------------------------------")
 print("Step 2: Compute annual peak-to-trough amplitudes")
 start = time.time()
 
-co2_izo_p16, co2_izo_p50, co2_izo_p84 = compute_annual_amplitude_band(co2_izo_samples, co2_years, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_slow_harmonics)
-co2_mlo_p16, co2_mlo_p50, co2_mlo_p84 = compute_annual_amplitude_band(co2_mlo_samples, co2_years, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_slow_harmonics)
+co2_izo_p16, co2_izo_p50, co2_izo_p84 = compute_annual_amplitude_band(co2_izo_samples, co2_years, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_base_period_slow_harmonics, co2_izo_slow_harmonics)
+co2_mlo_p16, co2_mlo_p50, co2_mlo_p84 = compute_annual_amplitude_band(co2_mlo_samples, co2_years, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_base_period_slow_harmonics, co2_mlo_slow_harmonics)
 
-d13c_izo_p16, d13c_izo_p50, d13c_izo_p84 = compute_annual_amplitude_band(d13c_izo_samples, d13c_years, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_slow_harmonics)
-d13c_mlo_p16, d13c_mlo_p50, d13c_mlo_p84 = compute_annual_amplitude_band(d13c_mlo_samples, d13c_years, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_slow_harmonics)
+d13c_izo_p16, d13c_izo_p50, d13c_izo_p84 = compute_annual_amplitude_band(d13c_izo_samples, d13c_years, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_base_period_slow_harmonics, d13c_izo_slow_harmonics)
+d13c_mlo_p16, d13c_mlo_p50, d13c_mlo_p84 = compute_annual_amplitude_band(d13c_mlo_samples, d13c_years, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_base_period_slow_harmonics, d13c_mlo_slow_harmonics)
 
-d14c_izo_p16, d14c_izo_p50, d14c_izo_p84 = compute_annual_amplitude_band(d14c_izo_samples, d14c_years, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_slow_harmonics)
+d14c_izo_p16, d14c_izo_p50, d14c_izo_p84 = compute_annual_amplitude_band(d14c_izo_samples, d14c_years, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_base_period_slow_harmonics, d14c_izo_slow_harmonics)
 
 end = time.time()
 print(f"Total processing time: {(end - start)/60:.2f} minutes")

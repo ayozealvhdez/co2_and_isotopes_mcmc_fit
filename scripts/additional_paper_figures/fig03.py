@@ -1,13 +1,13 @@
 """
-For the three observables (CO2, delta13C, delta14C), plot the fitted series, the posterior median model, the 68% confidence band, and the residuals.
+For the three observables (CO2, delta13C, delta14C), plot the fitted series, the posterior median model, the 68% confidence band, the Thoning-like seasonally adjusted trend p(t) + l(t), and the residuals.
 
 Layout:
-- Left column: CO2.
-- Middle column: delta13C.
-- Right column: delta14C.
+- Upper block: CO2, spanning the full figure width.
+- Lower-left block: delta13C.
+- Lower-right block: delta14C.
 
 For each observable:
-- Upper panel: observed data, posterior median model, and 68% confidence band.
+- Upper panel: observed data, posterior median model and 68% confidence band, plus the Thoning-like seasonally adjusted trend p(t) + l(t) and its 68% confidence band.
 - Lower panel: residuals.
 
 The script reads:
@@ -16,10 +16,12 @@ The script reads:
 
 To select the version of these files corresponding to the run you want to plot, the matching run configuration must be specified in the 'SELECTED RUNS' block.
 
-The best-fit curve and the confidence band are computed by evaluating the model on a regular grid in decimal years for the 50,000 posterior samples stored in 'samples_for_MC.txt' and taking the 16th, 50th, and 84th percentiles at each grid point.
+The posterior median model curve, the Thoning-like seasonally adjusted trend p(t) + l(t), and their confidence bands are computed by evaluating the relevant model components on a regular grid in decimal years for the 50,000 posterior samples stored in 'samples_for_MC.txt' and taking the 16th, 50th, and 84th percentiles at each grid point.
+
+The Thoning-like trend is computed within this model framework; it is not a reproduction of the NOAA CCGCRV filtering procedure.
 
 The result is stored in:
-results_and_plots/comparisons/all_observables_fitted/
+results_and_plots/comparisons/fig03_all_observables_fitted/fig03.png
 """
 
 
@@ -32,7 +34,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from functions.model import model
+from functions.model import model_components
 from functions.paths import find_project_root, run_results_directory, comparison_directory
 
 
@@ -86,18 +88,30 @@ n_grid = 1000
 # ---------- FUNCTION TO COMPUTE UNCERTAINTY BAND --------
 # -------------------------------------------------------
 
-def compute_model_band(samples, decimal_year_grid, timezero, polynomial_degree, include_slow_harmonics, base_period_slow_harmonics, slow_harmonics):
+def compute_model_and_trend_bands(samples, decimal_year_grid, timezero, polynomial_degree, include_slow_harmonics, base_period_slow_harmonics, slow_harmonics):
+    """
+    Compute posterior bands for f(t) and for the seasonally adjusted trend p(t) + l(t).
+    """
     x_grid = decimal_year_grid - timezero
     model_curves = np.empty((len(samples), len(decimal_year_grid)))
+    trend_curves = np.empty((len(samples), len(decimal_year_grid)))
 
     for i, params in enumerate(samples):
-        model_curves[i] = model(x_grid, *params, polynomial_degree=polynomial_degree, include_slow_harmonics=include_slow_harmonics, base_period_slow_harmonics=base_period_slow_harmonics, slow_harmonics=slow_harmonics)
+        poly, seasonal, lf = model_components(
+            x_grid,
+            *params,
+            polynomial_degree=polynomial_degree,
+            include_slow_harmonics=include_slow_harmonics,
+            base_period_slow_harmonics=base_period_slow_harmonics,
+            slow_harmonics=slow_harmonics,
+        )
+        model_curves[i] = poly + seasonal + lf
+        trend_curves[i] = poly + lf
 
-    p16 = np.percentile(model_curves, 16, axis=0)
-    p50 = np.percentile(model_curves, 50, axis=0)
-    p84 = np.percentile(model_curves, 84, axis=0)
+    model_p16, model_p50, model_p84 = np.percentile(model_curves, [16, 50, 84], axis=0)
+    trend_p16, trend_p50, trend_p84 = np.percentile(trend_curves, [16, 50, 84], axis=0)
 
-    return p16, p50, p84
+    return (model_p16, model_p50, model_p84), (trend_p16, trend_p50, trend_p84)
 
 
 
@@ -176,13 +190,13 @@ print("-------------------------------------------------------")
 print("Step 2: Compute posterior median models and 68% confidence bands")
 
 co2_decimal_year_grid = np.linspace(co2_range[0], co2_range[1], n_grid)
-co2_p16, co2_p50, co2_p84 = compute_model_band(co2_samples, co2_decimal_year_grid, co2_timezero, co2_polynomial_degree, co2_include_slow_harmonics, co2_base_period_slow_harmonics, co2_slow_harmonics)
+(co2_p16, co2_p50, co2_p84), (co2_trend_p16, co2_trend_p50, co2_trend_p84) = compute_model_and_trend_bands(co2_samples, co2_decimal_year_grid, co2_timezero, co2_polynomial_degree, co2_include_slow_harmonics, co2_base_period_slow_harmonics, co2_slow_harmonics)
 
 d13c_decimal_year_grid = np.linspace(d13c_range[0], d13c_range[1], n_grid)
-d13c_p16, d13c_p50, d13c_p84 = compute_model_band(d13c_samples, d13c_decimal_year_grid, d13c_timezero, d13c_polynomial_degree, d13c_include_slow_harmonics, d13c_base_period_slow_harmonics, d13c_slow_harmonics)
+(d13c_p16, d13c_p50, d13c_p84), (d13c_trend_p16, d13c_trend_p50, d13c_trend_p84) = compute_model_and_trend_bands(d13c_samples, d13c_decimal_year_grid, d13c_timezero, d13c_polynomial_degree, d13c_include_slow_harmonics, d13c_base_period_slow_harmonics, d13c_slow_harmonics)
 
 d14c_decimal_year_grid = np.linspace(d14c_range[0], d14c_range[1], n_grid)
-d14c_p16, d14c_p50, d14c_p84 = compute_model_band(d14c_samples, d14c_decimal_year_grid, d14c_timezero, d14c_polynomial_degree, d14c_include_slow_harmonics, d14c_base_period_slow_harmonics, d14c_slow_harmonics)
+(d14c_p16, d14c_p50, d14c_p84), (d14c_trend_p16, d14c_trend_p50, d14c_trend_p84) = compute_model_and_trend_bands(d14c_samples, d14c_decimal_year_grid, d14c_timezero, d14c_polynomial_degree, d14c_include_slow_harmonics, d14c_base_period_slow_harmonics, d14c_slow_harmonics)
 
 print("-------------------------------------------------------")
 
@@ -190,48 +204,69 @@ print("-------------------------------------------------------")
 
 print("Step 3: Plot the figure")
 
-fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(17, 7.5), sharex="col", gridspec_kw={"height_ratios": [3, 1]})
-fig.subplots_adjust(wspace=0.28, hspace=0.06)
+fig = plt.figure(figsize=(12.4, 10.2))
+outer_gs = fig.add_gridspec(
+    nrows=2,
+    ncols=2,
+    height_ratios=[1.35, 1.0],
+    hspace=0.18,
+    wspace=0.30,
+)
 
-ax11, ax12, ax13 = axes[0]
-ax21, ax22, ax23 = axes[1]
+co2_gs = outer_gs[0, :].subgridspec(nrows=2, ncols=1, height_ratios=[3.2, 1.0], hspace=0.06)
+d13c_gs = outer_gs[1, 0].subgridspec(nrows=2, ncols=1, height_ratios=[2.2, 0.8], hspace=0.06)
+d14c_gs = outer_gs[1, 1].subgridspec(nrows=2, ncols=1, height_ratios=[2.2, 0.8], hspace=0.06)
+
+ax11 = fig.add_subplot(co2_gs[0, 0])
+ax21 = fig.add_subplot(co2_gs[1, 0], sharex=ax11)
+ax12 = fig.add_subplot(d13c_gs[0, 0])
+ax22 = fig.add_subplot(d13c_gs[1, 0], sharex=ax12)
+ax13 = fig.add_subplot(d14c_gs[0, 0])
+ax23 = fig.add_subplot(d14c_gs[1, 0], sharex=ax13)
 
 data_style = dict(fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 residual_style = dict(fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
+trend_color = "crimson"
 
-# Upper-left panel: CO2 observed data and fitted model
+# Upper block: CO2 observed data and fitted model
 ax11.errorbar(co2_time, co2_observed, yerr=co2_yerr, **data_style, label="Observed data")
-ax11.plot(co2_decimal_year_grid, co2_p50, "b-", lw=0.8, label="Posterior median model")
 ax11.fill_between(co2_decimal_year_grid, co2_p16, co2_p84, color="b", alpha=0.25, linewidth=0, label="68% confidence band")
+ax11.fill_between(co2_decimal_year_grid, co2_trend_p16, co2_trend_p84, color=trend_color, alpha=0.16, linewidth=0, label=r"68% band for trend")
+ax11.plot(co2_decimal_year_grid, co2_p50, "b-", lw=0.8, label="Posterior median model")
+ax11.plot(co2_decimal_year_grid, co2_trend_p50, color=trend_color, lw=1.1, label=r"Thoning-like trend, $p(t)+l(t)$")
 ax11.set_ylabel("CO$_2$ (ppm)", fontsize=14)
 
-# Lower-left panel: CO2 residuals
+# CO2 residuals
 ax21.axhline(0, color="0.5", lw=1.0, linestyle="--")
 ax21.errorbar(co2_time, co2_residuals, yerr=co2_yerr, **residual_style)
 ax21.set_xlabel("Year", fontsize=14)
 ax21.set_ylabel("Residuals (ppm)", fontsize=13)
 ax21.set_xlim(1985,2025)
 
-# Upper-middle panel: delta13C observed data and fitted model
+# Lower-left block: delta13C observed data and fitted model
 ax12.errorbar(d13c_time, d13c_observed, yerr=d13c_yerr, **data_style)
-ax12.plot(d13c_decimal_year_grid, d13c_p50, "b-", lw=0.8)
 ax12.fill_between(d13c_decimal_year_grid, d13c_p16, d13c_p84, color="b", alpha=0.25, linewidth=0)
+ax12.fill_between(d13c_decimal_year_grid, d13c_trend_p16, d13c_trend_p84, color=trend_color, alpha=0.16, linewidth=0)
+ax12.plot(d13c_decimal_year_grid, d13c_p50, "b-", lw=0.8)
+ax12.plot(d13c_decimal_year_grid, d13c_trend_p50, color=trend_color, lw=1.1)
 ax12.set_ylabel(r"$\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=14)
 
-# Lower-middle panel: delta13C residuals
+# delta13C residuals
 ax22.axhline(0, color="0.5", lw=1.0, linestyle="--")
 ax22.errorbar(d13c_time, d13c_residuals, yerr=d13c_yerr, **residual_style)
 ax22.set_xlabel("Year", fontsize=14)
 ax22.set_ylabel(r"Residuals ($\perthousand$)", fontsize=13)
 ax22.set_xlim(1985,2025)
 
-# Upper-right panel: delta14C observed data and fitted model
+# Lower-right block: delta14C observed data and fitted model
 ax13.errorbar(d14c_time, d14c_observed, yerr=d14c_yerr, **data_style)
-ax13.plot(d14c_decimal_year_grid, d14c_p50, "b-", lw=0.8)
 ax13.fill_between(d14c_decimal_year_grid, d14c_p16, d14c_p84, color="b", alpha=0.25, linewidth=0)
+ax13.fill_between(d14c_decimal_year_grid, d14c_trend_p16, d14c_trend_p84, color=trend_color, alpha=0.16, linewidth=0)
+ax13.plot(d14c_decimal_year_grid, d14c_p50, "b-", lw=0.8)
+ax13.plot(d14c_decimal_year_grid, d14c_trend_p50, color=trend_color, lw=1.1)
 ax13.set_ylabel(r"$\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=14)
 
-# Lower-right panel: delta14C residuals
+# delta14C residuals
 ax23.axhline(0, color="0.5", lw=1.0, linestyle="--")
 ax23.errorbar(d14c_time, d14c_residuals, yerr=d14c_yerr, **residual_style)
 ax23.set_xlabel("Year", fontsize=14)
@@ -243,6 +278,10 @@ for ax in (ax11, ax12, ax13, ax21, ax22, ax23):
     ax.tick_params(axis="both", direction="in", top=True, right=True, labelsize=12, length=6, width=1)
     ax.minorticks_on()
     ax.tick_params(which="minor", direction="in", top=True, right=True, length=3, width=0.8)
+
+plt.setp(ax11.get_xticklabels(), visible=False)
+plt.setp(ax12.get_xticklabels(), visible=False)
+plt.setp(ax13.get_xticklabels(), visible=False)
 
 fig.savefig(output_path, dpi=600, bbox_inches="tight", pad_inches=0.1)
 

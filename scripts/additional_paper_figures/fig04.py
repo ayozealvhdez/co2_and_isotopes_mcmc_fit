@@ -1,22 +1,28 @@
 """
-For the three observables (CO2, delta13C, delta14C), plot the long-term components p(t) inferred for the fitted records.
+For the three observables (CO2, delta13C, delta14C), plot the polynomial components p(t) inferred for the fitted records.
 
 Panels, from left to right:
 - CO2 mole fraction.
 - delta13C-CO2.
 - delta14C-CO2.
 
-The IZO long-term components are shown in black, with shaded regions indicating
+The IZO p(t) components are shown in black, with shaded regions indicating
 68% confidence intervals derived from joint posterior Monte Carlo draws.
 
-The corresponding MLO long-term components are shown in semitransparent red
+The corresponding MLO p(t) components are shown in semitransparent red
 where an equivalent MLO record is available.
 
 The script reads:
 - 'samples_for_MC.txt', containing posterior samples drawn from the MCMC chains.
 
-Only the polynomial coefficients are used, because this figure shows p(t), not
-the full fitted model f(t).
+Only the polynomial component p(t) is plotted. It is evaluated with
+functions.model.model_components so that the component definition remains
+centralised in the model module.
+
+This figure shows p(t) alone, not the seasonally adjusted trend p(t) + l(t).
+
+The result is stored in:
+results_and_plots/comparisons/fig04_longterm_components/fig04.png
 """
 
 
@@ -30,6 +36,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from functions.paths import find_project_root, run_results_directory, comparison_directory
+from scripts.additional_paper_figures.paper_figure_calculations import compute_polynomial_band
 
 
 
@@ -97,28 +104,6 @@ xlim_max = 2025
 
 n_grid = 1000
 
-
-
-# -------------------------------------------------------
-# ---------- FUNCTION TO COMPUTE LONG-TERM BAND ---------
-# -------------------------------------------------------
-
-def compute_polynomial_band(samples, decimal_year_grid, timezero, polynomial_degree):
-    """
-    Compute the posterior median and 68% band of the polynomial p(t).
-    """
-    x_grid = decimal_year_grid - timezero
-    polynomial_coeffs = samples[:, :polynomial_degree + 1]
-    polynomial_curves = np.zeros((len(samples), len(decimal_year_grid)))
-
-    for i in range(polynomial_degree + 1):
-        polynomial_curves += polynomial_coeffs[:, i, None] * x_grid[None, :]**i
-
-    p16 = np.percentile(polynomial_curves, 16, axis=0)
-    p50 = np.percentile(polynomial_curves, 50, axis=0)
-    p84 = np.percentile(polynomial_curves, 84, axis=0)
-
-    return p16, p50, p84
 
 
 def set_tight_ylim(ax, curves, extra_fraction=0.04):
@@ -195,15 +180,15 @@ print("-------------------------------------------------------")
 print("Step 2: Compute long-term components and 68% confidence bands")
 
 co2_decimal_year_grid = np.linspace(co2_range[0], co2_range[1], n_grid)
-co2_izo_p16, co2_izo_p50, co2_izo_p84 = compute_polynomial_band(co2_izo_samples, co2_decimal_year_grid, co2_izo_timezero, co2_izo_polynomial_degree)
-co2_mlo_p16, co2_mlo_p50, co2_mlo_p84 = compute_polynomial_band(co2_mlo_samples, co2_decimal_year_grid, co2_mlo_timezero, co2_mlo_polynomial_degree)
+co2_izo_p16, co2_izo_p50, co2_izo_p84 = compute_polynomial_band(co2_izo_samples, co2_decimal_year_grid, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_base_period_slow_harmonics, co2_izo_slow_harmonics)
+co2_mlo_p16, co2_mlo_p50, co2_mlo_p84 = compute_polynomial_band(co2_mlo_samples, co2_decimal_year_grid, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_base_period_slow_harmonics, co2_mlo_slow_harmonics)
 
 d13c_decimal_year_grid = np.linspace(d13c_range[0], d13c_range[1], n_grid)
-d13c_izo_p16, d13c_izo_p50, d13c_izo_p84 = compute_polynomial_band(d13c_izo_samples, d13c_decimal_year_grid, d13c_izo_timezero, d13c_izo_polynomial_degree)
-d13c_mlo_p16, d13c_mlo_p50, d13c_mlo_p84 = compute_polynomial_band(d13c_mlo_samples, d13c_decimal_year_grid, d13c_mlo_timezero, d13c_mlo_polynomial_degree)
+d13c_izo_p16, d13c_izo_p50, d13c_izo_p84 = compute_polynomial_band(d13c_izo_samples, d13c_decimal_year_grid, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_base_period_slow_harmonics, d13c_izo_slow_harmonics)
+d13c_mlo_p16, d13c_mlo_p50, d13c_mlo_p84 = compute_polynomial_band(d13c_mlo_samples, d13c_decimal_year_grid, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_base_period_slow_harmonics, d13c_mlo_slow_harmonics)
 
 d14c_decimal_year_grid = np.linspace(d14c_range[0], d14c_range[1], n_grid)
-d14c_izo_p16, d14c_izo_p50, d14c_izo_p84 = compute_polynomial_band(d14c_izo_samples, d14c_decimal_year_grid, d14c_izo_timezero, d14c_izo_polynomial_degree)
+d14c_izo_p16, d14c_izo_p50, d14c_izo_p84 = compute_polynomial_band(d14c_izo_samples, d14c_decimal_year_grid, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_base_period_slow_harmonics, d14c_izo_slow_harmonics)
 
 print("-------------------------------------------------------")
 

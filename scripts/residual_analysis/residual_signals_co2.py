@@ -1,14 +1,16 @@
 """
-Compare the Lomb-Scargle periodograms of the residuals obtained from two previous MCMC runs of co2 in the 'fmin' to 'fmax' yr^-1 frequency range.
+Compare the Lomb-Scargle periodograms of the residuals obtained from two previous MCMC runs of CO2 in the 'fmin' to 'fmax' yr^-1 frequency range.
 
 This script reads the file 'best_fit_and_residuals.txt' from the 'results' subdirectory of two selected runs and computes the Lomb-Scargle periodogram of the residuals for each run,
 together with the sampling-window periodogram.
 
-The periodograms are typically computed from runs without low-frequency harmonics, because the goal is to identify which slow periods may need to be included.
+The periodograms are typically computed from runs without low-frequency harmonics, because the goal is to identify candidate low-frequency terms for l(t).
 However, the red-noise parameters used for the empirical FAP estimation are estimated from the residuals of a separate run that includes the selected low-frequency harmonics.
 
-For the first selected run, peaks above an initial approximate threshold are identified and fitted with a Gaussian profile in a narrow frequency window around each peak.
+For the first selected run, candidate peaks above an initial approximate threshold are identified and fitted with a Gaussian profile in a narrow frequency window around each peak.
 Their central frequencies, widths, powers, and empirical false-alarm probabilities under white-noise and red-noise simulations are printed to screen.
+
+This is an exploratory residual analysis for model design; candidate peaks should not be interpreted as definitive periodicities by themselves.
 
 To select which runs are compared, specify the matching configurations in the 'SELECTED RUN 1' and 'SELECTED RUN 2' blocks.
 The run used to estimate the red-noise parameters is selected independently in the 'RUN USED TO ESTIMATE RED-NOISE PARAMETERS' block.

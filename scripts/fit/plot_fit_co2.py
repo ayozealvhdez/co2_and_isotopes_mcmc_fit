@@ -7,11 +7,11 @@ The script reads:
 
 To select the version of these files corresponding to the run you want to plot, the matching run configuration must be specified in the 'SELECTED RUN' block.
 
-The best-fit curve and the confidence band are computed by evaluating the model on a regular grid in decimal years for all posterior samples and taking the
+The posterior median model curve and the confidence band are computed by evaluating the model on a regular grid in decimal years for all posterior samples and taking the
 16th, 50th (median), and 84th percentiles at each grid point.
 
 The script stores the following plot in results_and_plots/co2/<site_acronym.lower()>/<data_frequency>/<model_tag>/plots/
-- Upper panel: Observed CO2 series alongside the best-fit model from the MCMC fitting, with shaded band indicating 68% CL derived from Monte Carlo
+- Upper panel: Observed CO2 series alongside the posterior median model, with shaded band indicating 68% CL derived from Monte Carlo
 with joint posterior vectors. Lower panel: residuals of the fit.
 """
 
@@ -48,7 +48,7 @@ timezero = 1985.0  # Must match the value used in the fitting run
 # -------------------------------------------------------
 start_decimal_year_for_grid = 1985.0
 end_decimal_year_for_grid = 2025.0
-step_years_for_grid = 1 / 100   # resolution for the best-fit curve and uncertainty band
+step_years_for_grid = 1 / 100   # resolution for the posterior median model curve and uncertainty band
 
 
 
@@ -94,7 +94,7 @@ print("-------------------------------------------------------")
 
 
 
-print(f"Step 3: Compute the best-fit curve and 68% confidence band from {len(samples)} posterior samples")
+print(f"Step 3: Compute the posterior median model curve and 68% confidence band from {len(samples)} posterior samples")
 y_fits_grid = np.array([
     model(
         x_fit_grid,

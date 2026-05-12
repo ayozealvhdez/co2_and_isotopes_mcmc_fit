@@ -20,6 +20,9 @@ For each posterior sample, the seasonal component is evaluated year by year and
 then averaged over complete years in the analysed period at each annual phase.
 This keeps the time-dependent first harmonic terms b1 + bp1*t and c1 + cp1*t in
 the calculation.
+
+The result is stored in:
+results_and_plots/comparisons/fig05_mean_seasonal_components/fig05.png
 """
 
 
@@ -33,6 +36,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from functions.paths import find_project_root, run_results_directory, comparison_directory
+from scripts.additional_paper_figures.paper_figure_calculations import compute_mean_seasonal_band
 
 
 
@@ -99,57 +103,6 @@ n_phase = 500
 phase_grid = np.linspace(0.0, 1.0, n_phase)
 month_grid = 12.0 * phase_grid
 
-
-
-# -------------------------------------------------------
-# ---------- FUNCTION TO COMPUTE SEASONAL BAND ----------
-# -------------------------------------------------------
-
-def compute_mean_seasonal_band(samples, phase_grid, years_for_mean, timezero, polynomial_degree, include_slow_harmonics, slow_harmonics):
-    """
-    Compute the posterior median and 68% band of the mean seasonal component.
-    """
-    idx = polynomial_degree + 1
-
-    if include_slow_harmonics and len(slow_harmonics) > 0:
-        idx += 2 * len(slow_harmonics)
-
-    seasonal_coeffs = samples[:, idx:idx + 10]
-
-    b1 = seasonal_coeffs[:, 0, None]
-    c1 = seasonal_coeffs[:, 1, None]
-    bp1 = seasonal_coeffs[:, 2, None]
-    cp1 = seasonal_coeffs[:, 3, None]
-    b2 = seasonal_coeffs[:, 4, None]
-    c2 = seasonal_coeffs[:, 5, None]
-    b3 = seasonal_coeffs[:, 6, None]
-    c3 = seasonal_coeffs[:, 7, None]
-    b4 = seasonal_coeffs[:, 8, None]
-    c4 = seasonal_coeffs[:, 9, None]
-
-    seasonal_curves = np.zeros((len(samples), len(phase_grid)))
-
-    for year in years_for_mean:
-        t_phase = year + phase_grid - timezero
-
-        seasonal_curves += (
-            (b1 + bp1 * t_phase[None, :]) * np.sin(2.0 * np.pi * t_phase)[None, :]
-            + (c1 + cp1 * t_phase[None, :]) * np.cos(2.0 * np.pi * t_phase)[None, :]
-            + b2 * np.sin(2.0 * np.pi * 2 * t_phase)[None, :]
-            + c2 * np.cos(2.0 * np.pi * 2 * t_phase)[None, :]
-            + b3 * np.sin(2.0 * np.pi * 3 * t_phase)[None, :]
-            + c3 * np.cos(2.0 * np.pi * 3 * t_phase)[None, :]
-            + b4 * np.sin(2.0 * np.pi * 4 * t_phase)[None, :]
-            + c4 * np.cos(2.0 * np.pi * 4 * t_phase)[None, :]
-        )
-
-    seasonal_curves /= len(years_for_mean)
-
-    p16 = np.percentile(seasonal_curves, 16, axis=0)
-    p50 = np.percentile(seasonal_curves, 50, axis=0)
-    p84 = np.percentile(seasonal_curves, 84, axis=0)
-
-    return p16, p50, p84
 
 
 def set_symmetric_ylim(ax, curves, extra_fraction=0.08):
@@ -223,13 +176,13 @@ print("-------------------------------------------------------")
 
 print("Step 2: Compute mean seasonal components and 68% confidence bands")
 
-co2_izo_p16, co2_izo_p50, co2_izo_p84 = compute_mean_seasonal_band(co2_izo_samples, phase_grid, co2_years_for_mean, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_slow_harmonics)
-co2_mlo_p16, co2_mlo_p50, co2_mlo_p84 = compute_mean_seasonal_band(co2_mlo_samples, phase_grid, co2_years_for_mean, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_slow_harmonics)
+co2_izo_p16, co2_izo_p50, co2_izo_p84 = compute_mean_seasonal_band(co2_izo_samples, phase_grid, co2_years_for_mean, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_base_period_slow_harmonics, co2_izo_slow_harmonics)
+co2_mlo_p16, co2_mlo_p50, co2_mlo_p84 = compute_mean_seasonal_band(co2_mlo_samples, phase_grid, co2_years_for_mean, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_base_period_slow_harmonics, co2_mlo_slow_harmonics)
 
-d13c_izo_p16, d13c_izo_p50, d13c_izo_p84 = compute_mean_seasonal_band(d13c_izo_samples, phase_grid, d13c_years_for_mean, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_slow_harmonics)
-d13c_mlo_p16, d13c_mlo_p50, d13c_mlo_p84 = compute_mean_seasonal_band(d13c_mlo_samples, phase_grid, d13c_years_for_mean, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_slow_harmonics)
+d13c_izo_p16, d13c_izo_p50, d13c_izo_p84 = compute_mean_seasonal_band(d13c_izo_samples, phase_grid, d13c_years_for_mean, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_base_period_slow_harmonics, d13c_izo_slow_harmonics)
+d13c_mlo_p16, d13c_mlo_p50, d13c_mlo_p84 = compute_mean_seasonal_band(d13c_mlo_samples, phase_grid, d13c_years_for_mean, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_base_period_slow_harmonics, d13c_mlo_slow_harmonics)
 
-d14c_izo_p16, d14c_izo_p50, d14c_izo_p84 = compute_mean_seasonal_band(d14c_izo_samples, phase_grid, d14c_years_for_mean, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_slow_harmonics)
+d14c_izo_p16, d14c_izo_p50, d14c_izo_p84 = compute_mean_seasonal_band(d14c_izo_samples, phase_grid, d14c_years_for_mean, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_base_period_slow_harmonics, d14c_izo_slow_harmonics)
 
 print("-------------------------------------------------------")
 

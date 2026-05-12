@@ -5,7 +5,7 @@ Data:
 - IZO: CO2 mole fraction, delta13C-CO2, and delta14C-CO2.
 - MLO: CO2 mole fraction and delta13C-CO2.
 
-The script reads the file 'best_fit_and_residuals.txt' from the selected official runs.
+The script reads the file 'best_fit_and_residuals.txt' from the selected paper runs.
 Only the observed values and uncertainties are used.
 
 Panels:
@@ -15,6 +15,9 @@ Panels:
 
 IZO data are shown as black points with error bars.
 MLO data are shown as semitransparent red points with error bars.
+
+The result is stored in:
+results_and_plots/comparisons/fig01_all_paper_records/fig01.png
 """
 
 
@@ -100,6 +103,12 @@ d14c_max_year = 2023.999
 # -------------------------------------------------------
 
 def load_observed_series(filepath, min_year=None, max_year=None):
+    """
+    Load observed values and uncertainties from a best_fit_and_residuals.txt file.
+
+    Optional min_year and max_year limits restrict the returned decimal-year
+    range. Fitted values and residuals in the file are ignored.
+    """
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"Input file not found: {filepath}")
 

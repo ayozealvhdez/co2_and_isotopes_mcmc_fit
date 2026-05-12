@@ -13,7 +13,10 @@ Panel (b):
   colors used in panel (a).
 
 The script reads:
-- 'best_fit_and_residuals.txt' from the selected official IZO runs.
+- 'best_fit_and_residuals.txt' from the selected paper IZO runs.
+
+The result is stored in:
+results_and_plots/comparisons/fig08_isotope_residuals/fig08.png
 """
 
 

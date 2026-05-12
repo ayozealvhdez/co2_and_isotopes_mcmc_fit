@@ -14,7 +14,14 @@ Run the full test suite from the project root with:
 python tests/run_tests.py
 ```
 
-Some tests intentionally compare the current scripts against the model
-configuration described in the paper The number of MCMC steps is only
-checked to be present and positive, because it may be temporarily reduced during
-development runs.
+These tests do not enforce a particular paper configuration, MCMC length,
+burn-in choice, selected run, or periodogram range. Those are user-editable
+settings in the reusable scripts.
+
+Additional paper-figure scripts are intentionally tested next to those scripts,
+not in this reusable test suite. Those local tests focus on the numerical
+calculations used by the paper figures:
+
+```bash
+python scripts/additional_paper_figures/tests_paper_figures.py
+```
