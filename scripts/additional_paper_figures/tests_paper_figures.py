@@ -6,40 +6,18 @@ rather than in the project-wide tests/ directory. The calculations tested here
 are tied to the paper figures and are not intended to define a reusable API.
 
 Run from the project root with:
-python scripts/additional_paper_figures/tests_paper_figures.py
+python -m scripts.additional_paper_figures.tests_paper_figures
 """
 
-import sys
 import tempfile
 import traceback
 import os
 
 import numpy as np
 
+from functions.paths import find_project_root
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = None
-current_dir = SCRIPT_DIR
-
-while True:
-    if os.path.isdir(os.path.join(current_dir, "functions")) and os.path.isdir(os.path.join(current_dir, "scripts")):
-        PROJECT_ROOT = current_dir
-        break
-
-    parent_dir = os.path.dirname(current_dir)
-    if parent_dir == current_dir:
-        break
-
-    current_dir = parent_dir
-
-if PROJECT_ROOT is None:
-    raise RuntimeError("Project root not found.")
-
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
-
-if SCRIPT_DIR not in sys.path:
-    sys.path.insert(0, SCRIPT_DIR)
+PROJECT_ROOT = find_project_root(__file__)
 
 from functions.grids import daily_grid_for_year
 from scripts.additional_paper_figures.paper_figure_calculations import (

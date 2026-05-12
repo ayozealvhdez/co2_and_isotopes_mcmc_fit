@@ -11,37 +11,17 @@ Each file named test_*.py is imported, and each function whose name starts with 
 
 import importlib.util
 import os
-import sys
 import traceback
+
+from functions.paths import find_project_root
 
 
 # -------------------------------------------------------
 # ---------------------- PATHS --------------------------
 # -------------------------------------------------------
 
-current_file = os.path.abspath(__file__)
-test_dir = os.path.dirname(current_file)
-
-PROJECT_ROOT = None
-
-current_dir = test_dir
-while True:
-    if os.path.isdir(os.path.join(current_dir, "functions")) and os.path.isdir(os.path.join(current_dir, "scripts")):
-        PROJECT_ROOT = current_dir
-        break
-
-    parent_dir = os.path.dirname(current_dir)
-    if parent_dir == current_dir:
-        break
-
-    current_dir = parent_dir
-
-if PROJECT_ROOT is None:
-    raise RuntimeError("Project root not found.")
-
-
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
+PROJECT_ROOT = find_project_root(__file__)
+test_dir = os.path.join(PROJECT_ROOT, "tests")
 
 test_files = []
 for filename in os.listdir(test_dir):

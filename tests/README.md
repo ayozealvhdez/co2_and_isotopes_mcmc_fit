@@ -7,7 +7,7 @@ residual-analysis helpers.
 Run the full test suite from the project root with:
 
 ```bash
-python tests/run_tests.py
+python -m tests.run_tests
 ```
 
 These tests do not enforce a particular paper configuration, MCMC length,
@@ -22,5 +22,5 @@ not in this reusable test suite. Those local tests focus on the numerical
 calculations used by the paper figures:
 
 ```bash
-python scripts/additional_paper_figures/tests_paper_figures.py
+python -m scripts.additional_paper_figures.tests_paper_figures
 ```
