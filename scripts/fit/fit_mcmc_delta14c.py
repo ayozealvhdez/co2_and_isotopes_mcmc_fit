@@ -67,7 +67,7 @@ end_month = "2024-12"
 recenter_to_month_midpoint = True  # shift monthly timestamps to the exact calendar midpoint
 
 nwalkers = 128
-nsteps = 10000
+nsteps = 100000
 discard = int(0.5 * nsteps)  # burn-in
 
 corner_mode = "reduced"   # options: "reduced", "full"

@@ -45,8 +45,8 @@ from functions.paths import find_project_root, model_tag, run_results_directory,
 # -------------------------------------------------------
 # -------------------- DATA TO FIT ----------------------
 # -------------------------------------------------------
-site_acronym = "MLO" # Used to name the directories where results and plots will be stored
-input_file = "co2_mensual_mlo-wdcgg_1974-2024.txt"
+site_acronym = "IZO" # Used to name the directories where results and plots will be stored
+input_file = "co2_mensual_izo-wdcgg_1984-2024.txt"
 
 data_frequency = "monthly"   # options: "hourly", "daily", "monthly"
 recenter_time_axis = True # shift timestamps to the exact midpoint of the averaging period

@@ -45,8 +45,8 @@ from functions.paths import find_project_root, model_tag, run_results_directory,
 # -------------------------------------------------------
 # -------------------- DATA TO FIT ----------------------
 # -------------------------------------------------------
-site_acronym = "MLO"  # Used to name the directories where results and plots will be stored
-input_file = "co2c13_mlo_surface-flask_1_sil_event.txt"
+site_acronym = "IZO"  # Used to name the directories where results and plots will be stored
+input_file = "co2c13_izo_surface-flask_1_sil_event.txt"
 
 recompute_monthly_series = True # If True, compute monthly means before fitting
 
@@ -67,7 +67,7 @@ end_month = "2024-12"
 recenter_to_month_midpoint = True  # shift monthly timestamps to the exact calendar midpoint
 
 nwalkers = 128
-nsteps = 10000
+nsteps = 100000
 discard = int(0.5 * nsteps)  # burn-in
 
 corner_mode = "reduced"   # options: "reduced", "full"
