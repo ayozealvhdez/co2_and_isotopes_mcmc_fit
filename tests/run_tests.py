@@ -1,5 +1,7 @@
 """
-Run the test suite.Each file named test_*.py is imported, and each function whose name starts with test_ is executed.
+Run the test suite.
+
+Each file named test_*.py is imported, and each function whose name starts with test_ is executed.
 """
 
 

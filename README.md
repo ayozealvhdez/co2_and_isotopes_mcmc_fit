@@ -54,6 +54,7 @@ The model is fitted using a Bayesian MCMC approach. Derived quantities and uncer
 ```text
 co2_and_isotopes_mcmc_fit/
   data/
+    climatic_indexes/
     co2/
     delta13c/
     delta14c/
@@ -120,12 +121,15 @@ The expected structure is:
 
 ```text
 data/
+  climatic_indexes/
   co2/
   delta13c/
   delta14c/
 ```
 
 Place the required input files in the corresponding subdirectories before running the fitting or plotting scripts. The expected formats are WDCGG for CO2, NOAA GML for δ13C-CO2 and Heidelberg Radiocarbon Laboratory format for Δ14C-CO2. For other formats, the data-reading logic in the scripts must be modified.
+
+The `data/climatic_indexes/` directory contains the small climate-index files used by the paper-specific comparison figures.
 
 ### `functions/`
 
@@ -179,6 +183,7 @@ Before running the scripts, place the required observational files in:
 
 ```text
 data/co2/
+data/climatic_indexes/
 data/delta13c/
 data/delta14c/
 ```

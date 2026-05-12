@@ -11,9 +11,19 @@ def simulate_white_noise(n_points, sigma, rng):
 
 def simulate_red_noise_ar1(n_points, alpha, sigma, rng):
     """
-    Generate an AR(1) red-noise series.
+    Generate a stationary AR(1) red-noise series.
     """
-    noise = np.zeros(n_points)
+    if n_points < 1:
+        raise ValueError("n_points must be at least 1")
+    if not np.isfinite(alpha) or not np.isfinite(sigma):
+        raise ValueError("alpha and sigma must be finite")
+    if abs(alpha) >= 1.0:
+        raise ValueError("alpha must satisfy abs(alpha) < 1 for a stationary AR(1) process")
+    if sigma < 0.0:
+        raise ValueError("sigma must be non-negative")
+
+    noise = np.empty(n_points)
+    noise[0] = rng.normal(0.0, sigma / np.sqrt(1.0 - alpha**2))
     for i in range(1, n_points):
         noise[i] = alpha * noise[i - 1] + rng.normal(0.0, sigma)
     return noise
@@ -23,14 +33,32 @@ def estimate_red_noise_ar1_parameters(residuals):
     """
     Estimate the parameters of an AR(1) red-noise model from a residual series.
     """
+    residuals = np.asarray(residuals)
+
+    if len(residuals) < 3:
+        raise ValueError("At least three residuals are required to estimate AR(1) parameters")
+    if not np.all(np.isfinite(residuals)):
+        raise ValueError("Residuals must be finite to estimate AR(1) parameters")
+
     centered_residuals = residuals - np.mean(residuals)
 
     y0 = centered_residuals[:-1]
     y1 = centered_residuals[1:]
 
-    alpha = np.dot(y0, y1) / np.dot(y0, y0)
+    denominator = np.dot(y0, y0)
+    if denominator == 0.0:
+        raise ValueError("Residual variance is zero; AR(1) parameters cannot be estimated")
+
+    alpha = np.dot(y0, y1) / denominator
+    if not np.isfinite(alpha):
+        raise ValueError("Estimated AR(1) alpha is not finite")
+    if abs(alpha) >= 1.0:
+        raise ValueError("Estimated AR(1) alpha is not stationary")
+
     innovations = y1 - alpha * y0
     sigma = np.std(innovations, ddof=1)
+    if not np.isfinite(sigma):
+        raise ValueError("Estimated AR(1) innovation sigma is not finite")
 
     return alpha, sigma
 

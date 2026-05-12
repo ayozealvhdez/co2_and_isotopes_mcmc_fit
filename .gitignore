@@ -36,3 +36,7 @@ results_and_plots/
 data/**/*
 !data/**/
 !data/**/README.md
+
+# Keep small climate-index files used by paper-specific figures
+!data/climatic_indexes/
+!data/climatic_indexes/**/*

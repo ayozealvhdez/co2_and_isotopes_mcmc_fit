@@ -40,13 +40,33 @@ def test_white_noise_simulation_is_reproducible_with_seeded_rng():
     assert noise_1.shape == (5,)
 
 
-def test_red_noise_simulation_uses_first_order_autoregression():
-    """Check a deterministic AR(1) red-noise case with zero innovation variance."""
+def test_red_noise_simulation_uses_stationary_ar1_initial_value():
+    """Check that AR(1) simulations start from the stationary distribution."""
+    alpha = 0.8
+    sigma = 0.5
+
+    rng = np.random.default_rng(321)
+    noise = simulate_red_noise_ar1(6, alpha=alpha, sigma=sigma, rng=rng)
+
+    rng_expected = np.random.default_rng(321)
+    expected = np.empty(6)
+    expected[0] = rng_expected.normal(0.0, sigma / np.sqrt(1.0 - alpha**2))
+    for i in range(1, 6):
+        expected[i] = alpha * expected[i - 1] + rng_expected.normal(0.0, sigma)
+
+    np.testing.assert_allclose(noise, expected)
+
+
+def test_red_noise_simulation_rejects_nonstationary_alpha():
+    """Check that non-stationary AR(1) simulations are rejected."""
     rng = np.random.default_rng(321)
 
-    noise = simulate_red_noise_ar1(6, alpha=0.8, sigma=0.0, rng=rng)
-
-    np.testing.assert_allclose(noise, np.zeros(6))
+    try:
+        simulate_red_noise_ar1(6, alpha=1.0, sigma=0.5, rng=rng)
+    except ValueError as exc:
+        assert "stationary" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for non-stationary alpha")
 
 
 def test_ar1_parameter_estimate_recovers_known_positive_autocorrelation():
@@ -59,6 +79,18 @@ def test_ar1_parameter_estimate_recovers_known_positive_autocorrelation():
     assert np.isfinite(sigma)
     assert alpha > 0.0
     assert sigma >= 0.0
+
+
+def test_ar1_parameter_estimate_rejects_constant_residuals():
+    """Check that AR(1) estimation rejects residuals with no variance."""
+    residuals = np.ones(5)
+
+    try:
+        estimate_red_noise_ar1_parameters(residuals)
+    except ValueError as exc:
+        assert "variance" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for constant residuals")
 
 
 def fap_test_inputs():
