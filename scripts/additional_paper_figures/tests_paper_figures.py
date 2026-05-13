@@ -25,6 +25,7 @@ from scripts.additional_paper_figures.paper_figure_calculations import (
     compute_annual_amplitude_band,
     compute_low_frequency_band,
     compute_mean_seasonal_band,
+    compute_nonseasonal_component_bands,
     compute_polynomial_band,
     load_nino34_anomaly,
     map_monthly_series_to_grid,
@@ -92,6 +93,52 @@ def test_polynomial_band_uses_posterior_percentiles_of_p_of_t():
     np.testing.assert_allclose(p84, expected_p84)
 
 
+def test_nonseasonal_component_bands_preserve_joint_posterior_samples():
+    """Check Fig. 04 p(t), ell(t), and p(t) + ell(t) use joint samples."""
+    decimal_year_grid = np.array([2000.0, 2001.0, 2002.0])
+    timezero = 2000.0
+    base_period = 4.0
+    samples = np.array([
+        degree1_sample(a0=1.0, a1=0.5, slow_pairs=[(1.0, 0.0)]),
+        degree1_sample(a0=2.0, a1=0.5, slow_pairs=[(2.0, 0.0)]),
+        degree1_sample(a0=3.0, a1=0.5, slow_pairs=[(3.0, 0.0)]),
+    ])
+
+    polynomial_band, low_frequency_band, nonseasonal_band = compute_nonseasonal_component_bands(
+        samples,
+        decimal_year_grid,
+        timezero,
+        polynomial_degree=1,
+        include_slow_harmonics=True,
+        base_period_slow_harmonics=base_period,
+        slow_harmonics=[1],
+    )
+
+    x_grid = decimal_year_grid - timezero
+    polynomial_curves = []
+    low_frequency_curves = []
+    nonseasonal_curves = []
+
+    for sample in samples:
+        poly = sample[0] + sample[1] * x_grid
+        lf = sample[2] * np.sin(2.0 * np.pi * x_grid / base_period)
+        polynomial_curves.append(poly)
+        low_frequency_curves.append(lf)
+        nonseasonal_curves.append(poly + lf)
+
+    polynomial_curves = np.asarray(polynomial_curves)
+    low_frequency_curves = np.asarray(low_frequency_curves)
+    nonseasonal_curves = np.asarray(nonseasonal_curves)
+
+    expected_polynomial_band = np.percentile(polynomial_curves, [16, 50, 84], axis=0)
+    expected_low_frequency_band = np.percentile(low_frequency_curves, [16, 50, 84], axis=0)
+    expected_nonseasonal_band = np.percentile(nonseasonal_curves, [16, 50, 84], axis=0)
+
+    np.testing.assert_allclose(polynomial_band, expected_polynomial_band)
+    np.testing.assert_allclose(low_frequency_band, expected_low_frequency_band)
+    np.testing.assert_allclose(nonseasonal_band, expected_nonseasonal_band)
+
+
 def test_mean_seasonal_cycle_averages_time_varying_first_harmonic():
     """Check Fig. 05 mean s(t) keeps the bp1*t time dependence before averaging."""
     phase_grid = np.array([0.0, 0.25, 0.5, 0.75])
@@ -123,7 +170,7 @@ def test_mean_seasonal_cycle_averages_time_varying_first_harmonic():
 
 
 def test_annual_amplitude_band_uses_peak_to_trough_seasonal_component():
-    """Check Fig. 06 annual amplitude is max(s) - min(s) for each sample and year."""
+    """Check Fig. 05 annual amplitude is max(s) - min(s) for each sample and year."""
     years = np.array([2001])
     timezero = 2000.0
     amplitudes = np.array([1.0, 2.0, 3.0])
@@ -158,7 +205,7 @@ def test_annual_amplitude_band_uses_peak_to_trough_seasonal_component():
 
 
 def test_low_frequency_band_returns_ell_and_analytical_derivative():
-    """Check Fig. 07 ell(t) and d ell / dt against an analytic slow harmonic."""
+    """Check Fig. 06 ell(t) and d ell / dt against an analytic slow harmonic."""
     decimal_years = np.array([2000.0, 2001.0, 2002.0])
     timezero = 2000.0
     base_period = 4.0
@@ -188,7 +235,7 @@ def test_low_frequency_band_returns_ell_and_analytical_derivative():
 
 
 def test_monthly_midpoint_grid_builds_complete_yyyymm_axis():
-    """Check Fig. 07 monthly grid uses all month keys from start to end year."""
+    """Check Fig. 06 monthly grid uses all month keys from start to end year."""
     midpoint_dates, decimal_years, grid_keys = build_monthly_midpoint_grid(2001, 2001)
 
     assert len(midpoint_dates) == 12
@@ -200,7 +247,7 @@ def test_monthly_midpoint_grid_builds_complete_yyyymm_axis():
 
 
 def test_monthly_series_mapping_sorts_values_and_does_not_interpolate():
-    """Check Fig. 07 maps monthly values to the common grid without interpolation."""
+    """Check Fig. 06 maps monthly values to the common grid without interpolation."""
     years = np.array([2000, 2000, 2000, 2000])
     months = np.array([3, 1, 2, 4])
     values = np.array([3.0, 1.0, 2.0, np.nan])
@@ -214,7 +261,7 @@ def test_monthly_series_mapping_sorts_values_and_does_not_interpolate():
 
 
 def test_nino34_loader_uses_noaa_monthly_anomaly_column_and_midmonth_time():
-    """Check Fig. 07 Nino 3.4 loading uses column 10 and midmonth decimal years."""
+    """Check Fig. 06 Nino 3.4 loading uses column 10 and midmonth decimal years."""
     with tempfile.TemporaryDirectory() as tmpdir:
         filepath = os.path.join(tmpdir, "enso_index.txt")
         with open(filepath, "w", encoding="utf-8") as f:
@@ -233,7 +280,7 @@ def test_nino34_loader_uses_noaa_monthly_anomaly_column_and_midmonth_time():
 
 
 def test_lagged_correlation_identifies_positive_lag_when_nino_leads():
-    """Check Fig. 07 lag convention: positive lag means y leads x."""
+    """Check Fig. 06 lag convention: positive lag means y leads x."""
     rng = np.random.default_rng(123)
     y = rng.normal(size=80)
     lead_months = 3

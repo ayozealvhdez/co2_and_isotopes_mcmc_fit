@@ -1,25 +1,29 @@
 """
-For the three observables (CO2, delta13C, delta14C), plot the polynomial components p(t) inferred for the fitted records.
+For the three observables (CO2, delta13C, delta14C), plot the non-seasonal
+components inferred for the fitted records.
 
-Panels, from left to right:
+Rows:
+- (a) polynomial component p(t).
+- (b) low-frequency component l(t).
+- (c) non-seasonal component p(t) + l(t).
+
+Columns, from left to right:
 - CO2 mole fraction.
 - delta13C-CO2.
 - delta14C-CO2.
 
-The IZO p(t) components are shown in black, with shaded regions indicating
-68% confidence intervals derived from joint posterior Monte Carlo draws.
+The IZO components are shown in black, with shaded regions indicating 68%
+confidence intervals derived from joint posterior Monte Carlo draws.
 
-The corresponding MLO p(t) components are shown in semitransparent red
-where an equivalent MLO record is available.
+The corresponding MLO components are shown in semitransparent red where an
+equivalent MLO record is available.
 
 The script reads:
 - 'samples_for_MC.txt', containing posterior samples drawn from the MCMC chains.
 
-Only the polynomial component p(t) is plotted. It is evaluated with
-functions.model.model_components so that the component definition remains
+The components are evaluated with functions.model.model_components through the
+paper-specific helper functions, so that the component definition remains
 centralised in the model module.
-
-This figure shows p(t) alone, not the seasonally adjusted trend p(t) + l(t).
 
 The result is stored in:
 results_and_plots/comparisons/fig04_longterm_components/fig04.png
@@ -36,7 +40,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from functions.paths import find_project_root, run_results_directory, comparison_directory
-from scripts.additional_paper_figures.paper_figure_calculations import compute_polynomial_band
+from scripts.additional_paper_figures.paper_figure_calculations import compute_nonseasonal_component_bands
 
 
 
@@ -106,7 +110,7 @@ n_grid = 1000
 
 
 
-def set_tight_ylim(ax, curves, extra_fraction=0.04):
+def set_tight_ylim(ax, curves, extra_fraction=0.06):
     """
     Set y limits from the plotted curves with a small margin.
     """
@@ -119,6 +123,26 @@ def set_tight_ylim(ax, curves, extra_fraction=0.04):
 
     ax.set_ylim(ymin - extra_fraction * yrange, ymax + extra_fraction * yrange)
 
+
+def plot_component_band(ax, decimal_year_grid, izo_band, mlo_band=None, show_labels=False):
+    """
+    Plot IZO and, if available, MLO posterior component bands.
+    """
+    curves_for_ylim = [izo_band[0], izo_band[2]]
+
+    if mlo_band is not None:
+        ax.fill_between(decimal_year_grid, mlo_band[0], mlo_band[2], color="r", alpha=0.16, linewidth=0, zorder=1)
+        ax.plot(decimal_year_grid, mlo_band[0], color="r", linewidth=0.45, alpha=0.38, zorder=2)
+        ax.plot(decimal_year_grid, mlo_band[2], color="r", linewidth=0.45, alpha=0.38, zorder=2)
+        ax.plot(decimal_year_grid, mlo_band[1], color="r", linewidth=1.2, alpha=0.48, zorder=3, label="MLO" if show_labels else None)
+        curves_for_ylim.extend([mlo_band[0], mlo_band[2]])
+
+    ax.fill_between(decimal_year_grid, izo_band[0], izo_band[2], color="0.45", alpha=0.35, linewidth=0, zorder=2)
+    ax.plot(decimal_year_grid, izo_band[0], color="k", linewidth=0.55, alpha=0.75, zorder=4)
+    ax.plot(decimal_year_grid, izo_band[2], color="k", linewidth=0.55, alpha=0.75, zorder=4)
+    ax.plot(decimal_year_grid, izo_band[1], color="k", linewidth=1.4, zorder=5, label="IZO" if show_labels else None)
+
+    set_tight_ylim(ax, curves_for_ylim)
 
 
 # -------------------------------------------------------
@@ -177,18 +201,18 @@ print("-------------------------------------------------------")
 
 
 
-print("Step 2: Compute long-term components and 68% confidence bands")
+print("Step 2: Compute p(t), l(t), and p(t) + l(t) components and 68% confidence bands")
 
 co2_decimal_year_grid = np.linspace(co2_range[0], co2_range[1], n_grid)
-co2_izo_p16, co2_izo_p50, co2_izo_p84 = compute_polynomial_band(co2_izo_samples, co2_decimal_year_grid, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_base_period_slow_harmonics, co2_izo_slow_harmonics)
-co2_mlo_p16, co2_mlo_p50, co2_mlo_p84 = compute_polynomial_band(co2_mlo_samples, co2_decimal_year_grid, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_base_period_slow_harmonics, co2_mlo_slow_harmonics)
+co2_izo_poly_band, co2_izo_lf_band, co2_izo_nonseasonal_band = compute_nonseasonal_component_bands(co2_izo_samples, co2_decimal_year_grid, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_base_period_slow_harmonics, co2_izo_slow_harmonics)
+co2_mlo_poly_band, co2_mlo_lf_band, co2_mlo_nonseasonal_band = compute_nonseasonal_component_bands(co2_mlo_samples, co2_decimal_year_grid, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_base_period_slow_harmonics, co2_mlo_slow_harmonics)
 
 d13c_decimal_year_grid = np.linspace(d13c_range[0], d13c_range[1], n_grid)
-d13c_izo_p16, d13c_izo_p50, d13c_izo_p84 = compute_polynomial_band(d13c_izo_samples, d13c_decimal_year_grid, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_base_period_slow_harmonics, d13c_izo_slow_harmonics)
-d13c_mlo_p16, d13c_mlo_p50, d13c_mlo_p84 = compute_polynomial_band(d13c_mlo_samples, d13c_decimal_year_grid, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_base_period_slow_harmonics, d13c_mlo_slow_harmonics)
+d13c_izo_poly_band, d13c_izo_lf_band, d13c_izo_nonseasonal_band = compute_nonseasonal_component_bands(d13c_izo_samples, d13c_decimal_year_grid, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_base_period_slow_harmonics, d13c_izo_slow_harmonics)
+d13c_mlo_poly_band, d13c_mlo_lf_band, d13c_mlo_nonseasonal_band = compute_nonseasonal_component_bands(d13c_mlo_samples, d13c_decimal_year_grid, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_base_period_slow_harmonics, d13c_mlo_slow_harmonics)
 
 d14c_decimal_year_grid = np.linspace(d14c_range[0], d14c_range[1], n_grid)
-d14c_izo_p16, d14c_izo_p50, d14c_izo_p84 = compute_polynomial_band(d14c_izo_samples, d14c_decimal_year_grid, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_base_period_slow_harmonics, d14c_izo_slow_harmonics)
+d14c_izo_poly_band, d14c_izo_lf_band, d14c_izo_nonseasonal_band = compute_nonseasonal_component_bands(d14c_izo_samples, d14c_decimal_year_grid, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_base_period_slow_harmonics, d14c_izo_slow_harmonics)
 
 print("-------------------------------------------------------")
 
@@ -196,55 +220,70 @@ print("-------------------------------------------------------")
 
 print("Step 3: Plot the figure")
 
-fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(13.5, 4.6), sharex=False)
-fig.subplots_adjust(wspace=0.34)
+fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(13.8, 9.6), sharex=False, constrained_layout=True)
+fig.set_constrained_layout_pads(w_pad=0.02, h_pad=0.02, wspace=0.07, hspace=0.04)
 
-# Upper panel: CO2 long-term component
-ax1.fill_between(co2_decimal_year_grid, co2_mlo_p16, co2_mlo_p84, color="r", alpha=0.16, linewidth=0, zorder=1)
-ax1.plot(co2_decimal_year_grid, co2_mlo_p16, color="r", linewidth=0.45, alpha=0.38, zorder=2)
-ax1.plot(co2_decimal_year_grid, co2_mlo_p84, color="r", linewidth=0.45, alpha=0.38, zorder=2)
-ax1.plot(co2_decimal_year_grid, co2_mlo_p50, color="r", linewidth=1.2, alpha=0.48, zorder=3, label="MLO")
-ax1.fill_between(co2_decimal_year_grid, co2_izo_p16, co2_izo_p84, color="0.45", alpha=0.35, linewidth=0, zorder=2)
-ax1.plot(co2_decimal_year_grid, co2_izo_p16, color="k", linewidth=0.55, alpha=0.75, zorder=4)
-ax1.plot(co2_decimal_year_grid, co2_izo_p84, color="k", linewidth=0.55, alpha=0.75, zorder=4)
-ax1.plot(co2_decimal_year_grid, co2_izo_p50, color="k", linewidth=1.4, zorder=5, label="IZO")
-ax1.set_ylabel("$p(t)$ CO$_2$ (ppm)", fontsize=16)
-ax1.set_xlabel("Year", fontsize=16)
-set_tight_ylim(ax1, [co2_izo_p16, co2_izo_p84, co2_mlo_p16, co2_mlo_p84])
+ax11, ax12, ax13 = axes[0]
+ax21, ax22, ax23 = axes[1]
+ax31, ax32, ax33 = axes[2]
 
-# Middle panel: delta13C long-term component
-ax2.fill_between(d13c_decimal_year_grid, d13c_mlo_p16, d13c_mlo_p84, color="r", alpha=0.16, linewidth=0, zorder=1)
-ax2.plot(d13c_decimal_year_grid, d13c_mlo_p16, color="r", linewidth=0.45, alpha=0.38, zorder=2)
-ax2.plot(d13c_decimal_year_grid, d13c_mlo_p84, color="r", linewidth=0.45, alpha=0.38, zorder=2)
-ax2.plot(d13c_decimal_year_grid, d13c_mlo_p50, color="r", linewidth=1.2, alpha=0.48, zorder=3)
-ax2.fill_between(d13c_decimal_year_grid, d13c_izo_p16, d13c_izo_p84, color="0.45", alpha=0.35, linewidth=0, zorder=2)
-ax2.plot(d13c_decimal_year_grid, d13c_izo_p16, color="k", linewidth=0.55, alpha=0.75, zorder=4)
-ax2.plot(d13c_decimal_year_grid, d13c_izo_p84, color="k", linewidth=0.55, alpha=0.75, zorder=4)
-ax2.plot(d13c_decimal_year_grid, d13c_izo_p50, color="k", linewidth=1.4, zorder=5, label="IZO")
-ax2.set_ylabel(r"$p(t)$ $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=16)
-ax2.set_xlabel("Year", fontsize=16)
-set_tight_ylim(ax2, [d13c_izo_p16, d13c_izo_p84, d13c_mlo_p16, d13c_mlo_p84])
+# Row (a): p(t)
+plot_component_band(ax11, co2_decimal_year_grid, co2_izo_poly_band, co2_mlo_poly_band, show_labels=True)
+plot_component_band(ax12, d13c_decimal_year_grid, d13c_izo_poly_band, d13c_mlo_poly_band)
+plot_component_band(ax13, d14c_decimal_year_grid, d14c_izo_poly_band)
 
-# Lower panel: delta14C long-term component
-ax3.fill_between(d14c_decimal_year_grid, d14c_izo_p16, d14c_izo_p84, color="0.45", alpha=0.35, linewidth=0, zorder=2)
-ax3.plot(d14c_decimal_year_grid, d14c_izo_p16, color="k", linewidth=0.55, alpha=0.75, zorder=4)
-ax3.plot(d14c_decimal_year_grid, d14c_izo_p84, color="k", linewidth=0.55, alpha=0.75, zorder=4)
-ax3.plot(d14c_decimal_year_grid, d14c_izo_p50, color="k", linewidth=1.4, zorder=5, label="IZO")
-ax3.set_xlabel("Year", fontsize=16)
-ax3.set_ylabel(r"$p(t)$ $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=16)
-set_tight_ylim(ax3, [d14c_izo_p16, d14c_izo_p84])
+ax11.set_ylabel("$p(t)$ CO$_2$ (ppm)", fontsize=15, labelpad=6)
+ax12.set_ylabel(r"$p(t)$ $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax13.set_ylabel(r"$p(t)$ $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+
+# Row (b): l(t)
+plot_component_band(ax21, co2_decimal_year_grid, co2_izo_lf_band, co2_mlo_lf_band)
+plot_component_band(ax22, d13c_decimal_year_grid, d13c_izo_lf_band, d13c_mlo_lf_band)
+plot_component_band(ax23, d14c_decimal_year_grid, d14c_izo_lf_band)
+
+ax21.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
+ax22.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
+ax23.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
+
+ax21.set_ylabel("$l(t)$ CO$_2$ (ppm)", fontsize=15, labelpad=6)
+ax22.set_ylabel(r"$l(t)$ $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax23.set_ylabel(r"$l(t)$ $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+
+# Row (c): p(t) + l(t)
+plot_component_band(ax31, co2_decimal_year_grid, co2_izo_nonseasonal_band, co2_mlo_nonseasonal_band)
+plot_component_band(ax32, d13c_decimal_year_grid, d13c_izo_nonseasonal_band, d13c_mlo_nonseasonal_band)
+plot_component_band(ax33, d14c_decimal_year_grid, d14c_izo_nonseasonal_band)
+
+ax31.set_ylabel("$p(t)+l(t)$ CO$_2$ (ppm)", fontsize=15, labelpad=6)
+ax32.set_ylabel(r"$p(t)+l(t)$ $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax33.set_ylabel(r"$p(t)+l(t)$ $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+
+ax11.set_title("CO$_2$", fontsize=16)
+ax12.set_title(r"$\delta^{13}$C-CO$_2$", fontsize=16)
+ax13.set_title(r"$\Delta^{14}$C-CO$_2$", fontsize=16)
+
+for ax in (ax31, ax32, ax33):
+    ax.set_xlabel("Year", fontsize=15)
 
 # Axis formatting
-for ax in (ax1, ax2, ax3):
-    ax.tick_params(axis="both", direction="in", top=True, right=True, labelsize=14, length=6, width=1)
+for ax in axes.ravel():
+    ax.tick_params(axis="both", direction="in", top=True, right=True, labelsize=12, length=6, width=1)
     ax.minorticks_on()
     ax.tick_params(which="minor", direction="in", top=True, right=True, length=3, width=0.8)
     ax.set_xlim(xlim_min, xlim_max)
-    ax.set_box_aspect(1)
 
-fig.align_ylabels([ax1, ax2, ax3])
+for ax in (ax11, ax12, ax13, ax21, ax22, ax23):
+    plt.setp(ax.get_xticklabels(), visible=False)
 
-ax1.legend(loc="best")
+fig.align_ylabels(axes[:, 0])
+fig.align_ylabels(axes[:, 1])
+fig.align_ylabels(axes[:, 2])
+
+ax11.text(-0.24, 1.01, "(a)", transform=ax11.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
+ax21.text(-0.24, 1.01, "(b)", transform=ax21.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
+ax31.text(-0.24, 1.01, "(c)", transform=ax31.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
+
+ax11.legend(loc="best")
 
 fig.savefig(output_path, dpi=600, bbox_inches="tight", pad_inches=0.1)
 

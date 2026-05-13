@@ -43,6 +43,43 @@ def compute_polynomial_band(
     return p16, p50, p84
 
 
+def compute_nonseasonal_component_bands(
+        samples,
+        decimal_year_grid,
+        timezero,
+        polynomial_degree,
+        include_slow_harmonics,
+        base_period_slow_harmonics,
+        slow_harmonics):
+    """
+    Compute posterior bands for p(t), ell(t), and p(t) + ell(t).
+    """
+    x_grid = decimal_year_grid - timezero
+    polynomial_curves = np.empty((len(samples), len(decimal_year_grid)))
+    low_frequency_curves = np.empty((len(samples), len(decimal_year_grid)))
+    nonseasonal_curves = np.empty((len(samples), len(decimal_year_grid)))
+
+    for i, params in enumerate(samples):
+        poly, _, lf = model_components(
+            x_grid,
+            *params,
+            polynomial_degree=polynomial_degree,
+            include_slow_harmonics=include_slow_harmonics,
+            base_period_slow_harmonics=base_period_slow_harmonics,
+            slow_harmonics=slow_harmonics,
+        )
+
+        polynomial_curves[i] = poly
+        low_frequency_curves[i] = lf
+        nonseasonal_curves[i] = poly + lf
+
+    polynomial_band = np.percentile(polynomial_curves, [16, 50, 84], axis=0)
+    low_frequency_band = np.percentile(low_frequency_curves, [16, 50, 84], axis=0)
+    nonseasonal_band = np.percentile(nonseasonal_curves, [16, 50, 84], axis=0)
+
+    return polynomial_band, low_frequency_band, nonseasonal_band
+
+
 def compute_mean_seasonal_band(
         samples,
         phase_grid,
