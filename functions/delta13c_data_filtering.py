@@ -3,7 +3,7 @@ import numpy as np
 
 def filter_valid_delta13C_values(dates, values, uncertainties, flags):
     """
-    Remove entries with non-finite delta13C values or uncertainties.
+    Remove entries with non-finite delta13CO2 values or uncertainties.
 
     Returns filtered dates, values, uncertainties, and flags.
     """

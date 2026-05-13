@@ -1,8 +1,8 @@
 # co2_and_isotopes_mcmc_fit
 
-Reusable Python code for fitting atmospheric CO2, δ13C-CO2 and Δ14C-CO2 time series using the flexible model framework described in Álvarez-Hernández et al. (2026). The fits are performed with a Bayesian MCMC approach using the `emcee` sampler.
+Reusable Python code for fitting atmospheric CO2, δ13CO2 and Δ14CO2 time series using the flexible model framework described in Álvarez-Hernández et al. (2026). The fits are performed with a Bayesian MCMC approach using the `emcee` sampler.
 
-The repository contains both general-purpose analysis tools and paper-specific scripts. The reusable scripts are intended to fit, diagnose and visualise CO2, δ13C-CO2 and Δ14C-CO2 time series using the same modelling approach as in Álvarez-Hernández et al. (2026).
+The repository contains both general-purpose analysis tools and paper-specific scripts. The reusable scripts are intended to fit, diagnose and visualise CO2, δ13CO2 and Δ14CO2 time series using the same modelling approach as in Álvarez-Hernández et al. (2026).
 
 The paper-specific scripts are included separately to support transparency and reproducibility of the figures and results presented in Álvarez-Hernández et al. (2026).
 
@@ -11,8 +11,8 @@ The paper-specific scripts are included separately to support transparency and r
 This codebase is designed for the analysis of long-term atmospheric carbon records, including:
 
 - CO2 dry-air mole fraction time series.
-- δ13C-CO2 carbon isotope time series.
-- Δ14C-CO2 radiocarbon time series.
+- δ13CO2 carbon isotope time series.
+- Δ14CO2 radiocarbon time series.
 
 The model represents each fitted time series as the sum of three components:
 
@@ -27,7 +27,7 @@ where:
 - `l(t)` is an optional low-frequency component representing interannual variability.
 - `t` is expressed in decimal years, with `t = 0` corresponding to 1985.0 in the default framework.
 
-The same general formulation can be applied to CO2, δ13C-CO2 and Δ14C-CO2, while allowing observable-specific configurations.
+The same general formulation can be applied to CO2, δ13CO2 and Δ14CO2, while allowing observable-specific configurations.
 
 ## Model overview
 
@@ -127,7 +127,7 @@ data/
   delta14c/
 ```
 
-Place the required input files in the corresponding subdirectories before running the fitting or plotting scripts. The expected formats are WDCGG for CO2, NOAA GML for δ13C-CO2 and Heidelberg Radiocarbon Laboratory format for Δ14C-CO2. For other formats, the data-reading logic in the scripts must be modified.
+Place the required input files in the corresponding subdirectories before running the fitting or plotting scripts. The expected formats are WDCGG for CO2, NOAA GML for δ13CO2 and Heidelberg Radiocarbon Laboratory format for Δ14CO2. For other formats, the data-reading logic in the scripts must be modified.
 
 The `data/climatic_indexes/` directory contains the small climate-index files used by the paper-specific comparison figures.
 
@@ -143,7 +143,7 @@ Local helper scripts for one-off data transformations are not part of the reusab
 
 ### `scripts/fit/`
 
-Reusable scripts for fitting CO2, δ13C-CO2 and Δ14C-CO2 time series using the Bayesian MCMC framework.
+Reusable scripts for fitting CO2, δ13CO2 and Δ14CO2 time series using the Bayesian MCMC framework.
 
 These scripts also generate the main diagnostic plots, such as:
 
@@ -253,8 +253,8 @@ scripts/fit/fit_mcmc_delta14c.py
 Each script is dedicated to one observable:
 
 - CO2;
-- δ13C-CO2;
-- Δ14C-CO2.
+- δ13CO2;
+- Δ14CO2.
 
 These scripts perform the Bayesian MCMC fit and generate the corresponding output products.
 

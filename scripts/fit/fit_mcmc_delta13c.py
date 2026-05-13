@@ -1,5 +1,5 @@
 """
-Fit a delta13C record to the model given by Equation 1 in Alvarez-Hernandez et al. (2026) using the emcee sampler.
+Fit a delta13CO2 record to the model given by Equation 1 in Alvarez-Hernandez et al. (2026) using the emcee sampler.
 
 The polynomial degree can be set using 'polynomial_degree'. The low-frequency term l(t) can be activated or deactivated using the boolean variable 'include_slow_harmonics'.
 The code can be used either with the original discrete flask measurements or with monthly averaged data. The input data file must be located in the 'data/delta13c' directory.
@@ -143,7 +143,7 @@ os.makedirs(plots_dir, exist_ok=True)
 # -------------------- MAIN WORKFLOW --------------------
 # -------------------------------------------------------
 
-print("Step 1: Load the full series of discrete delta13C measurements")
+print("Step 1: Load the full series of discrete delta13CO2 measurements")
 dates, values, uncertainties, flags = load_delta13C_series(input_path)
 print("-------------------------------------------------------")
 

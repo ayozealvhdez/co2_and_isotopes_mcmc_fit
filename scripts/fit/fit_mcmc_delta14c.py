@@ -1,5 +1,5 @@
 """
-Fit a delta14C record to the model given by Equation 1 in Alvarez-Hernandez et al. (2026) using the emcee sampler.
+Fit a Delta14CO2 record to the model given by Equation 1 in Alvarez-Hernandez et al. (2026) using the emcee sampler.
 
 The polynomial degree can be set using 'polynomial_degree'. The low-frequency term l(t) can be activated or deactivated using the boolean variable 'include_slow_harmonics'.
 The code can be used either with the original discrete integrated measurements or with monthly averaged data. The input data file must be located in the 'data/delta14c' directory.
@@ -144,7 +144,7 @@ os.makedirs(plots_dir, exist_ok=True)
 # -------------------- MAIN WORKFLOW --------------------
 # -------------------------------------------------------
 
-print("Step 1: Load the full series of discrete delta14C measurements")
+print("Step 1: Load the full series of discrete Delta14CO2 measurements")
 dates, values, uncertainties, flags, analytical_flags = load_delta14C_series(input_path)
 print("-------------------------------------------------------")
 

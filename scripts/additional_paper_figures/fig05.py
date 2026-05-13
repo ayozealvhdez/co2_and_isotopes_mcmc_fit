@@ -7,8 +7,8 @@ Rows:
 
 Columns, from left to right:
 - CO2 mole fraction.
-- delta13C-CO2.
-- delta14C-CO2.
+- delta13CO2.
+- Delta14CO2.
 
 For the mean seasonal component, each posterior sample is evaluated year by
 year and then averaged over complete years in the analysed period at each
@@ -67,7 +67,7 @@ co2_mlo_base_period_slow_harmonics = 30
 co2_mlo_slow_harmonics = [2,3,4,7,8]
 co2_mlo_timezero = 1985.0
 
-# ---------- delta13C IZO ----------
+# ---------- delta13CO2 IZO ----------
 d13c_izo_site_acronym = "IZO"
 d13c_izo_recompute_monthly_series = True
 d13c_izo_polynomial_degree = 2
@@ -76,7 +76,7 @@ d13c_izo_base_period_slow_harmonics = 30
 d13c_izo_slow_harmonics = [2,3]
 d13c_izo_timezero = 1985.0
 
-# ---------- delta13C MLO ----------
+# ---------- delta13CO2 MLO ----------
 d13c_mlo_site_acronym = "MLO"
 d13c_mlo_recompute_monthly_series = True
 d13c_mlo_polynomial_degree = 2
@@ -85,7 +85,7 @@ d13c_mlo_base_period_slow_harmonics = 30
 d13c_mlo_slow_harmonics = [2,3]
 d13c_mlo_timezero = 1985.0
 
-# ---------- delta14C IZO ----------
+# ---------- Delta14CO2 IZO ----------
 d14c_izo_site_acronym = "IZO"
 d14c_izo_recompute_monthly_series = True
 d14c_izo_polynomial_degree = 3
@@ -236,9 +236,9 @@ d14c_izo_samples = np.loadtxt(d14c_izo_samples_path, comments="#", ndmin=2)
 
 print(f"Loaded IZO CO2 samples from: {co2_izo_samples_path}")
 print(f"Loaded MLO CO2 samples from: {co2_mlo_samples_path}")
-print(f"Loaded IZO delta13C samples from: {d13c_izo_samples_path}")
-print(f"Loaded MLO delta13C samples from: {d13c_mlo_samples_path}")
-print(f"Loaded IZO delta14C samples from: {d14c_izo_samples_path}")
+print(f"Loaded IZO delta13CO2 samples from: {d13c_izo_samples_path}")
+print(f"Loaded MLO delta13CO2 samples from: {d13c_mlo_samples_path}")
+print(f"Loaded IZO Delta14CO2 samples from: {d14c_izo_samples_path}")
 print("-------------------------------------------------------")
 
 
@@ -288,12 +288,12 @@ plot_seasonal_band(ax12, month_grid, d13c_izo_seasonal_band, d13c_mlo_seasonal_b
 plot_seasonal_band(ax13, month_grid, d14c_izo_seasonal_band)
 
 ax11.set_ylabel("mean $s(t)$ CO$_2$ (ppm)", fontsize=15)
-ax12.set_ylabel(r"mean $s(t)$ $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=15)
-ax13.set_ylabel(r"mean $s(t)$ $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=15)
+ax12.set_ylabel(r"mean $s(t)$ $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15)
+ax13.set_ylabel(r"mean $s(t)$ $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15)
 
 ax11.set_title("CO$_2$", fontsize=16)
-ax12.set_title(r"$\delta^{13}$C-CO$_2$", fontsize=16)
-ax13.set_title(r"$\Delta^{14}$C-CO$_2$", fontsize=16)
+ax12.set_title(r"$\delta^{13}$CO$_2$", fontsize=16)
+ax13.set_title(r"$\Delta^{14}$CO$_2$", fontsize=16)
 
 # Row (b): annual peak-to-trough amplitude
 plot_amplitude_with_errorbars(ax21, co2_years, co2_mlo_amp_p16, co2_mlo_amp_p50, co2_mlo_amp_p84, color="r", alpha=1.0, label="MLO")
@@ -305,8 +305,8 @@ plot_amplitude_with_errorbars(ax22, d13c_years, d13c_izo_amp_p16, d13c_izo_amp_p
 plot_amplitude_with_errorbars(ax23, d14c_years, d14c_izo_amp_p16, d14c_izo_amp_p50, d14c_izo_amp_p84, color="k", alpha=1.0, label="IZO")
 
 ax21.set_ylabel("$s(t)$ amplitude CO$_2$ (ppm)", fontsize=15)
-ax22.set_ylabel(r"$s(t)$ amplitude $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=15)
-ax23.set_ylabel(r"$s(t)$ amplitude $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=15)
+ax22.set_ylabel(r"$s(t)$ amplitude $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15)
+ax23.set_ylabel(r"$s(t)$ amplitude $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15)
 
 # Axis formatting
 for ax in (ax11, ax12, ax13):

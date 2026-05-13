@@ -3,7 +3,7 @@ import numpy as np
 
 def filter_valid_delta14C_values(dates, values, uncertainties, flags, analytical_flags):
     """
-    Remove entries with non-finite delta14C values or uncertainties.
+    Remove entries with non-finite Delta14CO2 values or uncertainties.
 
     Returns filtered dates, values, uncertainties, flags, and analytical_flags.
     """
@@ -19,7 +19,7 @@ def filter_valid_delta14C_values(dates, values, uncertainties, flags, analytical
 
 def filter_delta14C_analysis_flag(dates, values, uncertainties, flags, analytical_flags):
     """
-    Keep all entries that are not clearly invalid according to the delta14C QC flags.
+    Keep all entries that are not clearly invalid according to the Delta14CO2 QC flags.
 
     Only measurements with sample flag different from 'O' or analytical flag equal
     to 'K' are removed.

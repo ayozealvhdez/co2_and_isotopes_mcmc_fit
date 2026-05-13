@@ -2,7 +2,7 @@ import numpy as np
 
 
 def load_delta14C_series(path):
-    """Load the file with the discrete delta14C measurements in the .c14 format.
+    """Load the file with the discrete Delta14CO2 measurements in the .c14 format.
 
     Returns:
         dates (np.ndarray): middate as np.datetime64

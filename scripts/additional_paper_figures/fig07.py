@@ -1,5 +1,5 @@
 """
-Compare IZO CO2, delta13C-CO2, and delta14C-CO2 fit residuals.
+Compare IZO CO2, delta13CO2, and Delta14CO2 fit residuals.
 
 Panel (a):
 - Time series of the residuals from the selected MCMC fits.
@@ -7,7 +7,7 @@ Panel (a):
   in the smoothed CO2 residuals.
 
 Panel (b):
-- Scatter plots of CO2 residuals against delta13C and delta14C residuals at
+- Scatter plots of CO2 residuals against delta13CO2 and Delta14CO2 residuals at
   common timestamps.
 - Points within the detected CO2 residual windows are overplotted with the same
   colors used in panel (a).
@@ -45,7 +45,7 @@ co2_include_slow_harmonics = True
 co2_base_period_slow_harmonics = 30
 co2_slow_harmonics = [2,3,4,7,8]
 
-# ---------- delta13C IZO ----------
+# ---------- delta13CO2 IZO ----------
 d13c_site_acronym = "IZO"
 d13c_recompute_monthly_series = True
 d13c_polynomial_degree = 2
@@ -53,7 +53,7 @@ d13c_include_slow_harmonics = True
 d13c_base_period_slow_harmonics = 30
 d13c_slow_harmonics = [2,3]
 
-# ---------- delta14C IZO ----------
+# ---------- Delta14CO2 IZO ----------
 d14c_site_acronym = "IZO"
 d14c_recompute_monthly_series = True
 d14c_polynomial_degree = 3
@@ -290,8 +290,8 @@ d13c_time, d13c_observed, d13c_yerr, d13c_fit, d13c_residuals = load_residual_fi
 d14c_time, d14c_observed, d14c_yerr, d14c_fit, d14c_residuals = load_residual_file(d14c_residuals_path)
 
 print(f"Loaded CO2 residuals from: {co2_residuals_path}")
-print(f"Loaded delta13C residuals from: {d13c_residuals_path}")
-print(f"Loaded delta14C residuals from: {d14c_residuals_path}")
+print(f"Loaded delta13CO2 residuals from: {d13c_residuals_path}")
+print(f"Loaded Delta14CO2 residuals from: {d14c_residuals_path}")
 print("-------------------------------------------------------")
 
 
@@ -316,8 +316,8 @@ common_time_14, co2_res_common_14, d14c_res_common, co2_yerr_common_14, d14c_yer
     d14c_yerr,
 )
 
-print("Number of common CO2-delta13C timestamps =", len(common_time_13))
-print("Number of common CO2-delta14C timestamps =", len(common_time_14))
+print("Number of common CO2-delta13CO2 timestamps =", len(common_time_13))
+print("Number of common CO2-Delta14CO2 timestamps =", len(common_time_14))
 print("-------------------------------------------------------")
 
 
@@ -364,10 +364,10 @@ print("Step 4: Build anomalous masks for common timestamps")
 window_mask_pos_13, window_mask_neg_13 = anomalous_masks_for_common_times(common_time_13, anomalous_periods)
 window_mask_pos_14, window_mask_neg_14 = anomalous_masks_for_common_times(common_time_14, anomalous_periods)
 
-print(f"Number of positive anomalous CO2-delta13C common points = {np.sum(window_mask_pos_13)}")
-print(f"Number of negative anomalous CO2-delta13C common points = {np.sum(window_mask_neg_13)}")
-print(f"Number of positive anomalous CO2-delta14C common points = {np.sum(window_mask_pos_14)}")
-print(f"Number of negative anomalous CO2-delta14C common points = {np.sum(window_mask_neg_14)}")
+print(f"Number of positive anomalous CO2-delta13CO2 common points = {np.sum(window_mask_pos_13)}")
+print(f"Number of negative anomalous CO2-delta13CO2 common points = {np.sum(window_mask_neg_13)}")
+print(f"Number of positive anomalous CO2-Delta14CO2 common points = {np.sum(window_mask_pos_14)}")
+print(f"Number of negative anomalous CO2-Delta14CO2 common points = {np.sum(window_mask_neg_14)}")
 print("-------------------------------------------------------")
 
 
@@ -403,41 +403,41 @@ ax1.set_ylabel("CO$_2$ residual (ppm)", fontsize=16)
 ax1.set_xlim(xlim_min, xlim_max)
 plt.setp(ax1.get_xticklabels(), visible=False)
 
-# Left, middle panel: delta13C residuals
+# Left, middle panel: delta13CO2 residuals
 shade_anomalous_windows(ax2, anomalous_periods, positive_color, negative_color)
 ax2.axhline(0, color="gray", linestyle="--", linewidth=0.8)
 ax2.errorbar(d13c_time, d13c_residuals, yerr=d13c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
-ax2.set_ylabel(r"$\delta^{13}$C residual ($\perthousand$)", fontsize=16)
+ax2.set_ylabel(r"$\delta^{13}$CO$_2$ residual ($\perthousand$)", fontsize=16)
 ax2.set_xlim(xlim_min, xlim_max)
 plt.setp(ax2.get_xticklabels(), visible=False)
 
-# Left, lower panel: delta14C residuals
+# Left, lower panel: Delta14CO2 residuals
 shade_anomalous_windows(ax3, anomalous_periods, positive_color, negative_color)
 ax3.axhline(0, color="gray", linestyle="--", linewidth=0.8)
 ax3.errorbar(d14c_time, d14c_residuals, yerr=d14c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax3.set_xlabel("Year", fontsize=16)
-ax3.set_ylabel(r"$\Delta^{14}$C residual ($\perthousand$)", fontsize=16)
+ax3.set_ylabel(r"$\Delta^{14}$CO$_2$ residual ($\perthousand$)", fontsize=16)
 ax3.set_xlim(xlim_min, xlim_max)
 
 fig.align_ylabels([ax1, ax2, ax3])
 
-# Right upper panel: CO2 versus delta13C residuals
+# Right upper panel: CO2 versus delta13CO2 residuals
 ax4.plot(co2_res_common_13, d13c_res_common, "ko", markersize=4, alpha=0.75)
 ax4.plot(co2_res_common_13[window_mask_pos_13], d13c_res_common[window_mask_pos_13], "o", color=positive_color, markersize=5)
 ax4.plot(co2_res_common_13[window_mask_neg_13], d13c_res_common[window_mask_neg_13], "o", color=negative_color, markersize=5)
 ax4.axhline(0, color="gray", linestyle="--", linewidth=0.8)
 ax4.axvline(0, color="gray", linestyle="--", linewidth=0.8)
 ax4.set_xlabel("CO$_2$ residual (ppm)", fontsize=16)
-ax4.set_ylabel(r"$\delta^{13}$C residual ($\perthousand$)", fontsize=16)
+ax4.set_ylabel(r"$\delta^{13}$CO$_2$ residual ($\perthousand$)", fontsize=16)
 
-# Right lower panel: CO2 versus delta14C residuals
+# Right lower panel: CO2 versus Delta14CO2 residuals
 ax5.plot(co2_res_common_14, d14c_res_common, "ko", markersize=4, alpha=0.75)
 ax5.plot(co2_res_common_14[window_mask_pos_14], d14c_res_common[window_mask_pos_14], "o", color=positive_color, markersize=5)
 ax5.plot(co2_res_common_14[window_mask_neg_14], d14c_res_common[window_mask_neg_14], "o", color=negative_color, markersize=5)
 ax5.axhline(0, color="gray", linestyle="--", linewidth=0.8)
 ax5.axvline(0, color="gray", linestyle="--", linewidth=0.8)
 ax5.set_xlabel("CO$_2$ residual (ppm)", fontsize=16)
-ax5.set_ylabel(r"$\Delta^{14}$C residual ($\perthousand$)", fontsize=16)
+ax5.set_ylabel(r"$\Delta^{14}$CO$_2$ residual ($\perthousand$)", fontsize=16)
 
 # Axis formatting
 for ax in (ax1, ax2, ax3, ax4, ax5):

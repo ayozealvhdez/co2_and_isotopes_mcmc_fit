@@ -2,8 +2,8 @@
 Build Appendix Fig. A1 by combining the isotope residual periodogram figures.
 
 The figure combines the residual periodograms for:
-- delta13C-CO2 at IZO and MLO.
-- delta14C-CO2 at IZO.
+- delta13CO2 at IZO and MLO.
+- Delta14CO2 at IZO.
 
 The result is stored in:
 results_and_plots/comparisons/figA1_periodograms_isotopes/figA1.png
@@ -28,7 +28,7 @@ from functions.utilities import gauss
 
 
 # -------------------------------------------------------
-# ---------------- SELECTED delta13C RUN 1 --------------
+# ---------------- SELECTED delta13CO2 RUN 1 ------------
 # -------------------------------------------------------
 d13c_run_1_label = "IZO"
 d13c_site_acronym_1 = "IZO"
@@ -42,7 +42,7 @@ d13c_color_1 = "k"
 
 
 # -------------------------------------------------------
-# ---------------- SELECTED delta13C RUN 2 --------------
+# ---------------- SELECTED delta13CO2 RUN 2 ------------
 # -------------------------------------------------------
 d13c_run_2_label = "MLO"
 d13c_site_acronym_2 = "MLO"
@@ -56,7 +56,7 @@ d13c_color_2 = "r"
 
 
 # -------------------------------------------------------
-# ---------------- SELECTED delta14C RUN ----------------
+# ---------------- SELECTED Delta14CO2 RUN --------------
 # -------------------------------------------------------
 d14c_run_label = "IZO-poly3-noSlow"
 d14c_site_acronym = "IZO"
@@ -132,7 +132,7 @@ print("-------------------------------------------------------")
 
 
 
-print(f"Step 2: Compute the Lomb-Scargle periodogram for {d13c_run_1_label} delta13C")
+print(f"Step 2: Compute the Lomb-Scargle periodogram for {d13c_run_1_label} delta13CO2")
 
 d13c_ls_1 = LombScargle(d13c_t_1, d13c_residuals_1, fit_mean=True, center_data=True, normalization=lomb_scargle_normalization)
 d13c_frequency_1, d13c_power_1 = d13c_ls_1.autopower(minimum_frequency=fmin, maximum_frequency=fmax, samples_per_peak=samples_per_peak)
@@ -144,7 +144,7 @@ print("-------------------------------------------------------")
 
 
 
-print(f"Step 3: Compute the Lomb-Scargle periodogram for {d13c_run_2_label} delta13C")
+print(f"Step 3: Compute the Lomb-Scargle periodogram for {d13c_run_2_label} delta13CO2")
 
 d13c_ls_2 = LombScargle(d13c_t_2, d13c_residuals_2, fit_mean=True, center_data=True, normalization=lomb_scargle_normalization)
 d13c_frequency_2, d13c_power_2 = d13c_ls_2.autopower(minimum_frequency=fmin, maximum_frequency=fmax, samples_per_peak=samples_per_peak)
@@ -156,7 +156,7 @@ print("-------------------------------------------------------")
 
 
 
-print(f"Step 4: Compute the Lomb-Scargle periodogram for {d14c_run_label} delta14C")
+print(f"Step 4: Compute the Lomb-Scargle periodogram for {d14c_run_label} Delta14CO2")
 
 d14c_ls = LombScargle(d14c_t, d14c_residuals, fit_mean=True, center_data=True, normalization=lomb_scargle_normalization)
 d14c_frequency, d14c_power = d14c_ls.autopower(minimum_frequency=fmin, maximum_frequency=fmax, samples_per_peak=samples_per_peak)
@@ -168,7 +168,7 @@ print("-------------------------------------------------------")
 
 
 
-print(f"Step 5: Identify candidate peaks for {d13c_run_1_label} delta13C")
+print(f"Step 5: Identify candidate peaks for {d13c_run_1_label} delta13CO2")
 
 d13c_threshold_1 = d13c_levels_1[1]  # 3 sigma approximate threshold
 d13c_peaks_idx_1, _ = find_peaks(d13c_power_1, height=d13c_threshold_1)
@@ -194,9 +194,9 @@ for pk in d13c_peaks_idx_1:
         d13c_fits_1.append({"mu": d13c_frequency_1[pk], "sigma": np.nan})
 
 if len(d13c_peaks_idx_1) == 0:
-    print(f"No candidate peaks found for {d13c_run_1_label} delta13C above the approximate threshold.")
+    print(f"No candidate peaks found for {d13c_run_1_label} delta13CO2 above the approximate threshold.")
 else:
-    print(f"Found {len(d13c_peaks_idx_1)} candidate peak(s) for {d13c_run_1_label} delta13C:")
+    print(f"Found {len(d13c_peaks_idx_1)} candidate peak(s) for {d13c_run_1_label} delta13CO2:")
     for pk in d13c_peaks_idx_1:
         f_pk = d13c_frequency_1[pk]
         print(f"  f = {f_pk:.4f} 1/yr  (period = {1/f_pk:.2f} yr)")
@@ -204,7 +204,7 @@ print("-------------------------------------------------------")
 
 
 
-print(f"Step 6: Identify candidate peaks for {d14c_run_label} delta14C")
+print(f"Step 6: Identify candidate peaks for {d14c_run_label} Delta14CO2")
 
 d14c_threshold = d14c_levels[1]  # 3 sigma approximate threshold
 d14c_peaks_idx, _ = find_peaks(d14c_power, height=d14c_threshold)
@@ -230,9 +230,9 @@ for pk in d14c_peaks_idx:
         d14c_fits.append({"mu": d14c_frequency[pk], "sigma": np.nan})
 
 if len(d14c_peaks_idx) == 0:
-    print(f"No candidate peaks found for {d14c_run_label} delta14C above the approximate threshold.")
+    print(f"No candidate peaks found for {d14c_run_label} Delta14CO2 above the approximate threshold.")
 else:
-    print(f"Found {len(d14c_peaks_idx)} candidate peak(s) for {d14c_run_label} delta14C:")
+    print(f"Found {len(d14c_peaks_idx)} candidate peak(s) for {d14c_run_label} Delta14CO2:")
     for pk in d14c_peaks_idx:
         f_pk = d14c_frequency[pk]
         print(f"  f = {f_pk:.4f} 1/yr  (period = {1/f_pk:.2f} yr)")
@@ -246,7 +246,7 @@ fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(9, 10.5), sharex=True)
 fig.subplots_adjust(hspace=0.08)
 
 
-# ---------------- delta13C panel ----------------
+# ---------------- delta13CO2 panel --------------
 ax1.plot(d13c_frequency_1, d13c_power_1, lw=1.8, color=d13c_color_1, label=d13c_run_1_label)
 ax1.plot(d13c_frequency_2, d13c_power_2, lw=1.8, color=d13c_color_2, label=d13c_run_2_label)
 
@@ -281,7 +281,7 @@ ax1.legend(loc="upper right", fontsize=12)
 ax1.set_xlim(fmin, fmax)
 
 
-# ---------------- delta14C panel ----------------
+# ---------------- Delta14CO2 panel --------------
 ax2.plot(d14c_frequency, d14c_power, lw=1.8, color=d14c_color, label=d14c_run_label)
 
 x_text = fmin + 0.93 * (fmax - fmin)

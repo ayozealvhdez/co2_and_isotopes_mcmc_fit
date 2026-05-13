@@ -1,5 +1,5 @@
 """
-For the three observables (CO2, delta13C, delta14C), plot the non-seasonal
+For the three observables (CO2, delta13CO2, Delta14CO2), plot the non-seasonal
 components inferred for the fitted records.
 
 Rows:
@@ -9,8 +9,8 @@ Rows:
 
 Columns, from left to right:
 - CO2 mole fraction.
-- delta13C-CO2.
-- delta14C-CO2.
+- delta13CO2.
+- Delta14CO2.
 
 The IZO components are shown in black, with shaded regions indicating 68%
 confidence intervals derived from joint posterior Monte Carlo draws.
@@ -66,7 +66,7 @@ co2_mlo_base_period_slow_harmonics = 30
 co2_mlo_slow_harmonics = [2,3,4,7,8]
 co2_mlo_timezero = 1985.0
 
-# ---------- delta13C IZO ----------
+# ---------- delta13CO2 IZO ----------
 d13c_izo_site_acronym = "IZO"
 d13c_izo_recompute_monthly_series = True
 d13c_izo_polynomial_degree = 2
@@ -75,7 +75,7 @@ d13c_izo_base_period_slow_harmonics = 30
 d13c_izo_slow_harmonics = [2,3]
 d13c_izo_timezero = 1985.0
 
-# ---------- delta13C MLO ----------
+# ---------- delta13CO2 MLO ----------
 d13c_mlo_site_acronym = "MLO"
 d13c_mlo_recompute_monthly_series = True
 d13c_mlo_polynomial_degree = 2
@@ -84,7 +84,7 @@ d13c_mlo_base_period_slow_harmonics = 30
 d13c_mlo_slow_harmonics = [2,3]
 d13c_mlo_timezero = 1985.0
 
-# ---------- delta14C IZO ----------
+# ---------- Delta14CO2 IZO ----------
 d14c_izo_site_acronym = "IZO"
 d14c_izo_recompute_monthly_series = True
 d14c_izo_polynomial_degree = 3
@@ -194,9 +194,9 @@ d14c_izo_samples = np.loadtxt(d14c_izo_samples_path, comments="#", ndmin=2)
 
 print(f"Loaded IZO CO2 samples from: {co2_izo_samples_path}")
 print(f"Loaded MLO CO2 samples from: {co2_mlo_samples_path}")
-print(f"Loaded IZO delta13C samples from: {d13c_izo_samples_path}")
-print(f"Loaded MLO delta13C samples from: {d13c_mlo_samples_path}")
-print(f"Loaded IZO delta14C samples from: {d14c_izo_samples_path}")
+print(f"Loaded IZO delta13CO2 samples from: {d13c_izo_samples_path}")
+print(f"Loaded MLO delta13CO2 samples from: {d13c_mlo_samples_path}")
+print(f"Loaded IZO Delta14CO2 samples from: {d14c_izo_samples_path}")
 print("-------------------------------------------------------")
 
 
@@ -233,8 +233,8 @@ plot_component_band(ax12, d13c_decimal_year_grid, d13c_izo_poly_band, d13c_mlo_p
 plot_component_band(ax13, d14c_decimal_year_grid, d14c_izo_poly_band)
 
 ax11.set_ylabel("$p(t)$ CO$_2$ (ppm)", fontsize=15, labelpad=6)
-ax12.set_ylabel(r"$p(t)$ $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
-ax13.set_ylabel(r"$p(t)$ $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax12.set_ylabel(r"$p(t)$ $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax13.set_ylabel(r"$p(t)$ $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
 
 # Row (b): l(t)
 plot_component_band(ax21, co2_decimal_year_grid, co2_izo_lf_band, co2_mlo_lf_band)
@@ -246,8 +246,8 @@ ax22.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
 ax23.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
 
 ax21.set_ylabel("$l(t)$ CO$_2$ (ppm)", fontsize=15, labelpad=6)
-ax22.set_ylabel(r"$l(t)$ $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
-ax23.set_ylabel(r"$l(t)$ $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax22.set_ylabel(r"$l(t)$ $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax23.set_ylabel(r"$l(t)$ $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
 
 # Row (c): p(t) + l(t)
 plot_component_band(ax31, co2_decimal_year_grid, co2_izo_nonseasonal_band, co2_mlo_nonseasonal_band)
@@ -255,12 +255,12 @@ plot_component_band(ax32, d13c_decimal_year_grid, d13c_izo_nonseasonal_band, d13
 plot_component_band(ax33, d14c_decimal_year_grid, d14c_izo_nonseasonal_band)
 
 ax31.set_ylabel("$p(t)+l(t)$ CO$_2$ (ppm)", fontsize=15, labelpad=6)
-ax32.set_ylabel(r"$p(t)+l(t)$ $\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
-ax33.set_ylabel(r"$p(t)+l(t)$ $\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax32.set_ylabel(r"$p(t)+l(t)$ $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax33.set_ylabel(r"$p(t)+l(t)$ $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
 
 ax11.set_title("CO$_2$", fontsize=16)
-ax12.set_title(r"$\delta^{13}$C-CO$_2$", fontsize=16)
-ax13.set_title(r"$\Delta^{14}$C-CO$_2$", fontsize=16)
+ax12.set_title(r"$\delta^{13}$CO$_2$", fontsize=16)
+ax13.set_title(r"$\Delta^{14}$CO$_2$", fontsize=16)
 
 for ax in (ax31, ax32, ax33):
     ax.set_xlabel("Year", fontsize=15)

@@ -59,10 +59,10 @@ def run_directory(project_root, observable, site_acronym, data_frequency, use_sl
     CO2 monthly run at IZO with slow harmonics and a quadratic polynomial:
         results_and_plots/co2/izo/monthly/poly2_withSlow_P30_K2-3-4-7-8
 
-    delta13C discrete run at MLO without slow harmonics and a quadratic polynomial:
+    delta13CO2 discrete run at MLO without slow harmonics and a quadratic polynomial:
         results_and_plots/delta13c/mlo/discrete/poly2_noSlow
 
-    delta14C monthly run at IZO without slow harmonics and a cubic polynomial:
+    Delta14CO2 monthly run at IZO without slow harmonics and a cubic polynomial:
         results_and_plots/delta14c/izo/monthly/poly3_noSlow
     """
     site_tag = site_acronym.lower()

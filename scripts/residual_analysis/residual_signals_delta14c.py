@@ -1,5 +1,5 @@
 """
-Compute the Lomb-Scargle periodogram of the residuals obtained from a previous MCMC run of delta14C in the 'fmin' to 'fmax' yr^-1 frequency range.
+Compute the Lomb-Scargle periodogram of the residuals obtained from a previous MCMC run of Delta14CO2 in the 'fmin' to 'fmax' yr^-1 frequency range.
 
 This script reads the file 'best_fit_and_residuals.txt' from the 'results' subdirectory of one selected run and computes the Lomb-Scargle periodogram of the residuals,
 together with the sampling-window periodogram.

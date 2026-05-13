@@ -2,16 +2,16 @@
 Plot all CO2 mole fraction and carbon isotope records used in the paper.
 
 Data:
-- IZO: CO2 mole fraction, delta13C-CO2, and delta14C-CO2.
-- MLO: CO2 mole fraction and delta13C-CO2.
+- IZO: CO2 mole fraction, delta13CO2, and Delta14CO2.
+- MLO: CO2 mole fraction and delta13CO2.
 
 The script reads the file 'best_fit_and_residuals.txt' from the selected paper runs.
 Only the observed values and uncertainties are used.
 
 Panels:
 - Upper: CO2 mole fraction.
-- Middle: delta13C-CO2.
-- Lower: delta14C-CO2.
+- Middle: delta13CO2.
+- Lower: Delta14CO2.
 
 IZO data are shown as black points with error bars.
 MLO data are shown as semitransparent red points with error bars.
@@ -54,7 +54,7 @@ co2_mlo_include_slow_harmonics = True
 co2_mlo_base_period_slow_harmonics = 30
 co2_mlo_slow_harmonics = [2,3,4,7,8]
 
-# ---------- delta13C IZO ----------
+# ---------- delta13CO2 IZO ----------
 d13c_izo_site_acronym = "IZO"
 d13c_izo_recompute_monthly_series = True
 d13c_izo_polynomial_degree = 2
@@ -62,7 +62,7 @@ d13c_izo_include_slow_harmonics = True
 d13c_izo_base_period_slow_harmonics = 30
 d13c_izo_slow_harmonics = [2,3]
 
-# ---------- delta13C MLO ----------
+# ---------- delta13CO2 MLO ----------
 d13c_mlo_site_acronym = "MLO"
 d13c_mlo_recompute_monthly_series = True
 d13c_mlo_polynomial_degree = 2
@@ -70,7 +70,7 @@ d13c_mlo_include_slow_harmonics = True
 d13c_mlo_base_period_slow_harmonics = 30
 d13c_mlo_slow_harmonics = [2,3]
 
-# ---------- delta14C IZO ----------
+# ---------- Delta14CO2 IZO ----------
 d14c_izo_site_acronym = "IZO"
 d14c_izo_recompute_monthly_series = True
 d14c_izo_polynomial_degree = 3
@@ -181,9 +181,9 @@ d14c_izo_time, d14c_izo_observed, d14c_izo_yerr = load_observed_series(d14c_izo_
 
 print(f"Loaded IZO CO2 data from: {co2_izo_file}")
 print(f"Loaded MLO CO2 data from: {co2_mlo_file}")
-print(f"Loaded IZO delta13C data from: {d13c_izo_file}")
-print(f"Loaded MLO delta13C data from: {d13c_mlo_file}")
-print(f"Loaded IZO delta14C data from: {d14c_izo_file}")
+print(f"Loaded IZO delta13CO2 data from: {d13c_izo_file}")
+print(f"Loaded MLO delta13CO2 data from: {d13c_mlo_file}")
+print(f"Loaded IZO Delta14CO2 data from: {d14c_izo_file}")
 print("-------------------------------------------------------")
 
 
@@ -198,15 +198,15 @@ ax1.errorbar(co2_mlo_time, co2_mlo_observed, yerr=co2_mlo_yerr, fmt="ro", alpha=
 ax1.errorbar(co2_izo_time, co2_izo_observed, yerr=co2_izo_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8, label="IZO")
 ax1.set_ylabel("CO$_2$ (ppm)", fontsize=16)
 
-# Middle panel: delta13C observed data
+# Middle panel: delta13CO2 observed data
 ax2.errorbar(d13c_mlo_time, d13c_mlo_observed, yerr=d13c_mlo_yerr, fmt="ro", alpha=0.35, markersize=3, elinewidth=0.8, capsize=2, capthick=0.8, label="MLO")
 ax2.errorbar(d13c_izo_time, d13c_izo_observed, yerr=d13c_izo_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8, label="IZO")
-ax2.set_ylabel(r"$\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=16)
+ax2.set_ylabel(r"$\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=16)
 
-# Lower panel: delta14C observed data
+# Lower panel: Delta14CO2 observed data
 ax3.errorbar(d14c_izo_time, d14c_izo_observed, yerr=d14c_izo_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8, label="IZO")
 ax3.set_xlabel("Year", fontsize=16)
-ax3.set_ylabel(r"$\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=16)
+ax3.set_ylabel(r"$\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=16)
 
 # Axis formatting
 for ax in (ax1, ax2, ax3):

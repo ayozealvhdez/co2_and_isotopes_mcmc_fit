@@ -1,5 +1,5 @@
 """
-Plot the fitted delta13C series, the posterior median model, the 68% confidence band, the posterior median p(t) + l(t) component with its 68% confidence band, and the residuals from a previous MCMC run performed with 'fit_mcmc_delta13c.py'.
+Plot the fitted delta13CO2 series, the posterior median model, the 68% confidence band, the posterior median p(t) + l(t) component with its 68% confidence band, and the residuals from a previous MCMC run performed with 'fit_mcmc_delta13c.py'.
 
 The script reads:
 - 'samples_for_MC.txt', containing posterior samples drawn from the MCMC chain during the execution of 'fit_mcmc_delta13c.py'
@@ -10,7 +10,7 @@ To select the version of these files corresponding to the run you want to plot, 
 The posterior median model curve, the posterior median p(t) + l(t) curve, and their confidence bands are computed on a regular grid in decimal years for all posterior samples by taking the 16th, 50th (median), and 84th percentiles at each grid point.
 
 The script stores the following plot in results_and_plots/delta13c/<site_acronym.lower()>/<data_tag>/<model_tag>/plots/
-- Upper panel: Observed delta13C series alongside the posterior median model and the posterior median p(t) + l(t) component, with shaded bands indicating 68% CL derived from Monte Carlo with joint posterior vectors. Lower panel: residuals of the fit.
+- Upper panel: Observed delta13CO2 series alongside the posterior median model and the posterior median p(t) + l(t) component, with shaded bands indicating 68% CL derived from Monte Carlo with joint posterior vectors. Lower panel: residuals of the fit.
 """
 
 
@@ -169,7 +169,7 @@ ax1.plot(
     linewidth=1.1,
     zorder=3,
 )
-ax1.set_ylabel(r"$\delta^{13}$C-CO$_2$ ($\perthousand$)", size=20)
+ax1.set_ylabel(r"$\delta^{13}$CO$_2$ ($\perthousand$)", size=20)
 ax1.tick_params(axis="both", labelsize=18, direction="in", top=True, right=True, length=6)
 ax1.minorticks_on()
 ax1.tick_params(which="minor", direction="in", top=True, right=True, length=3, width=0.8)
@@ -189,7 +189,7 @@ ax2.errorbar(
     capthick=0.8,
 )
 ax2.set_xlabel("Year", size=20)
-ax2.set_ylabel(r"$\delta^{13}$C-CO$_2$ - $f(t)$ ($\perthousand$)", size=20)
+ax2.set_ylabel(r"$\delta^{13}$CO$_2$ - $f(t)$ ($\perthousand$)", size=20)
 ax2.tick_params(axis="both", labelsize=18, direction="in", top=True, right=True, length=6)
 ax2.minorticks_on()
 ax2.tick_params(which="minor", direction="in", top=True, right=True, length=3, width=0.8)

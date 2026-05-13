@@ -1,10 +1,10 @@
 """
-For the three observables (CO2, delta13C, delta14C), plot the fitted series, the posterior median model, the 68% confidence band, the Thoning-like seasonally adjusted trend p(t) + l(t), and the residuals.
+For the three observables (CO2, delta13CO2, Delta14CO2), plot the fitted series, the posterior median model, the 68% confidence band, the Thoning-like seasonally adjusted trend p(t) + l(t), and the residuals.
 
 Layout:
 - Upper block: CO2, spanning the full figure width.
-- Lower-left block: delta13C.
-- Lower-right block: delta14C.
+- Lower-left block: delta13CO2.
+- Lower-right block: Delta14CO2.
 
 For each observable:
 - Upper panel: observed data, posterior median model and 68% confidence band, plus the Thoning-like seasonally adjusted trend p(t) + l(t) and its 68% confidence band.
@@ -52,7 +52,7 @@ co2_base_period_slow_harmonics = 30
 co2_slow_harmonics = [2,3,4,7,8]
 co2_timezero = 1985.0
 
-# ---------- delta13C IZO ----------
+# ---------- delta13CO2 IZO ----------
 d13c_site_acronym = "IZO"
 d13c_recompute_monthly_series = True
 d13c_polynomial_degree = 2
@@ -61,7 +61,7 @@ d13c_base_period_slow_harmonics = 30
 d13c_slow_harmonics = [2,3]
 d13c_timezero = 1985.0
 
-# ---------- delta14C IZO ----------
+# ---------- Delta14CO2 IZO ----------
 d14c_site_acronym = "IZO"
 d14c_recompute_monthly_series = True
 d14c_polynomial_degree = 3
@@ -179,10 +179,10 @@ d14c_residuals = d14c_data[:, 5]
 
 print(f"Loaded CO2 samples from: {co2_samples_path}")
 print(f"Loaded CO2 best fit and residuals from: {co2_best_fit_and_residuals_path}")
-print(f"Loaded delta13C samples from: {d13c_samples_path}")
-print(f"Loaded delta13C best fit and residuals from: {d13c_best_fit_and_residuals_path}")
-print(f"Loaded delta14C samples from: {d14c_samples_path}")
-print(f"Loaded delta14C best fit and residuals from: {d14c_best_fit_and_residuals_path}")
+print(f"Loaded delta13CO2 samples from: {d13c_samples_path}")
+print(f"Loaded delta13CO2 best fit and residuals from: {d13c_best_fit_and_residuals_path}")
+print(f"Loaded Delta14CO2 samples from: {d14c_samples_path}")
+print(f"Loaded Delta14CO2 best fit and residuals from: {d14c_best_fit_and_residuals_path}")
 print("-------------------------------------------------------")
 
 
@@ -241,30 +241,30 @@ ax21.set_xlabel("Year", fontsize=14)
 ax21.set_ylabel("Residuals (ppm)", fontsize=13)
 ax21.set_xlim(1985,2025)
 
-# Lower-left block: delta13C observed data and fitted model
+# Lower-left block: delta13CO2 observed data and fitted model
 ax12.errorbar(d13c_time, d13c_observed, yerr=d13c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax12.fill_between(d13c_decimal_year_grid, d13c_p16, d13c_p84, color="b", alpha=0.25, linewidth=0)
 ax12.fill_between(d13c_decimal_year_grid, d13c_trend_p16, d13c_trend_p84, color=trend_color, alpha=0.16, linewidth=0)
 ax12.plot(d13c_decimal_year_grid, d13c_p50, "b-", lw=0.8)
 ax12.plot(d13c_decimal_year_grid, d13c_trend_p50, color=trend_color, lw=1.1)
-ax12.set_ylabel(r"$\delta^{13}$C-CO$_2$ ($\perthousand$)", fontsize=14)
+ax12.set_ylabel(r"$\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=14)
 
-# delta13C residuals
+# delta13CO2 residuals
 ax22.axhline(0, color="0.5", lw=1.0, linestyle="--")
 ax22.errorbar(d13c_time, d13c_residuals, yerr=d13c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax22.set_xlabel("Year", fontsize=14)
 ax22.set_ylabel(r"Residuals ($\perthousand$)", fontsize=13)
 ax22.set_xlim(1985,2025)
 
-# Lower-right block: delta14C observed data and fitted model
+# Lower-right block: Delta14CO2 observed data and fitted model
 ax13.errorbar(d14c_time, d14c_observed, yerr=d14c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax13.fill_between(d14c_decimal_year_grid, d14c_p16, d14c_p84, color="b", alpha=0.25, linewidth=0)
 ax13.fill_between(d14c_decimal_year_grid, d14c_trend_p16, d14c_trend_p84, color=trend_color, alpha=0.16, linewidth=0)
 ax13.plot(d14c_decimal_year_grid, d14c_p50, "b-", lw=0.8)
 ax13.plot(d14c_decimal_year_grid, d14c_trend_p50, color=trend_color, lw=1.1)
-ax13.set_ylabel(r"$\Delta^{14}$C-CO$_2$ ($\perthousand$)", fontsize=14)
+ax13.set_ylabel(r"$\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=14)
 
-# delta14C residuals
+# Delta14CO2 residuals
 ax23.axhline(0, color="0.5", lw=1.0, linestyle="--")
 ax23.errorbar(d14c_time, d14c_residuals, yerr=d14c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax23.set_xlabel("Year", fontsize=14)

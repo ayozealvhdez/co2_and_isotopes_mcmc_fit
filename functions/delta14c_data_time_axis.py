@@ -4,7 +4,7 @@ import datetime
 
 def compute_monthly_means_delta14C(dates, values, uncertainties):
     """
-    Compute monthly mean values from discrete delta14C measurements.
+    Compute monthly mean values from discrete Delta14CO2 measurements.
 
     Returns:
     - monthly_dates
