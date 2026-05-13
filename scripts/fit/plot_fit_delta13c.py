@@ -1,5 +1,5 @@
 """
-Plot the fitted delta13C series, the posterior median model, the 68% confidence band, and the residuals from a previous MCMC run performed with 'fit_mcmc_delta13c.py'.
+Plot the fitted delta13C series, the posterior median model, the 68% confidence band, the posterior median p(t) + l(t) component with its 68% confidence band, and the residuals from a previous MCMC run performed with 'fit_mcmc_delta13c.py'.
 
 The script reads:
 - 'samples_for_MC.txt', containing posterior samples drawn from the MCMC chain during the execution of 'fit_mcmc_delta13c.py'
@@ -7,12 +7,10 @@ The script reads:
 
 To select the version of these files corresponding to the run you want to plot, the matching run configuration must be specified in the 'SELECTED RUN' block.
 
-The posterior median model curve and the confidence band are computed by evaluating the model on a regular grid in decimal years for all posterior samples and taking the
-16th, 50th (median), and 84th percentiles at each grid point.
+The posterior median model curve, the posterior median p(t) + l(t) curve, and their confidence bands are computed on a regular grid in decimal years for all posterior samples by taking the 16th, 50th (median), and 84th percentiles at each grid point.
 
 The script stores the following plot in results_and_plots/delta13c/<site_acronym.lower()>/<data_tag>/<model_tag>/plots/
-- Upper panel: Observed delta13C series alongside the posterior median model, with shaded band indicating 68% CL derived from Monte Carlo
-with joint posterior vectors. Lower panel: residuals of the fit.
+- Upper panel: Observed delta13C series alongside the posterior median model and the posterior median p(t) + l(t) component, with shaded bands indicating 68% CL derived from Monte Carlo with joint posterior vectors. Lower panel: residuals of the fit.
 """
 
 
@@ -24,7 +22,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from functions.model import model
+from functions.model import model_components
 from functions.paths import find_project_root, run_results_directory, run_plots_directory
 
 
@@ -94,9 +92,12 @@ print("-------------------------------------------------------")
 
 
 
-print(f"Step 3: Compute the posterior median model curve and 68% confidence band from {len(samples)} posterior samples")
-y_fits_grid = np.array([
-    model(
+print(f"Step 3: Compute posterior median model and p(t) + l(t) curves with 68% confidence bands from {len(samples)} posterior samples")
+y_fits_grid = np.empty((len(samples), len(grid_decimal_dates)))
+trend_fits_grid = np.empty((len(samples), len(grid_decimal_dates)))
+
+for i, pars in enumerate(samples):
+    poly, seasonal, lf = model_components(
         x_fit_grid,
         *pars,
         polynomial_degree=polynomial_degree,
@@ -104,10 +105,11 @@ y_fits_grid = np.array([
         base_period_slow_harmonics=base_period_slow_harmonics,
         slow_harmonics=slow_harmonics,
     )
-    for pars in samples
-])
+    y_fits_grid[i] = poly + seasonal + lf
+    trend_fits_grid[i] = poly + lf
 
 p16, p50, p84 = np.percentile(y_fits_grid, [16, 50, 84], axis=0)
+trend_p16, trend_p50, trend_p84 = np.percentile(trend_fits_grid, [16, 50, 84], axis=0)
 
 print("-------------------------------------------------------")
 
@@ -123,7 +125,9 @@ fig, (ax1, ax2) = plt.subplots(
 )
 
 
-# Upper panel: fit and data
+# Upper panel: fit, p(t) + l(t), and data
+trend_color = "crimson"
+
 ax1.errorbar(
     decimal_dates,
     delta13c,
@@ -142,12 +146,28 @@ ax1.fill_between(
     alpha=0.15,
     zorder=1,
 )
+ax1.fill_between(
+    grid_decimal_dates,
+    trend_p16,
+    trend_p84,
+    color=trend_color,
+    alpha=0.16,
+    linewidth=0,
+    zorder=1,
+)
 ax1.plot(
     grid_decimal_dates,
     p50,
     "b",
     linewidth=0.8,
     zorder=2,
+)
+ax1.plot(
+    grid_decimal_dates,
+    trend_p50,
+    color=trend_color,
+    linewidth=1.1,
+    zorder=3,
 )
 ax1.set_ylabel(r"$\delta^{13}$C-CO$_2$ ($\perthousand$)", size=20)
 ax1.tick_params(axis="both", labelsize=18, direction="in", top=True, right=True, length=6)
