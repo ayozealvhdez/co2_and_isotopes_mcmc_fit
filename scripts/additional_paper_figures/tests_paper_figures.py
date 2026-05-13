@@ -27,6 +27,7 @@ from scripts.additional_paper_figures.paper_figure_calculations import (
     compute_mean_seasonal_band,
     compute_nonseasonal_component_bands,
     compute_polynomial_band,
+    compute_yearly_seasonal_band,
     load_nino34_anomaly,
     map_monthly_series_to_grid,
     pearson_correlation_by_lag,
@@ -202,6 +203,36 @@ def test_annual_amplitude_band_uses_peak_to_trough_seasonal_component():
     np.testing.assert_allclose(p16, [expected_p16])
     np.testing.assert_allclose(p50, [expected_p50])
     np.testing.assert_allclose(p84, [expected_p84])
+
+
+def test_yearly_seasonal_cycle_uses_requested_year():
+    """Check Fig. 05 selected-year s(t) uses the requested calendar year."""
+    phase_grid = np.array([0.0, 0.25, 0.5, 0.75])
+    year = 2003
+    timezero = 2000.0
+    samples = np.array([
+        degree1_sample(b1=2.0, bp1=1.0),
+        degree1_sample(b1=2.0, bp1=1.0),
+        degree1_sample(b1=2.0, bp1=1.0),
+    ])
+
+    p16, p50, p84 = compute_yearly_seasonal_band(
+        samples,
+        phase_grid,
+        year,
+        timezero,
+        polynomial_degree=1,
+        include_slow_harmonics=False,
+        base_period_slow_harmonics=30,
+        slow_harmonics=[],
+    )
+
+    x_phase = year + phase_grid - timezero
+    expected = (2.0 + x_phase) * np.sin(2.0 * np.pi * x_phase)
+
+    np.testing.assert_allclose(p16, expected, atol=1e-12)
+    np.testing.assert_allclose(p50, expected, atol=1e-12)
+    np.testing.assert_allclose(p84, expected, atol=1e-12)
 
 
 def test_low_frequency_band_returns_ell_and_analytical_derivative():

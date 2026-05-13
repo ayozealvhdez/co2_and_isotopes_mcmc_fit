@@ -3,7 +3,8 @@ Plot the seasonal component inferred for the fitted records.
 
 Rows:
 - (a) mean seasonal component s(t).
-- (b) annual peak-to-trough seasonal amplitude.
+- (b) seasonal component s(t) for the first and last selected years.
+- (c) annual peak-to-trough seasonal amplitude.
 
 Columns, from left to right:
 - CO2 mole fraction.
@@ -18,6 +19,9 @@ and c1 + cp1*t in the calculation.
 For the annual amplitude, the seasonal component s(t) is evaluated on a daily
 grid and the amplitude is computed as max(s) - min(s) for each posterior
 sample and year.
+
+For the selected yearly cycles, dashed lines show the first selected year and
+dotted lines show the last selected year. IZO is shown in black and MLO in red.
 
 The IZO results are shown in black. The corresponding MLO results are shown in
 semitransparent red where an equivalent MLO record is available.
@@ -41,7 +45,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from functions.paths import find_project_root, run_results_directory, comparison_directory
-from scripts.additional_paper_figures.paper_figure_calculations import compute_mean_seasonal_band, compute_annual_amplitude_band
+from scripts.additional_paper_figures.paper_figure_calculations import compute_mean_seasonal_band, compute_yearly_seasonal_band, compute_annual_amplitude_band
 
 
 
@@ -108,6 +112,13 @@ co2_years = np.arange(1985, 2025)
 d13c_years = np.arange(1992, 2025)
 d14c_years = np.arange(1985, 2024)
 
+co2_cycle_start_year = 1985
+co2_cycle_end_year = 2024
+d13c_cycle_start_year = 1992
+d13c_cycle_end_year = 2024
+d14c_cycle_start_year = 1985
+d14c_cycle_end_year = 2023
+
 n_phase = 500
 phase_grid = np.linspace(0.0, 1.0, n_phase)
 month_grid = 12.0 * phase_grid
@@ -160,6 +171,41 @@ def plot_seasonal_band(ax, month_grid, izo_band, mlo_band=None, show_labels=Fals
     ax.plot(month_grid, izo_band[2], color="k", linewidth=0.55, alpha=0.75, zorder=4)
     ax.plot(month_grid, izo_band[1], color="k", linewidth=1.4, zorder=5, label="IZO" if show_labels else None)
     ax.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
+
+    set_symmetric_ylim(ax, curves_for_ylim)
+
+
+def plot_selected_year_cycles(
+        ax,
+        month_grid,
+        izo_start_band,
+        izo_end_band,
+        start_year,
+        end_year,
+        mlo_start_band=None,
+        mlo_end_band=None):
+    """
+    Plot posterior median seasonal cycles for the selected start and end years.
+    """
+    curves_for_ylim = [izo_start_band[1], izo_end_band[1]]
+
+    if mlo_start_band is not None and mlo_end_band is not None:
+        ax.plot(month_grid, mlo_start_band[1], color="r", linestyle="--", linewidth=1.4, alpha=0.55, zorder=3)
+        ax.plot(month_grid, mlo_end_band[1], color="r", linestyle=":", linewidth=1.8, alpha=0.65, zorder=4)
+        curves_for_ylim.extend([mlo_start_band[1], mlo_end_band[1]])
+
+    ax.plot(month_grid, izo_start_band[1], color="k", linestyle="--", linewidth=1.4, zorder=5)
+    ax.plot(month_grid, izo_end_band[1], color="k", linestyle=":", linewidth=1.8, zorder=6)
+    ax.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
+    ax.text(
+        0.03,
+        0.94,
+        f"{start_year}: dashed\n{end_year}: dotted",
+        transform=ax.transAxes,
+        fontsize=10,
+        va="top",
+        ha="left",
+    )
 
     set_symmetric_ylim(ax, curves_for_ylim)
 
@@ -257,7 +303,26 @@ print("-------------------------------------------------------")
 
 
 
-print("Step 3: Compute annual peak-to-trough amplitudes")
+print("Step 3: Compute selected yearly seasonal cycles")
+
+co2_izo_start_cycle_band = compute_yearly_seasonal_band(co2_izo_samples, phase_grid, co2_cycle_start_year, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_base_period_slow_harmonics, co2_izo_slow_harmonics)
+co2_izo_end_cycle_band = compute_yearly_seasonal_band(co2_izo_samples, phase_grid, co2_cycle_end_year, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_base_period_slow_harmonics, co2_izo_slow_harmonics)
+co2_mlo_start_cycle_band = compute_yearly_seasonal_band(co2_mlo_samples, phase_grid, co2_cycle_start_year, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_base_period_slow_harmonics, co2_mlo_slow_harmonics)
+co2_mlo_end_cycle_band = compute_yearly_seasonal_band(co2_mlo_samples, phase_grid, co2_cycle_end_year, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_base_period_slow_harmonics, co2_mlo_slow_harmonics)
+
+d13c_izo_start_cycle_band = compute_yearly_seasonal_band(d13c_izo_samples, phase_grid, d13c_cycle_start_year, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_base_period_slow_harmonics, d13c_izo_slow_harmonics)
+d13c_izo_end_cycle_band = compute_yearly_seasonal_band(d13c_izo_samples, phase_grid, d13c_cycle_end_year, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_base_period_slow_harmonics, d13c_izo_slow_harmonics)
+d13c_mlo_start_cycle_band = compute_yearly_seasonal_band(d13c_mlo_samples, phase_grid, d13c_cycle_start_year, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_base_period_slow_harmonics, d13c_mlo_slow_harmonics)
+d13c_mlo_end_cycle_band = compute_yearly_seasonal_band(d13c_mlo_samples, phase_grid, d13c_cycle_end_year, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_base_period_slow_harmonics, d13c_mlo_slow_harmonics)
+
+d14c_izo_start_cycle_band = compute_yearly_seasonal_band(d14c_izo_samples, phase_grid, d14c_cycle_start_year, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_base_period_slow_harmonics, d14c_izo_slow_harmonics)
+d14c_izo_end_cycle_band = compute_yearly_seasonal_band(d14c_izo_samples, phase_grid, d14c_cycle_end_year, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_base_period_slow_harmonics, d14c_izo_slow_harmonics)
+
+print("-------------------------------------------------------")
+
+
+
+print("Step 4: Compute annual peak-to-trough amplitudes")
 start = time.time()
 
 co2_izo_amp_p16, co2_izo_amp_p50, co2_izo_amp_p84 = compute_annual_amplitude_band(co2_izo_samples, co2_years, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_base_period_slow_harmonics, co2_izo_slow_harmonics)
@@ -274,13 +339,14 @@ print("-------------------------------------------------------")
 
 
 
-print("Step 4: Plot the figure")
+print("Step 5: Plot the figure")
 
-fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(13.8, 8.8), sharex=False)
-fig.subplots_adjust(wspace=0.34, hspace=0.32)
+fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(13.8, 11.5), sharex=False)
+fig.subplots_adjust(wspace=0.34, hspace=0.26)
 
 ax11, ax12, ax13 = axes[0]
 ax21, ax22, ax23 = axes[1]
+ax31, ax32, ax33 = axes[2]
 
 # Row (a): mean seasonal component
 plot_seasonal_band(ax11, month_grid, co2_izo_seasonal_band, co2_mlo_seasonal_band, show_labels=True)
@@ -295,21 +361,30 @@ ax11.set_title("CO$_2$", fontsize=16)
 ax12.set_title(r"$\delta^{13}$CO$_2$", fontsize=16)
 ax13.set_title(r"$\Delta^{14}$CO$_2$", fontsize=16)
 
-# Row (b): annual peak-to-trough amplitude
-plot_amplitude_with_errorbars(ax21, co2_years, co2_mlo_amp_p16, co2_mlo_amp_p50, co2_mlo_amp_p84, color="r", alpha=1.0, label="MLO")
-plot_amplitude_with_errorbars(ax21, co2_years, co2_izo_amp_p16, co2_izo_amp_p50, co2_izo_amp_p84, color="k", alpha=1.0, label="IZO")
+# Row (b): selected yearly seasonal cycles
+plot_selected_year_cycles(ax21, month_grid, co2_izo_start_cycle_band, co2_izo_end_cycle_band, co2_cycle_start_year, co2_cycle_end_year, co2_mlo_start_cycle_band, co2_mlo_end_cycle_band)
+plot_selected_year_cycles(ax22, month_grid, d13c_izo_start_cycle_band, d13c_izo_end_cycle_band, d13c_cycle_start_year, d13c_cycle_end_year, d13c_mlo_start_cycle_band, d13c_mlo_end_cycle_band)
+plot_selected_year_cycles(ax23, month_grid, d14c_izo_start_cycle_band, d14c_izo_end_cycle_band, d14c_cycle_start_year, d14c_cycle_end_year)
 
-plot_amplitude_with_errorbars(ax22, d13c_years, d13c_mlo_amp_p16, d13c_mlo_amp_p50, d13c_mlo_amp_p84, color="r", alpha=1.0, label="MLO")
-plot_amplitude_with_errorbars(ax22, d13c_years, d13c_izo_amp_p16, d13c_izo_amp_p50, d13c_izo_amp_p84, color="k", alpha=1.0, label="IZO")
+ax21.set_ylabel("selected-year $s(t)$ CO$_2$ (ppm)", fontsize=15)
+ax22.set_ylabel(r"selected-year $s(t)$ $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15)
+ax23.set_ylabel(r"selected-year $s(t)$ $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15)
 
-plot_amplitude_with_errorbars(ax23, d14c_years, d14c_izo_amp_p16, d14c_izo_amp_p50, d14c_izo_amp_p84, color="k", alpha=1.0, label="IZO")
+# Row (c): annual peak-to-trough amplitude
+plot_amplitude_with_errorbars(ax31, co2_years, co2_mlo_amp_p16, co2_mlo_amp_p50, co2_mlo_amp_p84, color="r", alpha=1.0, label="MLO")
+plot_amplitude_with_errorbars(ax31, co2_years, co2_izo_amp_p16, co2_izo_amp_p50, co2_izo_amp_p84, color="k", alpha=1.0, label="IZO")
 
-ax21.set_ylabel("$s(t)$ amplitude CO$_2$ (ppm)", fontsize=15)
-ax22.set_ylabel(r"$s(t)$ amplitude $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15)
-ax23.set_ylabel(r"$s(t)$ amplitude $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15)
+plot_amplitude_with_errorbars(ax32, d13c_years, d13c_mlo_amp_p16, d13c_mlo_amp_p50, d13c_mlo_amp_p84, color="r", alpha=1.0, label="MLO")
+plot_amplitude_with_errorbars(ax32, d13c_years, d13c_izo_amp_p16, d13c_izo_amp_p50, d13c_izo_amp_p84, color="k", alpha=1.0, label="IZO")
+
+plot_amplitude_with_errorbars(ax33, d14c_years, d14c_izo_amp_p16, d14c_izo_amp_p50, d14c_izo_amp_p84, color="k", alpha=1.0, label="IZO")
+
+ax31.set_ylabel("$s(t)$ amplitude CO$_2$ (ppm)", fontsize=15)
+ax32.set_ylabel(r"$s(t)$ amplitude $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15)
+ax33.set_ylabel(r"$s(t)$ amplitude $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15)
 
 # Axis formatting
-for ax in (ax11, ax12, ax13):
+for ax in (ax11, ax12, ax13, ax21, ax22, ax23):
     ax.tick_params(axis="both", direction="in", top=True, right=True, labelsize=12, length=6, width=1)
     ax.minorticks_on()
     ax.tick_params(which="minor", direction="in", top=True, right=True, length=3, width=0.8)
@@ -318,7 +393,7 @@ for ax in (ax11, ax12, ax13):
     ax.set_xticklabels(["Jan", "Apr", "Jul", "Oct", "Jan"])
     ax.set_xlabel("Month", fontsize=15)
 
-for ax in (ax21, ax22, ax23):
+for ax in (ax31, ax32, ax33):
     ax.tick_params(axis="both", direction="in", top=True, right=True, labelsize=12, length=6, width=1)
     ax.minorticks_on()
     ax.tick_params(which="minor", direction="in", top=True, right=True, length=3, width=0.8)
@@ -331,11 +406,12 @@ fig.align_ylabels(axes[:, 2])
 
 ax11.text(-0.20, 1.08, "(a)", transform=ax11.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
 ax21.text(-0.20, 1.08, "(b)", transform=ax21.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
+ax31.text(-0.20, 1.08, "(c)", transform=ax31.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
 
 ax11.legend(loc="best")
-ax21.legend(loc="best")
-ax22.legend(loc="best")
-ax23.legend(loc="best")
+ax31.legend(loc="best")
+ax32.legend(loc="best")
+ax33.legend(loc="best")
 
 fig.savefig(output_path, dpi=600, bbox_inches="tight", pad_inches=0.1)
 

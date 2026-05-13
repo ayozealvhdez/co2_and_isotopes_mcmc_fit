@@ -152,6 +152,34 @@ def seasonal_component_from_samples(
     return seasonal
 
 
+def compute_yearly_seasonal_band(
+        samples,
+        phase_grid,
+        year,
+        timezero,
+        polynomial_degree,
+        include_slow_harmonics,
+        base_period_slow_harmonics,
+        slow_harmonics):
+    """
+    Compute the posterior median and 68% band of s(t) for one selected year.
+    """
+    x_phase = year + phase_grid - timezero
+
+    seasonal = seasonal_component_from_samples(
+        samples,
+        x_phase,
+        polynomial_degree,
+        include_slow_harmonics,
+        base_period_slow_harmonics,
+        slow_harmonics,
+    )
+
+    p16, p50, p84 = np.percentile(seasonal, [16, 50, 84], axis=0)
+
+    return p16, p50, p84
+
+
 def compute_annual_amplitude_band(
         samples,
         years,
