@@ -40,3 +40,6 @@ data/**/*
 # Keep small climate-index files used by paper-specific figures
 !data/climatic_indexes/
 !data/climatic_indexes/**/*
+
+# Local agent instructions
+AGENTS.md

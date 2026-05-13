@@ -283,6 +283,10 @@ flat_samples = sampler.get_chain(discard=discard, flat=True)
 medians = np.median(flat_samples, axis=0)
 sigmas = np.std(flat_samples, axis=0)
 
+N_draws = min(number_of_saved_samples, len(flat_samples))  # Use number_of_saved_samples samples, or all available samples if fewer are available
+idx_draw = np.random.choice(len(flat_samples), size=N_draws, replace=False)
+samples_drawn = flat_samples[idx_draw]
+
 for name, m, s in zip(param_names, medians, sigmas):
     print(f"{name:>3}: {m:.4f} +/- {s:.4f}")
 
@@ -313,7 +317,8 @@ print("-------------------------------------------------------")
 
 
 print("Step 10: Corner plot")
-save_corner_plot(flat_samples, param_names, include_slow_harmonics, slow_harmonics, plots_dir, polynomial_degree=polynomial_degree, mode=corner_mode)
+print(f"Using {N_draws} posterior samples for the corner plot.")
+save_corner_plot(samples_drawn, param_names, include_slow_harmonics, slow_harmonics, plots_dir, polynomial_degree=polynomial_degree, mode=corner_mode)
 print("-------------------------------------------------------")
 
 
@@ -349,10 +354,6 @@ print("-------------------------------------------------------")
 
 
 print(f"Step 12: Save up to {number_of_saved_samples} random samples from the posterior distributions for uncertainty calculations")
-N_draws = min(number_of_saved_samples, len(flat_samples))  # Use number_of_saved_samples samples, or all available samples if fewer are available
-idx_draw = np.random.choice(len(flat_samples), size=N_draws, replace=False)
-samples_drawn = flat_samples[idx_draw]
-
 header_cols = "# " + "\t".join(param_names)
 samples_path = os.path.join(results_dir, "samples_for_MC.txt")
 np.savetxt(samples_path, samples_drawn, header=header_cols, fmt="%.10f", delimiter="\t", comments="")
