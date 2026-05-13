@@ -316,8 +316,7 @@ print("-------------------------------------------------------")
 
 
 
-print("Step 10: Corner plot")
-print(f"Using {N_draws} posterior samples for the corner plot.")
+print(f"Step 10: Generate corner plot using {N_draws} posterior samples")
 save_corner_plot(samples_drawn, param_names, include_slow_harmonics, slow_harmonics, plots_dir, polynomial_degree=polynomial_degree, mode=corner_mode)
 print("-------------------------------------------------------")
 
@@ -353,7 +352,7 @@ print("-------------------------------------------------------")
 
 
 
-print(f"Step 12: Save up to {number_of_saved_samples} random samples from the posterior distributions for uncertainty calculations")
+print(f"Step 12: Save the same {N_draws} posterior samples for uncertainty calculations")
 header_cols = "# " + "\t".join(param_names)
 samples_path = os.path.join(results_dir, "samples_for_MC.txt")
 np.savetxt(samples_path, samples_drawn, header=header_cols, fmt="%.10f", delimiter="\t", comments="")
