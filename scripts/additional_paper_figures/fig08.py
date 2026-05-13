@@ -3,8 +3,8 @@ Compare IZO CO2, delta13C-CO2, and delta14C-CO2 fit residuals.
 
 Panel (a):
 - Time series of the residuals from the selected MCMC fits.
-- Blue and red shaded windows mark detected multi-month episodes of
-  persistently negative and positive CO2 residuals, respectively.
+- Blue and red shaded windows mark detected sign-coherent multi-month episodes
+  in the smoothed CO2 residuals.
 
 Panel (b):
 - Scatter plots of CO2 residuals against delta13C and delta14C residuals at
@@ -67,11 +67,10 @@ d14c_slow_harmonics = [2]
 # ------------- ANOMALOUS WINDOW CONFIGURATION ----------
 # -------------------------------------------------------
 
-window_months = 3
-sigma_threshold = 1.5
+window_months = 6
+peak_sigma_threshold = 2.0
+edge_sigma_threshold = 1.5
 min_consecutive_points = 3
-max_gap_points = 0
-require_same_sign = True
 
 xlim_min = 1985
 xlim_max = 2025
@@ -126,94 +125,74 @@ def rolling_mean_by_points(values, window_points):
     return rolling_mean
 
 
-def fill_short_gaps(mask, max_gap_points):
+def find_prolonged_anomalous_periods(time, residuals, window_points, peak_sigma_threshold, edge_sigma_threshold, min_consecutive_points):
     """
-    Fill short False gaps between True segments in a boolean mask.
-    """
-    mask = np.asarray(mask, dtype=bool).copy()
-
-    if max_gap_points <= 0:
-        return mask
-
-    i = 0
-
-    while i < len(mask):
-        if mask[i]:
-            i += 1
-            continue
-
-        gap_start = i
-
-        while i + 1 < len(mask) and not mask[i + 1]:
-            i += 1
-
-        gap_end = i
-        gap_length = gap_end - gap_start + 1
-
-        has_true_before = gap_start > 0 and mask[gap_start - 1]
-        has_true_after = gap_end < len(mask) - 1 and mask[gap_end + 1]
-
-        if has_true_before and has_true_after and gap_length <= max_gap_points:
-            mask[gap_start:gap_end + 1] = True
-
-        i += 1
-
-    return mask
-
-
-def find_prolonged_anomalous_periods(time, residuals, window_points, sigma_threshold, min_consecutive_points, max_gap_points, require_same_sign):
-    """
-    Detect multi-month periods with persistently positive or negative residuals.
+    Detect dominant sign-coherent lobes in the smoothed CO2 residuals.
     """
     residuals = np.asarray(residuals, dtype=float)
     rolling_mean = rolling_mean_by_points(residuals, window_points)
-    anomaly_threshold = sigma_threshold * np.std(residuals, ddof=1)
-
-    positive_mask = rolling_mean >= anomaly_threshold
-    negative_mask = rolling_mean <= -anomaly_threshold
-
-    if require_same_sign:
-        positive_mask &= residuals > 0
-        negative_mask &= residuals < 0
-
-    positive_mask = fill_short_gaps(positive_mask, max_gap_points)
-    negative_mask = fill_short_gaps(negative_mask, max_gap_points)
+    rolling_mean_sigma = np.std(rolling_mean, ddof=1)
+    peak_abs_threshold = peak_sigma_threshold * rolling_mean_sigma
+    edge_abs_threshold = edge_sigma_threshold * rolling_mean_sigma
 
     periods = []
+    i = 0
 
-    for sign, mask in [("positive", positive_mask), ("negative", negative_mask)]:
-        i = 0
-
-        while i < len(mask):
-            if not mask[i]:
-                i += 1
-                continue
-
-            start_idx = i
-
-            while i + 1 < len(mask) and mask[i + 1]:
-                i += 1
-
-            end_idx = i
-            n_points = end_idx - start_idx + 1
-
-            if n_points >= min_consecutive_points:
-                period_residuals = residuals[start_idx:end_idx + 1]
-
-                periods.append({
-                    "sign": sign,
-                    "start_time": time[start_idx],
-                    "end_time": time[end_idx],
-                    "n_points": n_points,
-                    "mean_residual": np.mean(period_residuals),
-                    "max_abs_residual": np.max(np.abs(period_residuals)),
-                })
-
+    while i < len(rolling_mean):
+        if rolling_mean[i] == 0:
             i += 1
+            continue
+
+        start_idx = i
+        current_sign = np.sign(rolling_mean[i])
+
+        while i + 1 < len(rolling_mean) and np.sign(rolling_mean[i + 1]) == current_sign:
+            i += 1
+
+        end_idx = i
+        n_points = end_idx - start_idx + 1
+
+        if n_points >= min_consecutive_points:
+            period_rolling_mean = rolling_mean[start_idx:end_idx + 1]
+            peak_idx_local = np.argmax(np.abs(period_rolling_mean))
+            peak_idx = start_idx + peak_idx_local
+            peak_rolling_mean = rolling_mean[peak_idx]
+
+            if np.abs(peak_rolling_mean) >= peak_abs_threshold:
+                if current_sign > 0:
+                    sign = "positive"
+                else:
+                    sign = "negative"
+
+                trimmed_start_idx = peak_idx
+                trimmed_end_idx = peak_idx
+
+                while trimmed_start_idx - 1 >= start_idx and current_sign * rolling_mean[trimmed_start_idx - 1] >= edge_abs_threshold:
+                    trimmed_start_idx -= 1
+
+                while trimmed_end_idx + 1 <= end_idx and current_sign * rolling_mean[trimmed_end_idx + 1] >= edge_abs_threshold:
+                    trimmed_end_idx += 1
+
+                trimmed_residuals = residuals[trimmed_start_idx:trimmed_end_idx + 1]
+                trimmed_n_points = trimmed_end_idx - trimmed_start_idx + 1
+
+                if trimmed_n_points >= min_consecutive_points:
+                    periods.append({
+                        "sign": sign,
+                        "start_time": time[trimmed_start_idx],
+                        "end_time": time[trimmed_end_idx],
+                        "n_points": trimmed_n_points,
+                        "peak_time": time[peak_idx],
+                        "peak_rolling_mean": peak_rolling_mean,
+                        "mean_residual": np.mean(trimmed_residuals),
+                        "max_abs_residual": np.max(np.abs(trimmed_residuals)),
+                    })
+
+        i += 1
 
     periods = sorted(periods, key=lambda period: period["start_time"])
 
-    return periods, rolling_mean, anomaly_threshold
+    return periods, rolling_mean, rolling_mean_sigma, peak_abs_threshold, edge_abs_threshold
 
 
 def common_residuals(time_co2, residuals_co2, yerr_co2, time_iso, residuals_iso, yerr_iso):
@@ -345,18 +324,20 @@ print("-------------------------------------------------------")
 
 print("Step 3: Identify multi-month anomalous periods in CO2 residuals")
 
-anomalous_periods, co2_rolling_mean, anomaly_threshold = find_prolonged_anomalous_periods(
+anomalous_periods, co2_rolling_mean, rolling_mean_sigma, peak_abs_threshold_used, edge_abs_threshold_used = find_prolonged_anomalous_periods(
     co2_time,
     co2_residuals,
     window_months,
-    sigma_threshold,
+    peak_sigma_threshold,
+    edge_sigma_threshold,
     min_consecutive_points,
-    max_gap_points,
-    require_same_sign,
 )
 
-print(f"Anomaly threshold = +/- {anomaly_threshold:.3f} ppm")
-print(f"Maximum allowed non-anomalous gap within a period = {max_gap_points} month(s)")
+print(f"Rolling-mean window = {window_months} month(s)")
+print(f"Minimum duration = {min_consecutive_points} point(s)")
+print(f"Rolling-mean sigma = {rolling_mean_sigma:.3f} ppm")
+print(f"Peak threshold = {peak_sigma_threshold:.1f} sigma = {peak_abs_threshold_used:.3f} ppm")
+print(f"Edge threshold = {edge_sigma_threshold:.1f} sigma = {edge_abs_threshold_used:.3f} ppm")
 
 if len(anomalous_periods) == 0:
     print("No prolonged anomalous periods found.")
@@ -368,6 +349,8 @@ else:
             f"start = {period['start_time']:.3f} | "
             f"end = {period['end_time']:.3f} | "
             f"n_points = {period['n_points']} | "
+            f"peak time = {period['peak_time']:.3f} | "
+            f"peak rolling mean = {period['peak_rolling_mean']:.3f} ppm | "
             f"mean residual = {period['mean_residual']:.3f} ppm | "
             f"max abs residual = {period['max_abs_residual']:.3f} ppm"
         )

@@ -70,7 +70,7 @@ nwalkers = 128
 nsteps = 100000
 discard = int(0.5 * nsteps)  # burn-in
 
-corner_mode = "reduced"   # options: "reduced", "full"
+corner_mode = "full"   # options: "reduced", "full"
 
 number_of_saved_samples = 50000
 
@@ -111,7 +111,7 @@ if include_slow_harmonics and len(slow_harmonics) > 0:
     # Order: (bLk, cLk) in the same order as slow_harmonics
     slow_harmonic_ranges = []
     for k in slow_harmonics:
-        slow_harmonic_ranges.extend([(-1, 1), (-1, 1)])
+        slow_harmonic_ranges.extend([(-10, 10), (-10, 10)])
 else:
     slow_harmonic_ranges = []
     slow_harmonics = []
