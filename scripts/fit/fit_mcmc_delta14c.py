@@ -70,7 +70,7 @@ nwalkers = 128
 nsteps = 100000
 discard = int(0.5 * nsteps)  # burn-in
 
-corner_mode = "full"   # options: "reduced", "full"
+corner_mode = "reduced"   # options: "reduced", "full"
 
 number_of_saved_samples = 50000
 

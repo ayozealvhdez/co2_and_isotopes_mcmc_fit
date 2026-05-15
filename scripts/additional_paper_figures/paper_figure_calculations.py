@@ -180,7 +180,7 @@ def compute_yearly_seasonal_band(
     return p16, p50, p84
 
 
-def compute_annual_amplitude_band(
+def compute_annual_amplitudes(
         samples,
         years,
         timezero,
@@ -189,13 +189,11 @@ def compute_annual_amplitude_band(
         base_period_slow_harmonics,
         slow_harmonics):
     """
-    Compute annual peak-to-trough seasonal-amplitude percentiles.
+    Compute annual peak-to-trough seasonal amplitudes for each posterior sample.
     """
-    p16_all = []
-    p50_all = []
-    p84_all = []
+    annual_amplitudes = np.empty((len(samples), len(years)))
 
-    for year in years:
+    for i, year in enumerate(years):
         decimal_year_grid = daily_grid_for_year(int(year))
         x_grid = decimal_year_grid - timezero
 
@@ -208,14 +206,34 @@ def compute_annual_amplitude_band(
             slow_harmonics,
         )
 
-        amplitudes = np.max(seasonal, axis=1) - np.min(seasonal, axis=1)
-        p16, p50, p84 = np.percentile(amplitudes, [16, 50, 84])
+        annual_amplitudes[:, i] = np.max(seasonal, axis=1) - np.min(seasonal, axis=1)
 
-        p16_all.append(p16)
-        p50_all.append(p50)
-        p84_all.append(p84)
+    return annual_amplitudes
 
-    return np.asarray(p16_all), np.asarray(p50_all), np.asarray(p84_all)
+
+def compute_annual_amplitude_band(
+        samples,
+        years,
+        timezero,
+        polynomial_degree,
+        include_slow_harmonics,
+        base_period_slow_harmonics,
+        slow_harmonics):
+    """
+    Compute annual peak-to-trough seasonal-amplitude percentiles.
+    """
+    annual_amplitudes = compute_annual_amplitudes(
+        samples,
+        years,
+        timezero,
+        polynomial_degree,
+        include_slow_harmonics,
+        base_period_slow_harmonics,
+        slow_harmonics,
+    )
+    p16_all, p50_all, p84_all = np.percentile(annual_amplitudes, [16, 50, 84], axis=0)
+
+    return p16_all, p50_all, p84_all
 
 
 def build_monthly_midpoint_grid(start_year, end_year):
@@ -291,6 +309,23 @@ def load_nino34_anomaly(filepath, start_decimal_year, end_decimal_year):
     nino34 = nino34[mask]
 
     return years, months, decimal_years, nino34
+
+
+def load_nao_index(filepath, start_decimal_year, end_decimal_year):
+    """
+    Load the monthly NAO index from a year-month-value text file.
+    """
+    years, months, nao = np.loadtxt(filepath, usecols=(0, 1, 2), unpack=True)
+
+    decimal_years = years + (months - 0.5) / 12.0
+    mask = (decimal_years >= start_decimal_year) & (decimal_years <= end_decimal_year) & np.isfinite(nao)
+
+    years = years[mask].astype(int)
+    months = months[mask].astype(int)
+    decimal_years = decimal_years[mask]
+    nao = nao[mask]
+
+    return years, months, decimal_years, nao
 
 
 def map_monthly_series_to_grid(years, months, values, grid_keys):

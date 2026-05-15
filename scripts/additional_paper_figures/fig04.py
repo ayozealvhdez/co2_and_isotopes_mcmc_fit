@@ -40,6 +40,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from functions.paths import find_project_root, run_results_directory, comparison_directory
+from functions.model import model_components
 from scripts.additional_paper_figures.paper_figure_calculations import compute_nonseasonal_component_bands
 
 
@@ -145,6 +146,96 @@ def plot_component_band(ax, decimal_year_grid, izo_band, mlo_band=None, show_lab
     set_tight_ylim(ax, curves_for_ylim)
 
 
+def posterior_summary(values):
+    """
+    Return median, symmetric 68% half-width, and percentile bounds.
+    """
+    p16, p50, p84 = np.percentile(values, [16, 50, 84])
+    half_width = 0.5 * (p84 - p16)
+
+    return p50, half_width, p16, p84
+
+
+def format_posterior_summary(values, unit, decimals):
+    """
+    Format a posterior sample vector for manuscript copy.
+    """
+    p50, half_width, p16, p84 = posterior_summary(values)
+
+    return (
+        f"{p50:.{decimals}f} +/- {half_width:.{decimals}f} {unit} "
+        f"(16-84%: {p16:.{decimals}f}, {p84:.{decimals}f})"
+    )
+
+
+def polynomial_values_from_samples(
+        samples,
+        decimal_years,
+        timezero,
+        polynomial_degree,
+        include_slow_harmonics,
+        base_period_slow_harmonics,
+        slow_harmonics):
+    """
+    Evaluate p(t) at selected decimal years for all posterior samples.
+    """
+    x = np.asarray(decimal_years, dtype=float) - timezero
+    x_for_all_samples = np.broadcast_to(x, (len(samples), len(x)))
+
+    params_by_column = []
+    for i in range(samples.shape[1]):
+        params_by_column.append(samples[:, i, None])
+    params_by_column = tuple(params_by_column)
+
+    polynomial, _, _ = model_components(
+        x_for_all_samples,
+        *params_by_column,
+        polynomial_degree=polynomial_degree,
+        include_slow_harmonics=include_slow_harmonics,
+        base_period_slow_harmonics=base_period_slow_harmonics,
+        slow_harmonics=slow_harmonics,
+    )
+
+    return polynomial
+
+
+def print_polynomial_change_summary(
+        label,
+        samples,
+        start_decimal_year,
+        end_decimal_year,
+        start_label,
+        end_label,
+        unit,
+        decimals,
+        timezero,
+        polynomial_degree,
+        include_slow_harmonics,
+        base_period_slow_harmonics,
+        slow_harmonics):
+    """
+    Print p(t) endpoint values and net change from joint posterior samples.
+    """
+    polynomial = polynomial_values_from_samples(
+        samples,
+        [start_decimal_year, end_decimal_year],
+        timezero,
+        polynomial_degree,
+        include_slow_harmonics,
+        base_period_slow_harmonics,
+        slow_harmonics,
+    )
+
+    start_values = polynomial[:, 0]
+    end_values = polynomial[:, 1]
+    change_values = end_values - start_values
+
+    print(f"{label} p(t)")
+    print(f"  {start_label}: {format_posterior_summary(start_values, unit, decimals)}")
+    print(f"  {end_label}: {format_posterior_summary(end_values, unit, decimals)}")
+    print(f"  net change: {format_posterior_summary(change_values, unit, decimals)}")
+
+
 # -------------------------------------------------------
 # ---------------------- PATHS --------------------------
 # -------------------------------------------------------
@@ -218,6 +309,56 @@ print("-------------------------------------------------------")
 
 
 
+print("Step 2b: Manuscript values for IZO long-term p(t)")
+print_polynomial_change_summary(
+    "IZO CO2",
+    co2_izo_samples,
+    co2_range[0],
+    co2_range[1],
+    "1985.0",
+    "2025.0 (end of 2024)",
+    "ppm",
+    2,
+    co2_izo_timezero,
+    co2_izo_polynomial_degree,
+    co2_izo_include_slow_harmonics,
+    co2_izo_base_period_slow_harmonics,
+    co2_izo_slow_harmonics,
+)
+print_polynomial_change_summary(
+    "IZO delta13CO2",
+    d13c_izo_samples,
+    d13c_range[0],
+    d13c_range[1],
+    "1992.0",
+    "2025.0 (end of 2024)",
+    "per mil",
+    3,
+    d13c_izo_timezero,
+    d13c_izo_polynomial_degree,
+    d13c_izo_include_slow_harmonics,
+    d13c_izo_base_period_slow_harmonics,
+    d13c_izo_slow_harmonics,
+)
+print_polynomial_change_summary(
+    "IZO Delta14CO2",
+    d14c_izo_samples,
+    d14c_range[0],
+    d14c_range[1],
+    "1985.0",
+    "2024.0 (end of 2023)",
+    "per mil",
+    2,
+    d14c_izo_timezero,
+    d14c_izo_polynomial_degree,
+    d14c_izo_include_slow_harmonics,
+    d14c_izo_base_period_slow_harmonics,
+    d14c_izo_slow_harmonics,
+)
+print("-------------------------------------------------------")
+
+
+
 print("Step 3: Plot the figure")
 
 fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(13.8, 9.6), sharex=False, constrained_layout=True)
@@ -229,34 +370,34 @@ ax31, ax32, ax33 = axes[2]
 
 # Row (a): p(t)
 plot_component_band(ax11, co2_decimal_year_grid, co2_izo_poly_band, co2_mlo_poly_band, show_labels=True)
-plot_component_band(ax12, d13c_decimal_year_grid, d13c_izo_poly_band, d13c_mlo_poly_band)
+plot_component_band(ax12, d13c_decimal_year_grid, d13c_izo_poly_band, d13c_mlo_poly_band, show_labels=True)
 plot_component_band(ax13, d14c_decimal_year_grid, d14c_izo_poly_band)
 
-ax11.set_ylabel("$p(t)$ CO$_2$ (ppm)", fontsize=15, labelpad=6)
-ax12.set_ylabel(r"$p(t)$ $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
-ax13.set_ylabel(r"$p(t)$ $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax11.set_ylabel("$p(t)$ (ppm)", fontsize=15, labelpad=6)
+ax12.set_ylabel(r"$p(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax13.set_ylabel(r"$p(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
 
 # Row (b): l(t)
-plot_component_band(ax21, co2_decimal_year_grid, co2_izo_lf_band, co2_mlo_lf_band)
-plot_component_band(ax22, d13c_decimal_year_grid, d13c_izo_lf_band, d13c_mlo_lf_band)
+plot_component_band(ax21, co2_decimal_year_grid, co2_izo_lf_band, co2_mlo_lf_band, show_labels=True)
+plot_component_band(ax22, d13c_decimal_year_grid, d13c_izo_lf_band, d13c_mlo_lf_band, show_labels=True)
 plot_component_band(ax23, d14c_decimal_year_grid, d14c_izo_lf_band)
 
 ax21.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
 ax22.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
 ax23.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
 
-ax21.set_ylabel("$l(t)$ CO$_2$ (ppm)", fontsize=15, labelpad=6)
-ax22.set_ylabel(r"$l(t)$ $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
-ax23.set_ylabel(r"$l(t)$ $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax21.set_ylabel("$l(t)$ (ppm)", fontsize=15, labelpad=6)
+ax22.set_ylabel(r"$l(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax23.set_ylabel(r"$l(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
 
 # Row (c): p(t) + l(t)
-plot_component_band(ax31, co2_decimal_year_grid, co2_izo_nonseasonal_band, co2_mlo_nonseasonal_band)
-plot_component_band(ax32, d13c_decimal_year_grid, d13c_izo_nonseasonal_band, d13c_mlo_nonseasonal_band)
+plot_component_band(ax31, co2_decimal_year_grid, co2_izo_nonseasonal_band, co2_mlo_nonseasonal_band, show_labels=True)
+plot_component_band(ax32, d13c_decimal_year_grid, d13c_izo_nonseasonal_band, d13c_mlo_nonseasonal_band, show_labels=True)
 plot_component_band(ax33, d14c_decimal_year_grid, d14c_izo_nonseasonal_band)
 
-ax31.set_ylabel("$p(t)+l(t)$ CO$_2$ (ppm)", fontsize=15, labelpad=6)
-ax32.set_ylabel(r"$p(t)+l(t)$ $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
-ax33.set_ylabel(r"$p(t)+l(t)$ $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax31.set_ylabel("$p(t)+l(t)$ (ppm)", fontsize=15, labelpad=6)
+ax32.set_ylabel(r"$p(t)+l(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax33.set_ylabel(r"$p(t)+l(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
 
 ax11.set_title("CO$_2$", fontsize=16)
 ax12.set_title(r"$\delta^{13}$CO$_2$", fontsize=16)
@@ -283,9 +424,10 @@ ax11.text(-0.24, 1.01, "(a)", transform=ax11.transAxes, fontsize=16, fontweight=
 ax21.text(-0.24, 1.01, "(b)", transform=ax21.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
 ax31.text(-0.24, 1.01, "(c)", transform=ax31.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
 
-ax11.legend(loc="best")
+for ax in (ax11, ax12, ax21, ax22, ax31, ax32):
+    ax.legend(loc="best")
 
-fig.savefig(output_path, dpi=600, bbox_inches="tight", pad_inches=0.1)
+fig.savefig(output_path, dpi=600)
 
 plt.show()
 plt.close(fig)

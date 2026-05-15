@@ -28,6 +28,7 @@ from scripts.additional_paper_figures.paper_figure_calculations import (
     compute_nonseasonal_component_bands,
     compute_polynomial_band,
     compute_yearly_seasonal_band,
+    load_nao_index,
     load_nino34_anomaly,
     map_monthly_series_to_grid,
     pearson_correlation_by_lag,
@@ -308,6 +309,24 @@ def test_nino34_loader_uses_noaa_monthly_anomaly_column_and_midmonth_time():
     np.testing.assert_array_equal(months, [1, 2])
     np.testing.assert_allclose(decimal_years, [2000.0 + 0.5 / 12.0, 2000.0 + 1.5 / 12.0])
     np.testing.assert_allclose(nino34, [1.5, -0.5])
+
+
+def test_nao_loader_uses_year_month_value_columns_and_midmonth_time():
+    """Check Fig. 06 NAO loading uses year, month, value columns and midmonth time."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        filepath = os.path.join(tmpdir, "nao_index.txt")
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write("2000 1 1.5\n")
+            f.write("2000 2 -0.5\n")
+            f.write("2000 3 nan\n")
+            f.write("2001 1 9.0\n")
+
+        years, months, decimal_years, nao = load_nao_index(filepath, 2000.0, 2000.25)
+
+    np.testing.assert_array_equal(years, [2000, 2000])
+    np.testing.assert_array_equal(months, [1, 2])
+    np.testing.assert_allclose(decimal_years, [2000.0 + 0.5 / 12.0, 2000.0 + 1.5 / 12.0])
+    np.testing.assert_allclose(nao, [1.5, -0.5])
 
 
 def test_lagged_correlation_identifies_positive_lag_when_nino_leads():

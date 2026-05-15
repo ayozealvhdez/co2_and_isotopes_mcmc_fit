@@ -28,6 +28,7 @@ Thumbs.db
 
 # Local helper scripts not intended for version control
 functions/.wdcgg_data_scaletransf.py
+scripts/leastsquares/
 
 # Project outputs
 results_and_plots/
@@ -43,3 +44,6 @@ data/**/*
 
 # Local agent instructions
 AGENTS.md
+
+# Local manuscript draft
+manuscript/

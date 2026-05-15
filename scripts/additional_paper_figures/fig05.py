@@ -43,9 +43,10 @@ import os
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 
 from functions.paths import find_project_root, run_results_directory, comparison_directory
-from scripts.additional_paper_figures.paper_figure_calculations import compute_mean_seasonal_band, compute_yearly_seasonal_band, compute_annual_amplitude_band
+from scripts.additional_paper_figures.paper_figure_calculations import compute_mean_seasonal_band, compute_yearly_seasonal_band, compute_annual_amplitudes, compute_annual_amplitude_band
 
 
 
@@ -183,27 +184,48 @@ def plot_selected_year_cycles(
         start_year,
         end_year,
         mlo_start_band=None,
-        mlo_end_band=None):
+        mlo_end_band=None,
+        show_site_legend=False,
+        year_text_location="upper left"):
     """
     Plot posterior median seasonal cycles for the selected start and end years.
     """
     curves_for_ylim = [izo_start_band[1], izo_end_band[1]]
+    start_linestyle = (0, (4.0, 1.4))
+    end_linestyle = (0, (1.0, 1.4))
 
     if mlo_start_band is not None and mlo_end_band is not None:
-        ax.plot(month_grid, mlo_start_band[1], color="r", linestyle="--", linewidth=1.4, alpha=0.55, zorder=3)
-        ax.plot(month_grid, mlo_end_band[1], color="r", linestyle=":", linewidth=1.8, alpha=0.65, zorder=4)
+        ax.plot(month_grid, mlo_start_band[1], color="r", linestyle=start_linestyle, linewidth=1.4, alpha=0.55, zorder=3)
+        ax.plot(month_grid, mlo_end_band[1], color="r", linestyle=end_linestyle, linewidth=1.8, alpha=0.65, zorder=4)
         curves_for_ylim.extend([mlo_start_band[1], mlo_end_band[1]])
 
-    ax.plot(month_grid, izo_start_band[1], color="k", linestyle="--", linewidth=1.4, zorder=5)
-    ax.plot(month_grid, izo_end_band[1], color="k", linestyle=":", linewidth=1.8, zorder=6)
+    ax.plot(month_grid, izo_start_band[1], color="k", linestyle=start_linestyle, linewidth=1.4, zorder=5)
+    ax.plot(month_grid, izo_end_band[1], color="k", linestyle=end_linestyle, linewidth=1.8, zorder=6)
     ax.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
+
+    if show_site_legend and mlo_start_band is not None and mlo_end_band is not None:
+        site_handles = [
+            Line2D([0], [0], color="k", linewidth=1.6, label="IZO"),
+            Line2D([0], [0], color="r", linewidth=1.6, alpha=0.65, label="MLO"),
+        ]
+        ax.legend(handles=site_handles, loc="upper right")
+
+    if year_text_location == "lower left":
+        year_text_x = 0.05
+        year_text_y = 0.06
+        year_text_va = "bottom"
+    else:
+        year_text_x = 0.05
+        year_text_y = 0.94
+        year_text_va = "top"
+
     ax.text(
-        0.03,
-        0.94,
+        year_text_x,
+        year_text_y,
         f"{start_year}: dashed\n{end_year}: dotted",
         transform=ax.transAxes,
         fontsize=10,
-        va="top",
+        va=year_text_va,
         ha="left",
     )
 
@@ -230,6 +252,88 @@ def plot_amplitude_with_errorbars(ax, years, p16, p50, p84, color, alpha, label)
         capthick=1.0,
         label=label,
     )
+
+
+def posterior_summary(values):
+    """
+    Return median, symmetric 68% half-width, and percentile bounds.
+    """
+    p16, p50, p84 = np.percentile(values, [16, 50, 84])
+    half_width = 0.5 * (p84 - p16)
+
+    return p50, half_width, p16, p84
+
+
+def format_posterior_summary(values, unit, decimals):
+    """
+    Format a posterior sample vector for manuscript copy.
+    """
+    p50, half_width, p16, p84 = posterior_summary(values)
+
+    return (
+        f"{p50:.{decimals}f} +/- {half_width:.{decimals}f} {unit} "
+        f"(16-84%: {p16:.{decimals}f}, {p84:.{decimals}f})"
+    )
+
+
+def annual_amplitude_percentiles(annual_amplitudes):
+    """
+    Convert annual amplitudes by posterior sample into 16th, 50th and 84th percentiles.
+    """
+    p16, p50, p84 = np.percentile(annual_amplitudes, [16, 50, 84], axis=0)
+
+    return p16, p50, p84
+
+
+def find_year_index(years, selected_year):
+    """
+    Return the index of a selected year in a year array.
+    """
+    indices = np.where(years == selected_year)[0]
+
+    if len(indices) != 1:
+        raise ValueError(f"Year {selected_year} is not present exactly once in the selected year array")
+
+    return int(indices[0])
+
+
+def linear_slope_from_samples(years, values_by_sample):
+    """
+    Fit a linear slope to each posterior sample of annual values.
+    """
+    centered_years = years - np.mean(years)
+    denominator = np.sum(centered_years**2)
+
+    return np.dot(values_by_sample, centered_years) / denominator
+
+
+def print_amplitude_change_summary(
+        label,
+        years,
+        annual_amplitudes,
+        start_year,
+        end_year,
+        unit,
+        decimals,
+        print_linear_slope=False):
+    """
+    Print selected annual amplitude values and posterior changes for manuscript copy.
+    """
+    start_idx = find_year_index(years, start_year)
+    end_idx = find_year_index(years, end_year)
+
+    start_values = annual_amplitudes[:, start_idx]
+    end_values = annual_amplitudes[:, end_idx]
+    change_values = end_values - start_values
+
+    print(f"{label} seasonal peak-to-trough amplitude")
+    print(f"  {start_year}: {format_posterior_summary(start_values, unit, decimals)}")
+    print(f"  {end_year}: {format_posterior_summary(end_values, unit, decimals)}")
+    print(f"  change: {format_posterior_summary(change_values, unit, decimals)}")
+
+    if print_linear_slope:
+        slopes = linear_slope_from_samples(years, annual_amplitudes)
+        print(f"  linear slope: {format_posterior_summary(slopes, unit + '/yr', decimals + 1)}")
 
 
 
@@ -325,13 +429,16 @@ print("-------------------------------------------------------")
 print("Step 4: Compute annual peak-to-trough amplitudes")
 start = time.time()
 
-co2_izo_amp_p16, co2_izo_amp_p50, co2_izo_amp_p84 = compute_annual_amplitude_band(co2_izo_samples, co2_years, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_base_period_slow_harmonics, co2_izo_slow_harmonics)
+co2_izo_annual_amplitudes = compute_annual_amplitudes(co2_izo_samples, co2_years, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_base_period_slow_harmonics, co2_izo_slow_harmonics)
+co2_izo_amp_p16, co2_izo_amp_p50, co2_izo_amp_p84 = annual_amplitude_percentiles(co2_izo_annual_amplitudes)
 co2_mlo_amp_p16, co2_mlo_amp_p50, co2_mlo_amp_p84 = compute_annual_amplitude_band(co2_mlo_samples, co2_years, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_base_period_slow_harmonics, co2_mlo_slow_harmonics)
 
-d13c_izo_amp_p16, d13c_izo_amp_p50, d13c_izo_amp_p84 = compute_annual_amplitude_band(d13c_izo_samples, d13c_years, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_base_period_slow_harmonics, d13c_izo_slow_harmonics)
+d13c_izo_annual_amplitudes = compute_annual_amplitudes(d13c_izo_samples, d13c_years, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_base_period_slow_harmonics, d13c_izo_slow_harmonics)
+d13c_izo_amp_p16, d13c_izo_amp_p50, d13c_izo_amp_p84 = annual_amplitude_percentiles(d13c_izo_annual_amplitudes)
 d13c_mlo_amp_p16, d13c_mlo_amp_p50, d13c_mlo_amp_p84 = compute_annual_amplitude_band(d13c_mlo_samples, d13c_years, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_base_period_slow_harmonics, d13c_mlo_slow_harmonics)
 
-d14c_izo_amp_p16, d14c_izo_amp_p50, d14c_izo_amp_p84 = compute_annual_amplitude_band(d14c_izo_samples, d14c_years, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_base_period_slow_harmonics, d14c_izo_slow_harmonics)
+d14c_izo_annual_amplitudes = compute_annual_amplitudes(d14c_izo_samples, d14c_years, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_base_period_slow_harmonics, d14c_izo_slow_harmonics)
+d14c_izo_amp_p16, d14c_izo_amp_p50, d14c_izo_amp_p84 = annual_amplitude_percentiles(d14c_izo_annual_amplitudes)
 
 end = time.time()
 print(f"Total processing time: {(end - start)/60:.2f} minutes")
@@ -339,10 +446,43 @@ print("-------------------------------------------------------")
 
 
 
+print("Step 4b: Manuscript values for IZO seasonal amplitudes")
+print_amplitude_change_summary(
+    "IZO CO2",
+    co2_years,
+    co2_izo_annual_amplitudes,
+    co2_cycle_start_year,
+    co2_cycle_end_year,
+    "ppm",
+    2,
+    print_linear_slope=True,
+)
+print_amplitude_change_summary(
+    "IZO delta13CO2",
+    d13c_years,
+    d13c_izo_annual_amplitudes,
+    d13c_cycle_start_year,
+    d13c_cycle_end_year,
+    "per mil",
+    3,
+)
+print_amplitude_change_summary(
+    "IZO Delta14CO2",
+    d14c_years,
+    d14c_izo_annual_amplitudes,
+    d14c_cycle_start_year,
+    d14c_cycle_end_year,
+    "per mil",
+    2,
+)
+print("-------------------------------------------------------")
+
+
+
 print("Step 5: Plot the figure")
 
-fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(13.8, 11.5), sharex=False)
-fig.subplots_adjust(wspace=0.34, hspace=0.26)
+fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(13.8, 11.5), sharex=False, constrained_layout=True)
+fig.set_constrained_layout_pads(w_pad=0.02, h_pad=0.02, wspace=0.07, hspace=0.04)
 
 ax11, ax12, ax13 = axes[0]
 ax21, ax22, ax23 = axes[1]
@@ -353,22 +493,22 @@ plot_seasonal_band(ax11, month_grid, co2_izo_seasonal_band, co2_mlo_seasonal_ban
 plot_seasonal_band(ax12, month_grid, d13c_izo_seasonal_band, d13c_mlo_seasonal_band)
 plot_seasonal_band(ax13, month_grid, d14c_izo_seasonal_band)
 
-ax11.set_ylabel("mean $s(t)$ CO$_2$ (ppm)", fontsize=15)
-ax12.set_ylabel(r"mean $s(t)$ $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15)
-ax13.set_ylabel(r"mean $s(t)$ $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15)
+ax11.set_ylabel("Annual-mean $s(t)$ (ppm)", fontsize=15)
+ax12.set_ylabel(r"Annual-mean $s(t)$ ($\perthousand$)", fontsize=15)
+ax13.set_ylabel(r"Annual-mean $s(t)$ ($\perthousand$)", fontsize=15)
 
 ax11.set_title("CO$_2$", fontsize=16)
 ax12.set_title(r"$\delta^{13}$CO$_2$", fontsize=16)
 ax13.set_title(r"$\Delta^{14}$CO$_2$", fontsize=16)
 
 # Row (b): selected yearly seasonal cycles
-plot_selected_year_cycles(ax21, month_grid, co2_izo_start_cycle_band, co2_izo_end_cycle_band, co2_cycle_start_year, co2_cycle_end_year, co2_mlo_start_cycle_band, co2_mlo_end_cycle_band)
-plot_selected_year_cycles(ax22, month_grid, d13c_izo_start_cycle_band, d13c_izo_end_cycle_band, d13c_cycle_start_year, d13c_cycle_end_year, d13c_mlo_start_cycle_band, d13c_mlo_end_cycle_band)
+plot_selected_year_cycles(ax21, month_grid, co2_izo_start_cycle_band, co2_izo_end_cycle_band, co2_cycle_start_year, co2_cycle_end_year, co2_mlo_start_cycle_band, co2_mlo_end_cycle_band, show_site_legend=True, year_text_location="lower left")
+plot_selected_year_cycles(ax22, month_grid, d13c_izo_start_cycle_band, d13c_izo_end_cycle_band, d13c_cycle_start_year, d13c_cycle_end_year, d13c_mlo_start_cycle_band, d13c_mlo_end_cycle_band, show_site_legend=True)
 plot_selected_year_cycles(ax23, month_grid, d14c_izo_start_cycle_band, d14c_izo_end_cycle_band, d14c_cycle_start_year, d14c_cycle_end_year)
 
-ax21.set_ylabel("selected-year $s(t)$ CO$_2$ (ppm)", fontsize=15)
-ax22.set_ylabel(r"selected-year $s(t)$ $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15)
-ax23.set_ylabel(r"selected-year $s(t)$ $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15)
+ax21.set_ylabel("Change in $s(t)$ (ppm)", fontsize=15)
+ax22.set_ylabel(r"Change in $s(t)$ ($\perthousand$)", fontsize=15)
+ax23.set_ylabel(r"Change in $s(t)$ ($\perthousand$)", fontsize=15)
 
 # Row (c): annual peak-to-trough amplitude
 plot_amplitude_with_errorbars(ax31, co2_years, co2_mlo_amp_p16, co2_mlo_amp_p50, co2_mlo_amp_p84, color="r", alpha=1.0, label="MLO")
@@ -379,9 +519,9 @@ plot_amplitude_with_errorbars(ax32, d13c_years, d13c_izo_amp_p16, d13c_izo_amp_p
 
 plot_amplitude_with_errorbars(ax33, d14c_years, d14c_izo_amp_p16, d14c_izo_amp_p50, d14c_izo_amp_p84, color="k", alpha=1.0, label="IZO")
 
-ax31.set_ylabel("$s(t)$ amplitude CO$_2$ (ppm)", fontsize=15)
-ax32.set_ylabel(r"$s(t)$ amplitude $\delta^{13}$CO$_2$ ($\perthousand$)", fontsize=15)
-ax33.set_ylabel(r"$s(t)$ amplitude $\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=15)
+ax31.set_ylabel("$s(t)$ amplitude (ppm)", fontsize=15)
+ax32.set_ylabel(r"$s(t)$ amplitude ($\perthousand$)", fontsize=15)
+ax33.set_ylabel(r"$s(t)$ amplitude ($\perthousand$)", fontsize=15)
 
 # Axis formatting
 for ax in (ax11, ax12, ax13, ax21, ax22, ax23):
@@ -413,7 +553,7 @@ ax31.legend(loc="best")
 ax32.legend(loc="best")
 ax33.legend(loc="best")
 
-fig.savefig(output_path, dpi=600, bbox_inches="tight", pad_inches=0.1)
+fig.savefig(output_path, dpi=600)
 
 plt.show()
 plt.close(fig)
