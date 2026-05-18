@@ -29,6 +29,7 @@ Thumbs.db
 # Local helper scripts not intended for version control
 functions/.wdcgg_data_scaletransf.py
 scripts/leastsquares/
+scripts/additional_paper_figures/co2_residual_inhomogeneity_test.py
 
 # Project outputs
 results_and_plots/

@@ -48,6 +48,8 @@ from functions.paths import find_project_root, model_tag, run_results_directory,
 site_acronym = "IZO"  # Used to name the directories where results and plots will be stored
 input_file = "uheiiup_l2_2025_1_izo_30m_int_14day.c14"
 
+error_scale_factor = np.sqrt(12.353940)  # Multiplicative factor applied to all data uncertainties before fitting
+
 recompute_monthly_series = True # If True, compute monthly means before fitting
 
 project_root = find_project_root(__file__)
@@ -67,7 +69,7 @@ end_month = "2024-12"
 recenter_to_month_midpoint = True  # shift monthly timestamps to the exact calendar midpoint
 
 nwalkers = 128
-nsteps = 100000
+nsteps = 20000
 discard = int(0.5 * nsteps)  # burn-in
 
 corner_mode = "reduced"   # options: "reduced", "full"
@@ -188,7 +190,8 @@ decimal_year_dates = to_decimal_year(dates)
 
 x = decimal_year_dates - timezero
 y = delta14c
-yerr = stds
+yerr = stds * error_scale_factor
+print(f"Error scale factor applied to yerr: {error_scale_factor:.6g}")
 print("-------------------------------------------------------")
 
 
@@ -385,6 +388,7 @@ rows_metrics = np.array([
     ["chi2", chi2, np.nan],
     ["dof", dof, np.nan],
     ["reduced_chi2", chi2_dof, np.nan],
+    ["error_scale_factor", error_scale_factor, np.nan],
     ["timezero", timezero, np.nan],
     ["polynomial_degree", polynomial_degree, np.nan],
     ["polynomial_ranges", np.nan, str(polynomial_ranges)],

@@ -48,6 +48,8 @@ from functions.paths import find_project_root, model_tag, run_results_directory,
 site_acronym = "IZO" # Used to name the directories where results and plots will be stored
 input_file = "co2_mensual_izo-wdcgg_1984-2024.txt"
 
+error_scale_factor = 1.0  # Multiplicative factor applied to all data uncertainties before fitting
+
 data_frequency = "monthly"   # options: "hourly", "daily", "monthly"
 recenter_time_axis = True # shift timestamps to the exact midpoint of the averaging period
 
@@ -169,7 +171,8 @@ decimal_year_dates = to_decimal_year(dates)
 
 x = decimal_year_dates - timezero
 y = co2
-yerr = stds
+yerr = stds * error_scale_factor
+print(f"Error scale factor applied to yerr: {error_scale_factor:.6g}")
 print("-------------------------------------------------------")
 
 
@@ -361,6 +364,7 @@ rows_metrics = np.array([
     ["chi2",          chi2,          np.nan],
     ["dof",           dof,           np.nan],
     ["reduced_chi2", chi2_dof, np.nan],
+    ["error_scale_factor", error_scale_factor, np.nan],
     ["timezero",      timezero,      np.nan],
     ["polynomial_degree", polynomial_degree, np.nan],
     ["polynomial_ranges", np.nan, str(polynomial_ranges)],
