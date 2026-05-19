@@ -259,9 +259,9 @@ d14c_note_ax.set_frame_on(False)
 d14c_note_ax.set_xticks([])
 d14c_note_ax.set_yticks([])
 d14c_note_ax.text(
+    0.45,
     0.5,
-    0.5,
-    r"No MLO $\Delta^{14}$CO$_2$ data",
+    r"No MLO equivalent $\Delta^{14}$CO$_2$ data",
     transform=d14c_note_ax.transAxes,
     ha="center",
     va="center",

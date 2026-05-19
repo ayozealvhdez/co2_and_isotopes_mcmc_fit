@@ -75,6 +75,7 @@ discard = int(0.5 * nsteps)  # burn-in
 corner_mode = "reduced"   # options: "reduced", "full"
 
 number_of_saved_samples = 50000
+number_of_corner_samples = None  # Use None to plot all post-burn-in samples
 
 
 
@@ -290,6 +291,14 @@ N_draws = min(number_of_saved_samples, len(flat_samples))  # Use number_of_saved
 idx_draw = np.random.choice(len(flat_samples), size=N_draws, replace=False)
 samples_drawn = flat_samples[idx_draw]
 
+if number_of_corner_samples is None:
+    N_corner_draws = len(flat_samples)
+    corner_samples = flat_samples
+else:
+    N_corner_draws = min(number_of_corner_samples, len(flat_samples))
+    idx_corner_draw = np.random.choice(len(flat_samples), size=N_corner_draws, replace=False)
+    corner_samples = flat_samples[idx_corner_draw]
+
 for name, m, s in zip(param_names, medians, sigmas):
     print(f"{name:>3}: {m:.4f} +/- {s:.4f}")
 
@@ -319,8 +328,8 @@ print("-------------------------------------------------------")
 
 
 
-print(f"Step 10: Generate corner plot using {N_draws} posterior samples")
-save_corner_plot(samples_drawn, param_names, include_slow_harmonics, slow_harmonics, plots_dir, polynomial_degree=polynomial_degree, mode=corner_mode)
+print(f"Step 10: Generate corner plot using {N_corner_draws} posterior samples")
+save_corner_plot(corner_samples, param_names, include_slow_harmonics, slow_harmonics, plots_dir, polynomial_degree=polynomial_degree, mode=corner_mode)
 print("-------------------------------------------------------")
 
 

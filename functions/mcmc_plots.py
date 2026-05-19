@@ -92,13 +92,16 @@ def save_corner_plot(
         title_fmt=".4f",
         title_kwargs={"fontsize": 16},
         label_kwargs={"fontsize": 30},
+        labelpad=0.28,
+        max_n_ticks=3,
+        use_math_text=True,
     )
 
     for ax in fig.get_axes():
-        ax.tick_params(axis="both", labelsize=14, direction="in", top=True, right=True)
+        ax.tick_params(axis="both", labelsize=14, direction="in", top=True, right=True, pad=2)
 
     output_path = os.path.join(plots_dir, output_name)
-    fig.savefig(output_path)
+    fig.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.25)
     plt.close(fig)
 
     print(f"Saved corner plot in '{output_path}'")
