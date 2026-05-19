@@ -1,27 +1,40 @@
 """
-For the three observables (CO2, delta13CO2, Delta14CO2), plot the fitted series, the posterior median model, the 68% confidence band, the Thoning-like seasonally adjusted trend p(t) + l(t), and the residuals.
+For the two MLO observables available in this repository (CO2 and delta13CO2),
+plot the fitted series, the posterior median model, the 68% confidence band,
+the Thoning-like seasonally adjusted trend p(t) + l(t), and the residuals.
 
 Layout:
 - Upper block: CO2, spanning the full figure width.
 - Lower-left block: delta13CO2.
-- Lower-right block: Delta14CO2.
+- Lower-right block: empty Delta14CO2 placeholder, because no MLO Delta14CO2
+  data are available.
 
 For each observable:
-- Upper panel: observed data, posterior median model and 68% confidence band, plus the Thoning-like seasonally adjusted trend p(t) + l(t) and its 68% confidence band.
+- Upper panel: observed data, posterior median model and 68% confidence band,
+  plus the Thoning-like seasonally adjusted trend p(t) + l(t) and its 68%
+  confidence band.
 - Lower panel: residuals.
 
 The script reads:
-- 'samples_for_MC.txt', containing 50,000 posterior samples drawn from the MCMC chain during the execution of 'fit_mcmc_<observable>.py'.
-- 'best_fit_and_residuals.txt', containing observed values, uncertainties, nvalues, best-fit values, and residuals at the observation timestamps.
+- 'samples_for_MC.txt', containing posterior samples drawn from the MCMC chain
+  during the execution of 'fit_mcmc_<observable>.py'.
+- 'best_fit_and_residuals.txt', containing observed values, uncertainties,
+  nvalues, best-fit values, and residuals at the observation timestamps.
 
-To select the version of these files corresponding to the run you want to plot, the matching run configuration must be specified in the 'SELECTED RUNS' block.
+To select the version of these files corresponding to the run you want to plot,
+the matching run configuration must be specified in the 'SELECTED RUNS' block.
 
-The posterior median model curve, the Thoning-like seasonally adjusted trend p(t) + l(t), and their confidence bands are computed by evaluating the relevant model components on a regular grid in decimal years for the 50,000 posterior samples stored in 'samples_for_MC.txt' and taking the 16th, 50th, and 84th percentiles at each grid point.
+The posterior median model curve, the Thoning-like seasonally adjusted trend
+p(t) + l(t), and their confidence bands are computed by evaluating the relevant
+model components on a regular grid in decimal years for the posterior samples
+stored in 'samples_for_MC.txt' and taking the 16th, 50th, and 84th percentiles
+at each grid point.
 
-The Thoning-like trend is computed within this model framework; it is not a reproduction of the NOAA CCGCRV filtering procedure.
+The Thoning-like trend is computed within this model framework; it is not a
+reproduction of the NOAA CCGCRV filtering procedure.
 
 The result is stored in:
-results_and_plots/comparisons/fig03_all_observables_fitted/fig03.png
+results_and_plots/comparisons/figA3_MLO_fits/figA3_MLO_fits.png
 """
 
 
@@ -43,32 +56,23 @@ from functions.paths import find_project_root, run_results_directory, comparison
 # ------------------- SELECTED RUNS ---------------------
 # -------------------------------------------------------
 
-# ---------- CO2 IZO ----------
-co2_site_acronym = "IZO"
+# ---------- CO2 MLO ----------
+co2_site_acronym = "MLO"
 co2_data_frequency = "monthly"
 co2_polynomial_degree = 2
 co2_include_slow_harmonics = True
 co2_base_period_slow_harmonics = 30
-co2_slow_harmonics = [2,3,4,7,8]
+co2_slow_harmonics = [2, 3, 4, 7, 8]
 co2_timezero = 1985.0
 
-# ---------- delta13CO2 IZO ----------
-d13c_site_acronym = "IZO"
+# ---------- delta13CO2 MLO ----------
+d13c_site_acronym = "MLO"
 d13c_recompute_monthly_series = True
 d13c_polynomial_degree = 2
 d13c_include_slow_harmonics = True
 d13c_base_period_slow_harmonics = 30
-d13c_slow_harmonics = [2,3]
+d13c_slow_harmonics = [2, 3]
 d13c_timezero = 1985.0
-
-# ---------- Delta14CO2 IZO ----------
-d14c_site_acronym = "IZO"
-d14c_recompute_monthly_series = True
-d14c_polynomial_degree = 3
-d14c_include_slow_harmonics = True
-d14c_base_period_slow_harmonics = 30
-d14c_slow_harmonics = [2]
-d14c_timezero = 1985.0
 
 
 
@@ -78,7 +82,6 @@ d14c_timezero = 1985.0
 
 co2_range = (1985, 2025)
 d13c_range = (1992, 2025)
-d14c_range = (1985, 2024)
 
 n_grid = 1000
 
@@ -122,11 +125,9 @@ def compute_model_and_trend_bands(samples, decimal_year_grid, timezero, polynomi
 project_root = find_project_root(__file__)
 
 d13c_data_tag = "monthly" if d13c_recompute_monthly_series else "discrete"
-d14c_data_tag = "monthly" if d14c_recompute_monthly_series else "discrete"
 
 co2_results_dir = run_results_directory(project_root, "co2", co2_site_acronym, co2_data_frequency, co2_include_slow_harmonics, co2_base_period_slow_harmonics, co2_slow_harmonics, polynomial_degree=co2_polynomial_degree)
 d13c_results_dir = run_results_directory(project_root, "delta13c", d13c_site_acronym, d13c_data_tag, d13c_include_slow_harmonics, d13c_base_period_slow_harmonics, d13c_slow_harmonics, polynomial_degree=d13c_polynomial_degree)
-d14c_results_dir = run_results_directory(project_root, "delta14c", d14c_site_acronym, d14c_data_tag, d14c_include_slow_harmonics, d14c_base_period_slow_harmonics, d14c_slow_harmonics, polynomial_degree=d14c_polynomial_degree)
 
 co2_samples_path = os.path.join(co2_results_dir, "samples_for_MC.txt")
 co2_best_fit_and_residuals_path = os.path.join(co2_results_dir, "best_fit_and_residuals.txt")
@@ -134,13 +135,10 @@ co2_best_fit_and_residuals_path = os.path.join(co2_results_dir, "best_fit_and_re
 d13c_samples_path = os.path.join(d13c_results_dir, "samples_for_MC.txt")
 d13c_best_fit_and_residuals_path = os.path.join(d13c_results_dir, "best_fit_and_residuals.txt")
 
-d14c_samples_path = os.path.join(d14c_results_dir, "samples_for_MC.txt")
-d14c_best_fit_and_residuals_path = os.path.join(d14c_results_dir, "best_fit_and_residuals.txt")
-
-plot_dir = comparison_directory(project_root, "fig03_all_observables_fitted")
+plot_dir = comparison_directory(project_root, "figA3_MLO_fits")
 os.makedirs(plot_dir, exist_ok=True)
 
-output_path = os.path.join(plot_dir, "fig03.png")
+output_path = os.path.join(plot_dir, "figA3_MLO_fits.png")
 
 
 
@@ -168,21 +166,10 @@ d13c_nvalues = d13c_data[:, 3].astype(int)
 d13c_fit = d13c_data[:, 4]
 d13c_residuals = d13c_data[:, 5]
 
-d14c_samples = np.loadtxt(d14c_samples_path, comments="#", ndmin=2)
-d14c_data = np.loadtxt(d14c_best_fit_and_residuals_path, comments="#", ndmin=2)
-d14c_time = d14c_data[:, 0]
-d14c_observed = d14c_data[:, 1]
-d14c_yerr = d14c_data[:, 2]
-d14c_nvalues = d14c_data[:, 3].astype(int)
-d14c_fit = d14c_data[:, 4]
-d14c_residuals = d14c_data[:, 5]
-
 print(f"Loaded CO2 samples from: {co2_samples_path}")
 print(f"Loaded CO2 best fit and residuals from: {co2_best_fit_and_residuals_path}")
 print(f"Loaded delta13CO2 samples from: {d13c_samples_path}")
 print(f"Loaded delta13CO2 best fit and residuals from: {d13c_best_fit_and_residuals_path}")
-print(f"Loaded Delta14CO2 samples from: {d14c_samples_path}")
-print(f"Loaded Delta14CO2 best fit and residuals from: {d14c_best_fit_and_residuals_path}")
 print("-------------------------------------------------------")
 
 
@@ -194,9 +181,6 @@ co2_decimal_year_grid = np.linspace(co2_range[0], co2_range[1], n_grid)
 
 d13c_decimal_year_grid = np.linspace(d13c_range[0], d13c_range[1], n_grid)
 (d13c_p16, d13c_p50, d13c_p84), (d13c_trend_p16, d13c_trend_p50, d13c_trend_p84) = compute_model_and_trend_bands(d13c_samples, d13c_decimal_year_grid, d13c_timezero, d13c_polynomial_degree, d13c_include_slow_harmonics, d13c_base_period_slow_harmonics, d13c_slow_harmonics)
-
-d14c_decimal_year_grid = np.linspace(d14c_range[0], d14c_range[1], n_grid)
-(d14c_p16, d14c_p50, d14c_p84), (d14c_trend_p16, d14c_trend_p50, d14c_trend_p84) = compute_model_and_trend_bands(d14c_samples, d14c_decimal_year_grid, d14c_timezero, d14c_polynomial_degree, d14c_include_slow_harmonics, d14c_base_period_slow_harmonics, d14c_slow_harmonics)
 
 print("-------------------------------------------------------")
 
@@ -223,6 +207,7 @@ ax12 = fig.add_subplot(d13c_gs[0, 0])
 ax22 = fig.add_subplot(d13c_gs[1, 0], sharex=ax12)
 ax13 = fig.add_subplot(d14c_gs[0, 0])
 ax23 = fig.add_subplot(d14c_gs[1, 0], sharex=ax13)
+d14c_note_ax = fig.add_subplot(outer_gs[1, 1])
 
 trend_color = "crimson"
 
@@ -239,9 +224,9 @@ ax21.axhline(0, color="0.5", lw=1.0, linestyle="--")
 ax21.errorbar(co2_time, co2_residuals, yerr=co2_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax21.set_xlabel("Year", fontsize=14)
 ax21.set_ylabel("Residuals (ppm)", fontsize=13)
-ax21.set_xlim(1985,2025)
+ax21.set_xlim(1985, 2025)
 
-# Lower-left block: delta13CO2 observed data and fitted model
+# Lower block: delta13CO2 observed data and fitted model
 ax12.errorbar(d13c_time, d13c_observed, yerr=d13c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax12.fill_between(d13c_decimal_year_grid, d13c_p16, d13c_p84, color="b", alpha=0.25, linewidth=0)
 ax12.fill_between(d13c_decimal_year_grid, d13c_trend_p16, d13c_trend_p84, color=trend_color, alpha=0.16, linewidth=0)
@@ -254,32 +239,37 @@ ax22.axhline(0, color="0.5", lw=1.0, linestyle="--")
 ax22.errorbar(d13c_time, d13c_residuals, yerr=d13c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax22.set_xlabel("Year", fontsize=14)
 ax22.set_ylabel(r"Residuals ($\perthousand$)", fontsize=13)
-ax22.set_xlim(1985,2025)
+ax22.set_xlim(1985, 2025)
 
-# Lower-right block: Delta14CO2 observed data and fitted model
-ax13.errorbar(d14c_time, d14c_observed, yerr=d14c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
-ax13.fill_between(d14c_decimal_year_grid, d14c_p16, d14c_p84, color="b", alpha=0.25, linewidth=0)
-ax13.fill_between(d14c_decimal_year_grid, d14c_trend_p16, d14c_trend_p84, color=trend_color, alpha=0.16, linewidth=0)
-ax13.plot(d14c_decimal_year_grid, d14c_p50, "b-", lw=0.8)
-ax13.plot(d14c_decimal_year_grid, d14c_trend_p50, color=trend_color, lw=1.1)
-ax13.set_ylabel(r"$\Delta^{14}$CO$_2$ ($\perthousand$)", fontsize=14)
+# Lower-right block: no Delta14CO2 data are available for MLO
+for ax in (ax13, ax23):
+    ax.set_frame_on(False)
+    ax.set_xticks([])
+    ax.set_yticks([])
 
-# Delta14CO2 residuals
-ax23.axhline(0, color="0.5", lw=1.0, linestyle="--")
-ax23.errorbar(d14c_time, d14c_residuals, yerr=d14c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
-ax23.set_xlabel("Year", fontsize=14)
-ax23.set_ylabel(r"Residuals ($\perthousand$)", fontsize=13)
-ax23.set_xlim(1985,2025)
+d14c_note_ax.patch.set_alpha(0.0)
+d14c_note_ax.set_frame_on(False)
+d14c_note_ax.set_xticks([])
+d14c_note_ax.set_yticks([])
+d14c_note_ax.text(
+    0.5,
+    0.5,
+    r"No MLO $\Delta^{14}$CO$_2$ data",
+    transform=d14c_note_ax.transAxes,
+    ha="center",
+    va="center",
+    fontsize=14,
+    color="0.35",
+)
 
 # Axis formatting
-for ax in (ax11, ax12, ax13, ax21, ax22, ax23):
+for ax in (ax11, ax12, ax21, ax22):
     ax.tick_params(axis="both", direction="in", top=True, right=True, labelsize=12, length=6, width=1)
     ax.minorticks_on()
     ax.tick_params(which="minor", direction="in", top=True, right=True, length=3, width=0.8)
 
 plt.setp(ax11.get_xticklabels(), visible=False)
 plt.setp(ax12.get_xticklabels(), visible=False)
-plt.setp(ax13.get_xticklabels(), visible=False)
 
 fig.savefig(output_path, dpi=600, bbox_inches="tight", pad_inches=0.1)
 
