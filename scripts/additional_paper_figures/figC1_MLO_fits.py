@@ -34,7 +34,7 @@ The Thoning-like trend is computed within this model framework; it is not a
 reproduction of the NOAA CCGCRV filtering procedure.
 
 The result is stored in:
-results_and_plots/comparisons/figA3_MLO_fits/figA3_MLO_fits.png
+results_and_plots/comparisons/figC1_MLO_fits/figC1_MLO_fits.png
 """
 
 
@@ -135,10 +135,10 @@ co2_best_fit_and_residuals_path = os.path.join(co2_results_dir, "best_fit_and_re
 d13c_samples_path = os.path.join(d13c_results_dir, "samples_for_MC.txt")
 d13c_best_fit_and_residuals_path = os.path.join(d13c_results_dir, "best_fit_and_residuals.txt")
 
-plot_dir = comparison_directory(project_root, "figA3_MLO_fits")
+plot_dir = comparison_directory(project_root, "figC1_MLO_fits")
 os.makedirs(plot_dir, exist_ok=True)
 
-output_path = os.path.join(plot_dir, "figA3_MLO_fits.png")
+output_path = os.path.join(plot_dir, "figC1_MLO_fits.png")
 
 
 
@@ -240,6 +240,13 @@ ax22.errorbar(d13c_time, d13c_residuals, yerr=d13c_yerr, fmt="ko", markersize=3,
 ax22.set_xlabel("Year", fontsize=14)
 ax22.set_ylabel(r"Residuals ($\perthousand$)", fontsize=13)
 ax22.set_xlim(1985, 2025)
+
+# Align each fit-panel ylabel with the residual-panel ylabel below it.
+for ax in (ax11, ax21):
+    ax.yaxis.set_label_coords(-0.06, 0.5)
+
+for ax in (ax12, ax22):
+    ax.yaxis.set_label_coords(-0.14, 0.5)
 
 # Lower-right block: no Delta14CO2 data are available for MLO
 for ax in (ax13, ax23):

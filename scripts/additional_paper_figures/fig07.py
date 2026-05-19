@@ -419,8 +419,6 @@ ax3.set_xlabel("Year", fontsize=16)
 ax3.set_ylabel(r"$\Delta^{14}$CO$_2$ residual ($\perthousand$)", fontsize=16)
 ax3.set_xlim(xlim_min, xlim_max)
 
-fig.align_ylabels([ax1, ax2, ax3])
-
 # Right upper panel: CO2 versus delta13CO2 residuals
 ax4.plot(co2_res_common_13, d13c_res_common, "ko", markersize=4, alpha=0.75)
 ax4.plot(co2_res_common_13[window_mask_pos_13], d13c_res_common[window_mask_pos_13], "o", color=positive_color, markersize=5)
@@ -438,6 +436,13 @@ ax5.axhline(0, color="gray", linestyle="--", linewidth=0.8)
 ax5.axvline(0, color="gray", linestyle="--", linewidth=0.8)
 ax5.set_xlabel("CO$_2$ residual (ppm)", fontsize=16)
 ax5.set_ylabel(r"$\Delta^{14}$CO$_2$ residual ($\perthousand$)", fontsize=16)
+
+# Align y-axis labels within each figure column.
+for ax in (ax1, ax2, ax3):
+    ax.yaxis.set_label_coords(-0.09, 0.5)
+
+for ax in (ax4, ax5):
+    ax.yaxis.set_label_coords(-0.11, 0.5)
 
 # Axis formatting
 for ax in (ax1, ax2, ax3, ax4, ax5):
