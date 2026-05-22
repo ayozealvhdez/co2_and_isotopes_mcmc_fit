@@ -48,7 +48,7 @@ from functions.paths import find_project_root, model_tag, run_results_directory,
 site_acronym = "IZO"  # Used to name the directories where results and plots will be stored
 input_file = "uheiiup_l2_2025_1_izo_30m_int_14day.c14"
 
-error_scale_factor = np.sqrt(12.353940)  # Multiplicative factor applied to all data uncertainties before fitting
+error_scale_factor = np.sqrt(13.907)  # Multiplicative factor applied to all data uncertainties before fitting; use None to leave uncertainties unchanged
 
 recompute_monthly_series = True # If True, compute monthly means before fitting
 
@@ -84,8 +84,8 @@ number_of_corner_samples = None  # Use None to plot all post-burn-in samples
 # -------------------------------------------------------
 polynomial_degree = 3  # Degree of the polynomial trend. Options: 1, 2, 3
 
-include_slow_harmonics = True
-base_period_slow_harmonics = 30  # Base period (years) used for the low-frequency harmonic terms
+include_slow_harmonics = False
+base_period_slow_harmonics = 25  # Base period (years) used for the low-frequency harmonic terms
 slow_harmonics = [2]  # Harmonic orders included for the low-frequency component
 
 
@@ -191,8 +191,16 @@ decimal_year_dates = to_decimal_year(dates)
 
 x = decimal_year_dates - timezero
 y = delta14c
-yerr = stds * error_scale_factor
-print(f"Error scale factor applied to yerr: {error_scale_factor:.6g}")
+if error_scale_factor is None:
+    yerr = stds
+    error_scale_factor_to_save = np.nan
+    error_scale_factor_text = "None"
+    print("Error scale factor applied to yerr: None (uncertainties unchanged)")
+else:
+    yerr = stds * error_scale_factor
+    error_scale_factor_to_save = error_scale_factor
+    error_scale_factor_text = np.nan
+    print(f"Error scale factor applied to yerr: {error_scale_factor:.6g}")
 print("-------------------------------------------------------")
 
 
@@ -397,7 +405,7 @@ rows_metrics = np.array([
     ["chi2", chi2, np.nan],
     ["dof", dof, np.nan],
     ["reduced_chi2", chi2_dof, np.nan],
-    ["error_scale_factor", error_scale_factor, np.nan],
+    ["error_scale_factor", error_scale_factor_to_save, error_scale_factor_text],
     ["timezero", timezero, np.nan],
     ["polynomial_degree", polynomial_degree, np.nan],
     ["polynomial_ranges", np.nan, str(polynomial_ranges)],

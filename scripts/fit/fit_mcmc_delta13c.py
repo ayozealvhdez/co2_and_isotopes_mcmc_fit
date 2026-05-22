@@ -48,7 +48,7 @@ from functions.paths import find_project_root, model_tag, run_results_directory,
 site_acronym = "IZO"  # Used to name the directories where results and plots will be stored
 input_file = "co2c13_izo_surface-flask_1_sil_event.txt"
 
-error_scale_factor = np.sqrt(3.868595)  # Multiplicative factor applied to all data uncertainties before fitting
+error_scale_factor = np.sqrt(3.868595)  # Multiplicative factor applied to all data uncertainties before fitting; use None to leave uncertainties unchanged
 
 recompute_monthly_series = True # If True, compute monthly means before fitting
 
@@ -190,8 +190,16 @@ decimal_year_dates = to_decimal_year(dates)
 
 x = decimal_year_dates - timezero
 y = delta13c
-yerr = stds * error_scale_factor
-print(f"Error scale factor applied to yerr: {error_scale_factor:.6g}")
+if error_scale_factor is None:
+    yerr = stds
+    error_scale_factor_to_save = np.nan
+    error_scale_factor_text = "None"
+    print("Error scale factor applied to yerr: None (uncertainties unchanged)")
+else:
+    yerr = stds * error_scale_factor
+    error_scale_factor_to_save = error_scale_factor
+    error_scale_factor_text = np.nan
+    print(f"Error scale factor applied to yerr: {error_scale_factor:.6g}")
 print("-------------------------------------------------------")
 
 
@@ -396,7 +404,7 @@ rows_metrics = np.array([
     ["chi2", chi2, np.nan],
     ["dof", dof, np.nan],
     ["reduced_chi2", chi2_dof, np.nan],
-    ["error_scale_factor", error_scale_factor, np.nan],
+    ["error_scale_factor", error_scale_factor_to_save, error_scale_factor_text],
     ["timezero", timezero, np.nan],
     ["polynomial_degree", polynomial_degree, np.nan],
     ["polynomial_ranges", np.nan, str(polynomial_ranges)],

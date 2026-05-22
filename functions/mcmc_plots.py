@@ -92,7 +92,7 @@ def save_corner_plot(
         title_fmt=".4f",
         title_kwargs={"fontsize": 16},
         label_kwargs={"fontsize": 30},
-        labelpad=0.28,
+        labelpad=0.13,
         max_n_ticks=3,
         use_math_text=True,
     )

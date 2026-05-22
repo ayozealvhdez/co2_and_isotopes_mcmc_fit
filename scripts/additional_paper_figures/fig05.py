@@ -94,7 +94,7 @@ d13c_mlo_timezero = 1985.0
 d14c_izo_site_acronym = "IZO"
 d14c_izo_recompute_monthly_series = True
 d14c_izo_polynomial_degree = 3
-d14c_izo_include_slow_harmonics = True
+d14c_izo_include_slow_harmonics = False
 d14c_izo_base_period_slow_harmonics = 30
 d14c_izo_slow_harmonics = [2]
 d14c_izo_timezero = 1985.0
@@ -208,7 +208,7 @@ def plot_selected_year_cycles(
             Line2D([0], [0], color="k", linewidth=1.6, label="IZO"),
             Line2D([0], [0], color="r", linewidth=1.6, alpha=0.65, label="MLO"),
         ]
-        ax.legend(handles=site_handles, loc="upper right")
+        ax.legend(handles=site_handles, loc="best")
 
     if year_text_location == "lower left":
         year_text_x = 0.05
@@ -490,7 +490,7 @@ ax31, ax32, ax33 = axes[2]
 
 # Row (a): mean seasonal component
 plot_seasonal_band(ax11, month_grid, co2_izo_seasonal_band, co2_mlo_seasonal_band, show_labels=True)
-plot_seasonal_band(ax12, month_grid, d13c_izo_seasonal_band, d13c_mlo_seasonal_band)
+plot_seasonal_band(ax12, month_grid, d13c_izo_seasonal_band, d13c_mlo_seasonal_band, show_labels=True)
 plot_seasonal_band(ax13, month_grid, d14c_izo_seasonal_band)
 
 ax11.set_ylabel("Annual-mean $s(t)$ (ppm)", fontsize=15)
@@ -549,9 +549,10 @@ ax21.text(-0.20, 1.08, "(b)", transform=ax21.transAxes, fontsize=16, fontweight=
 ax31.text(-0.20, 1.08, "(c)", transform=ax31.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
 
 ax11.legend(loc="best")
+ax12.legend(loc="best")
 ax31.legend(loc="best")
 ax32.legend(loc="best")
-ax33.legend(loc="best")
+
 
 fig.savefig(output_path, dpi=600)
 

@@ -57,7 +57,7 @@ d13c_slow_harmonics = [2,3]
 d14c_site_acronym = "IZO"
 d14c_recompute_monthly_series = True
 d14c_polynomial_degree = 3
-d14c_include_slow_harmonics = True
+d14c_include_slow_harmonics = False
 d14c_base_period_slow_harmonics = 30
 d14c_slow_harmonics = [2]
 

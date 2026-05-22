@@ -25,6 +25,10 @@ The components are evaluated with functions.model.model_components through the
 paper-specific helper functions, so that the component definition remains
 centralised in the model module.
 
+This final version uses the Delta14CO2 fit without a low-frequency component.
+The Delta14CO2 panels corresponding to l(t) and p(t) + l(t) are therefore left
+blank and annotated explicitly.
+
 The result is stored in:
 results_and_plots/comparisons/fig04_longterm_components/fig04.png
 """
@@ -89,9 +93,9 @@ d13c_mlo_timezero = 1985.0
 d14c_izo_site_acronym = "IZO"
 d14c_izo_recompute_monthly_series = True
 d14c_izo_polynomial_degree = 3
-d14c_izo_include_slow_harmonics = True
+d14c_izo_include_slow_harmonics = False
 d14c_izo_base_period_slow_harmonics = 30
-d14c_izo_slow_harmonics = [2]
+d14c_izo_slow_harmonics = []
 d14c_izo_timezero = 1985.0
 
 
@@ -144,6 +148,27 @@ def plot_component_band(ax, decimal_year_grid, izo_band, mlo_band=None, show_lab
     ax.plot(decimal_year_grid, izo_band[1], color="k", linewidth=1.4, zorder=5, label="IZO" if show_labels else None)
 
     set_tight_ylim(ax, curves_for_ylim)
+
+
+def annotate_empty_component_axis(ax, text):
+    """
+    Leave one component panel empty and annotate why no component is shown.
+    """
+    ax.set_frame_on(False)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.text(
+        0.45,
+        0.5,
+        text,
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        fontsize=13,
+        color="0.35",
+    )
 
 
 def posterior_summary(values):
@@ -380,24 +405,19 @@ ax13.set_ylabel(r"$p(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
 # Row (b): l(t)
 plot_component_band(ax21, co2_decimal_year_grid, co2_izo_lf_band, co2_mlo_lf_band, show_labels=True)
 plot_component_band(ax22, d13c_decimal_year_grid, d13c_izo_lf_band, d13c_mlo_lf_band, show_labels=True)
-plot_component_band(ax23, d14c_decimal_year_grid, d14c_izo_lf_band)
 
 ax21.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
 ax22.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
-ax23.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
 
 ax21.set_ylabel("$l(t)$ (ppm)", fontsize=15, labelpad=6)
 ax22.set_ylabel(r"$l(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
-ax23.set_ylabel(r"$l(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
 
 # Row (c): p(t) + l(t)
 plot_component_band(ax31, co2_decimal_year_grid, co2_izo_nonseasonal_band, co2_mlo_nonseasonal_band, show_labels=True)
 plot_component_band(ax32, d13c_decimal_year_grid, d13c_izo_nonseasonal_band, d13c_mlo_nonseasonal_band, show_labels=True)
-plot_component_band(ax33, d14c_decimal_year_grid, d14c_izo_nonseasonal_band)
 
 ax31.set_ylabel("$p(t)+l(t)$ (ppm)", fontsize=15, labelpad=6)
 ax32.set_ylabel(r"$p(t)+l(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
-ax33.set_ylabel(r"$p(t)+l(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
 
 ax11.set_title("CO$_2$", fontsize=16)
 ax12.set_title(r"$\delta^{13}$CO$_2$", fontsize=16)
@@ -416,9 +436,20 @@ for ax in axes.ravel():
 for ax in (ax11, ax12, ax13, ax21, ax22, ax23):
     plt.setp(ax.get_xticklabels(), visible=False)
 
+annotate_empty_component_axis(
+    ax23,
+    r"No low-frequency" "\n"
+    r"component included" "\n"
+    r"for $\Delta^{14}$CO$_2$",
+)
+annotate_empty_component_axis(
+    ax33,
+    r"$p(t)+l(t)=p(t)$" "\n"
+    r"for $\Delta^{14}$CO$_2$",
+)
+
 fig.align_ylabels(axes[:, 0])
 fig.align_ylabels(axes[:, 1])
-fig.align_ylabels(axes[:, 2])
 
 ax11.text(-0.24, 1.01, "(a)", transform=ax11.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
 ax21.text(-0.24, 1.01, "(b)", transform=ax21.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")

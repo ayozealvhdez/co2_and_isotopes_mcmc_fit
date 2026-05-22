@@ -30,6 +30,7 @@ Thumbs.db
 functions/.wdcgg_data_scaletransf.py
 scripts/leastsquares/
 scripts/additional_paper_figures/co2_residual_inhomogeneity_test.py
+scripts/additional_paper_figures/fig04_alternatve.py
 
 # Project outputs
 results_and_plots/
