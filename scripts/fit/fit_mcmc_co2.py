@@ -68,7 +68,7 @@ start_month = "1985-01"
 end_month = "2024-12"
 
 nwalkers = 128
-nsteps = 100000
+nsteps = 20000
 discard = int(0.5 * nsteps)  # burn-in
 
 corner_mode = "reduced"   # options: "reduced", "full"
@@ -384,7 +384,6 @@ rows_metrics = np.array([
     ["error_scale_factor", error_scale_factor_to_save, error_scale_factor_text],
     ["timezero",      timezero,      np.nan],
     ["polynomial_degree", polynomial_degree, np.nan],
-    ["polynomial_ranges", np.nan, str(polynomial_ranges)],
     ["nwalkers",      nwalkers,      np.nan],
     ["nsteps",        nsteps,        np.nan],
     ["discard",       discard,       np.nan],

@@ -475,6 +475,10 @@ print_amplitude_change_summary(
     "per mil",
     2,
 )
+d14c_izo_minimum_amplitudes = np.min(d14c_izo_annual_amplitudes, axis=1)
+d14c_izo_minimum_median_year = d14c_years[np.argmin(d14c_izo_amp_p50)]
+print(f"  minimum: {format_posterior_summary(d14c_izo_minimum_amplitudes, 'per mil', 2)}")
+print(f"  minimum year of median annual amplitude: {d14c_izo_minimum_median_year}")
 print("-------------------------------------------------------")
 
 
