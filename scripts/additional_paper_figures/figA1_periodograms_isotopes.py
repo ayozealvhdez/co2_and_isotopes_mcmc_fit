@@ -298,8 +298,8 @@ dy = ymax - ymin
 bar_ymin = ymax - 0.06 * dy
 bar_ymax = ymax - 0.02 * dy
 
-for fit in d14c_fits:
-    ax2.vlines(fit["mu"], bar_ymin, bar_ymax, colors=d14c_color, lw=1.2, linestyle="-", zorder=3)
+#for fit in d14c_fits:
+#    ax2.vlines(fit["mu"], bar_ymin, bar_ymax, colors=d14c_color, lw=1.2, linestyle="-", zorder=3)
 
 ax2.plot(d14c_w_frequency, d14c_w_power, linestyle=":", lw=0.6, color=d14c_color, label="Sampling window")
 

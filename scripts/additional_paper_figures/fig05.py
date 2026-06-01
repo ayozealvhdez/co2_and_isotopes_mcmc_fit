@@ -46,7 +46,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 from functions.paths import find_project_root, run_results_directory, comparison_directory
-from scripts.additional_paper_figures.paper_figure_calculations import compute_mean_seasonal_band, compute_yearly_seasonal_band, compute_annual_amplitudes, compute_annual_amplitude_band
+from scripts.additional_paper_figures.paper_figure_calculations import compute_mean_seasonal_band, compute_yearly_seasonal_band, compute_annual_amplitudes
 
 
 
@@ -431,11 +431,13 @@ start = time.time()
 
 co2_izo_annual_amplitudes = compute_annual_amplitudes(co2_izo_samples, co2_years, co2_izo_timezero, co2_izo_polynomial_degree, co2_izo_include_slow_harmonics, co2_izo_base_period_slow_harmonics, co2_izo_slow_harmonics)
 co2_izo_amp_p16, co2_izo_amp_p50, co2_izo_amp_p84 = annual_amplitude_percentiles(co2_izo_annual_amplitudes)
-co2_mlo_amp_p16, co2_mlo_amp_p50, co2_mlo_amp_p84 = compute_annual_amplitude_band(co2_mlo_samples, co2_years, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_base_period_slow_harmonics, co2_mlo_slow_harmonics)
+co2_mlo_annual_amplitudes = compute_annual_amplitudes(co2_mlo_samples, co2_years, co2_mlo_timezero, co2_mlo_polynomial_degree, co2_mlo_include_slow_harmonics, co2_mlo_base_period_slow_harmonics, co2_mlo_slow_harmonics)
+co2_mlo_amp_p16, co2_mlo_amp_p50, co2_mlo_amp_p84 = annual_amplitude_percentiles(co2_mlo_annual_amplitudes)
 
 d13c_izo_annual_amplitudes = compute_annual_amplitudes(d13c_izo_samples, d13c_years, d13c_izo_timezero, d13c_izo_polynomial_degree, d13c_izo_include_slow_harmonics, d13c_izo_base_period_slow_harmonics, d13c_izo_slow_harmonics)
 d13c_izo_amp_p16, d13c_izo_amp_p50, d13c_izo_amp_p84 = annual_amplitude_percentiles(d13c_izo_annual_amplitudes)
-d13c_mlo_amp_p16, d13c_mlo_amp_p50, d13c_mlo_amp_p84 = compute_annual_amplitude_band(d13c_mlo_samples, d13c_years, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_base_period_slow_harmonics, d13c_mlo_slow_harmonics)
+d13c_mlo_annual_amplitudes = compute_annual_amplitudes(d13c_mlo_samples, d13c_years, d13c_mlo_timezero, d13c_mlo_polynomial_degree, d13c_mlo_include_slow_harmonics, d13c_mlo_base_period_slow_harmonics, d13c_mlo_slow_harmonics)
+d13c_mlo_amp_p16, d13c_mlo_amp_p50, d13c_mlo_amp_p84 = annual_amplitude_percentiles(d13c_mlo_annual_amplitudes)
 
 d14c_izo_annual_amplitudes = compute_annual_amplitudes(d14c_izo_samples, d14c_years, d14c_izo_timezero, d14c_izo_polynomial_degree, d14c_izo_include_slow_harmonics, d14c_izo_base_period_slow_harmonics, d14c_izo_slow_harmonics)
 d14c_izo_amp_p16, d14c_izo_amp_p50, d14c_izo_amp_p84 = annual_amplitude_percentiles(d14c_izo_annual_amplitudes)
@@ -446,7 +448,7 @@ print("-------------------------------------------------------")
 
 
 
-print("Step 4b: Manuscript values for IZO seasonal amplitudes")
+print("Step 4b: Manuscript values for IZO and MLO seasonal amplitudes")
 print_amplitude_change_summary(
     "IZO CO2",
     co2_years,
@@ -475,10 +477,31 @@ print_amplitude_change_summary(
     "per mil",
     2,
 )
+print_amplitude_change_summary(
+    "MLO CO2",
+    co2_years,
+    co2_mlo_annual_amplitudes,
+    co2_cycle_start_year,
+    co2_cycle_end_year,
+    "ppm",
+    2,
+    print_linear_slope=True,
+)
+print_amplitude_change_summary(
+    "MLO delta13CO2",
+    d13c_years,
+    d13c_mlo_annual_amplitudes,
+    d13c_cycle_start_year,
+    d13c_cycle_end_year,
+    "per mil",
+    3,
+)
+
+print("-------------------------------------------------------")
 d14c_izo_minimum_amplitudes = np.min(d14c_izo_annual_amplitudes, axis=1)
 d14c_izo_minimum_median_year = d14c_years[np.argmin(d14c_izo_amp_p50)]
-print(f"  minimum: {format_posterior_summary(d14c_izo_minimum_amplitudes, 'per mil', 2)}")
-print(f"  minimum year of median annual amplitude: {d14c_izo_minimum_median_year}")
+print(f"  IZO delta14CO2 minimum: {format_posterior_summary(d14c_izo_minimum_amplitudes, 'per mil', 2)}")
+print(f"  minimum year of median annual amplitude in IZO delta14CO2: {d14c_izo_minimum_median_year}")
 print("-------------------------------------------------------")
 
 

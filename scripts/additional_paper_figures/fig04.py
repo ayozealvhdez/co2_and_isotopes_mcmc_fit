@@ -26,8 +26,9 @@ paper-specific helper functions, so that the component definition remains
 centralised in the model module.
 
 This final version uses the Delta14CO2 fit without a low-frequency component.
-The Delta14CO2 panels corresponding to l(t) and p(t) + l(t) are therefore left
-blank and annotated explicitly.
+The Delta14CO2 panel corresponding to l(t) is therefore left blank and
+annotated explicitly. The p(t) + l(t) panel is plotted and is identical to
+p(t), because l(t) = 0 for that fit.
 
 The result is stored in:
 results_and_plots/comparisons/fig04_longterm_components/fig04.png
@@ -415,9 +416,11 @@ ax22.set_ylabel(r"$l(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
 # Row (c): p(t) + l(t)
 plot_component_band(ax31, co2_decimal_year_grid, co2_izo_nonseasonal_band, co2_mlo_nonseasonal_band, show_labels=True)
 plot_component_band(ax32, d13c_decimal_year_grid, d13c_izo_nonseasonal_band, d13c_mlo_nonseasonal_band, show_labels=True)
+plot_component_band(ax33, d14c_decimal_year_grid, d14c_izo_nonseasonal_band)
 
 ax31.set_ylabel("$p(t)+l(t)$ (ppm)", fontsize=15, labelpad=6)
 ax32.set_ylabel(r"$p(t)+l(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
+ax33.set_ylabel(r"$p(t)+l(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
 
 ax11.set_title("CO$_2$", fontsize=16)
 ax12.set_title(r"$\delta^{13}$CO$_2$", fontsize=16)
@@ -442,14 +445,10 @@ annotate_empty_component_axis(
     r"component included" "\n"
     r"for $\Delta^{14}$CO$_2$",
 )
-annotate_empty_component_axis(
-    ax33,
-    r"$p(t)+l(t)=p(t)$" "\n"
-    r"for $\Delta^{14}$CO$_2$",
-)
 
 fig.align_ylabels(axes[:, 0])
 fig.align_ylabels(axes[:, 1])
+fig.align_ylabels(axes[:, 2])
 
 ax11.text(-0.24, 1.01, "(a)", transform=ax11.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
 ax21.text(-0.24, 1.01, "(b)", transform=ax21.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
