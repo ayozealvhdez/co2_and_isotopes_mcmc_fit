@@ -271,12 +271,16 @@ ax23.set_xlabel("Year", fontsize=14)
 ax23.set_ylabel(r"Residuals ($\perthousand$)", fontsize=13)
 ax23.set_xlim(1985,2025)
 
-# Align each fit-panel ylabel with the residual-panel ylabel below it.
+# Align ylabels by visual column. Top panels are wider, so they need
+# a less negative axes-coordinate offset than the lower-left panels.
 for ax in (ax11, ax21):
-    ax.yaxis.set_label_coords(-0.06, 0.5)
+    ax.yaxis.set_label_coords(-0.05, 0.5)
 
-for ax in (ax12, ax22, ax13, ax23):
-    ax.yaxis.set_label_coords(-0.14, 0.5)
+for ax in (ax12, ax22):
+    ax.yaxis.set_label_coords(-0.12, 0.5)
+
+for ax in (ax13, ax23):
+    ax.yaxis.set_label_coords(-0.10, 0.5)
 
 # Axis formatting
 for ax in (ax11, ax12, ax13, ax21, ax22, ax23):

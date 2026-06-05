@@ -213,7 +213,7 @@ ax1.plot(decimal_years, mlo_p50_lf, color="r", linewidth=1.2, alpha=0.50, zorder
 ax1.fill_between(decimal_years, izo_p16_lf, izo_p84_lf, color="0.45", alpha=0.30, linewidth=0, zorder=2)
 ax1.plot(decimal_years, izo_p50_lf, color="k", linewidth=1.2, zorder=5, label="IZO")
 ax1.axhline(0.0, color="0.5", linewidth=0.8, linestyle="--")
-ax1.set_ylabel(r"$\ell(t)$ CO$_2$ (ppm)", fontsize=16)
+ax1.set_ylabel(r"CO$_2$ $\ell(t)$ (ppm)", fontsize=16)
 set_symmetric_ylim(ax1, [izo_p16_lf, izo_p84_lf, mlo_p16_lf, mlo_p84_lf])
 
 # Middle panel: low-frequency derivative
@@ -222,7 +222,7 @@ ax2.plot(decimal_years, mlo_p50_dlf, color="r", linewidth=1.2, alpha=0.50, zorde
 ax2.fill_between(decimal_years, izo_p16_dlf, izo_p84_dlf, color="0.45", alpha=0.30, linewidth=0, zorder=2)
 ax2.plot(decimal_years, izo_p50_dlf, color="k", linewidth=1.2, zorder=5,label="IZO")
 ax2.axhline(0.0, color="0.5", linewidth=0.8, linestyle="--")
-ax2.set_ylabel(r"$\mathrm{d}\ell/\mathrm{d}t$ (ppm yr$^{-1}$)", fontsize=16)
+ax2.set_ylabel(r"CO$_2$ $\mathrm{d}\ell/\mathrm{d}t$ (ppm yr$^{-1}$)", fontsize=16)
 set_symmetric_ylim(ax2, [izo_p16_dlf, izo_p84_dlf, mlo_p16_dlf, mlo_p84_dlf])
 
 # Third panel: Nino 3.4 anomaly

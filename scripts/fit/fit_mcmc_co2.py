@@ -68,7 +68,7 @@ start_month = "1985-01"
 end_month = "2024-12"
 
 nwalkers = 128
-nsteps = 20000
+nsteps = 100000
 discard = int(0.5 * nsteps)  # burn-in
 
 corner_mode = "reduced"   # options: "reduced", "full"

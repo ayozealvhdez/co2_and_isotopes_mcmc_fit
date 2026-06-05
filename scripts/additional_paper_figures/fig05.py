@@ -520,9 +520,9 @@ plot_seasonal_band(ax11, month_grid, co2_izo_seasonal_band, co2_mlo_seasonal_ban
 plot_seasonal_band(ax12, month_grid, d13c_izo_seasonal_band, d13c_mlo_seasonal_band, show_labels=True)
 plot_seasonal_band(ax13, month_grid, d14c_izo_seasonal_band)
 
-ax11.set_ylabel("Annual-mean $s(t)$ (ppm)", fontsize=15)
-ax12.set_ylabel(r"Annual-mean $s(t)$ ($\perthousand$)", fontsize=15)
-ax13.set_ylabel(r"Annual-mean $s(t)$ ($\perthousand$)", fontsize=15)
+ax11.set_ylabel("Mean $s(t)$ (ppm)", fontsize=15)
+ax12.set_ylabel(r"Mean $s(t)$ ($\perthousand$)", fontsize=15)
+ax13.set_ylabel(r"Mean $s(t)$ ($\perthousand$)", fontsize=15)
 
 ax11.set_title("CO$_2$", fontsize=16)
 ax12.set_title(r"$\delta^{13}$CO$_2$", fontsize=16)
