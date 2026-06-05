@@ -225,6 +225,7 @@ ax21.errorbar(co2_time, co2_residuals, yerr=co2_yerr, fmt="ko", markersize=3, el
 ax21.set_xlabel("Year", fontsize=14)
 ax21.set_ylabel("Residuals (ppm)", fontsize=13)
 ax21.set_xlim(1985, 2025)
+ax21.set_ylim(bottom=-3.2)
 
 # Lower block: delta13CO2 observed data and fitted model
 ax12.errorbar(d13c_time, d13c_observed, yerr=d13c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
