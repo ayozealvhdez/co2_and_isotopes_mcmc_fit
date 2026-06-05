@@ -243,10 +243,10 @@ ax22.set_xlim(1985, 2025)
 
 # Align each fit-panel ylabel with the residual-panel ylabel below it.
 for ax in (ax11, ax21):
-    ax.yaxis.set_label_coords(-0.05, 0.5)
+    ax.yaxis.set_label_coords(-0.06, 0.5)
 
 for ax in (ax12, ax22):
-    ax.yaxis.set_label_coords(-0.12, 0.5)
+    ax.yaxis.set_label_coords(-0.14, 0.5)
 
 # Lower-right block: no Delta14CO2 data are available for MLO
 for ax in (ax13, ax23):
