@@ -254,6 +254,15 @@ def shade_anomalous_windows(ax, periods, positive_color, negative_color):
         )
 
 
+def set_symmetric_ylim(ax):
+    """
+    Center zero in a residual axis while preserving the automatic data margin.
+    """
+    ymin, ymax = ax.get_ylim()
+    ylim_abs = max(abs(ymin), abs(ymax))
+    ax.set_ylim(-ylim_abs, ylim_abs)
+
+
 
 # -------------------------------------------------------
 # ---------------------- PATHS --------------------------
@@ -401,6 +410,7 @@ ax1.axhline(0, color="gray", linestyle="--", linewidth=0.8)
 ax1.errorbar(co2_time, co2_residuals, yerr=co2_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax1.set_ylabel("CO$_2$ residual (ppm)", fontsize=16)
 ax1.set_xlim(xlim_min, xlim_max)
+set_symmetric_ylim(ax1)
 plt.setp(ax1.get_xticklabels(), visible=False)
 
 # Left, middle panel: delta13CO2 residuals
@@ -409,6 +419,7 @@ ax2.axhline(0, color="gray", linestyle="--", linewidth=0.8)
 ax2.errorbar(d13c_time, d13c_residuals, yerr=d13c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
 ax2.set_ylabel(r"$\delta^{13}$CO$_2$ residual ($\perthousand$)", fontsize=16)
 ax2.set_xlim(xlim_min, xlim_max)
+set_symmetric_ylim(ax2)
 plt.setp(ax2.get_xticklabels(), visible=False)
 
 # Left, lower panel: Delta14CO2 residuals
@@ -418,6 +429,7 @@ ax3.errorbar(d14c_time, d14c_residuals, yerr=d14c_yerr, fmt="ko", markersize=3, 
 ax3.set_xlabel("Year", fontsize=16)
 ax3.set_ylabel(r"$\Delta^{14}$CO$_2$ residual ($\perthousand$)", fontsize=16)
 ax3.set_xlim(xlim_min, xlim_max)
+set_symmetric_ylim(ax3)
 
 # Right upper panel: CO2 versus delta13CO2 residuals
 ax4.plot(co2_res_common_13, d13c_res_common, "ko", markersize=4, alpha=0.75)
@@ -427,6 +439,7 @@ ax4.axhline(0, color="gray", linestyle="--", linewidth=0.8)
 ax4.axvline(0, color="gray", linestyle="--", linewidth=0.8)
 ax4.set_xlabel("CO$_2$ residual (ppm)", fontsize=16)
 ax4.set_ylabel(r"$\delta^{13}$CO$_2$ residual ($\perthousand$)", fontsize=16)
+set_symmetric_ylim(ax4)
 
 # Right lower panel: CO2 versus Delta14CO2 residuals
 ax5.plot(co2_res_common_14, d14c_res_common, "ko", markersize=4, alpha=0.75)
@@ -436,6 +449,7 @@ ax5.axhline(0, color="gray", linestyle="--", linewidth=0.8)
 ax5.axvline(0, color="gray", linestyle="--", linewidth=0.8)
 ax5.set_xlabel("CO$_2$ residual (ppm)", fontsize=16)
 ax5.set_ylabel(r"$\Delta^{14}$CO$_2$ residual ($\perthousand$)", fontsize=16)
+set_symmetric_ylim(ax5)
 
 # Align y-axis labels within each figure column.
 for ax in (ax1, ax2, ax3):

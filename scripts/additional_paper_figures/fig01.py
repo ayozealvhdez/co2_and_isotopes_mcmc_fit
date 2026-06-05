@@ -190,7 +190,7 @@ print("-------------------------------------------------------")
 
 print("Step 2: Plot combined figure")
 
-fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, ncols=1, figsize=(16, 8.8), sharex=True)
+fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, ncols=1, figsize=(14, 7.5), sharex=True)
 fig.subplots_adjust(hspace=0.05)
 
 # Upper panel: CO2 observed data

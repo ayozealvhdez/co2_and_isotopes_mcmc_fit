@@ -117,6 +117,15 @@ def compute_model_and_trend_bands(samples, decimal_year_grid, timezero, polynomi
     return (model_p16, model_p50, model_p84), (trend_p16, trend_p50, trend_p84)
 
 
+def set_symmetric_ylim(ax):
+    """
+    Center zero in a residual axis while preserving the automatic data margin.
+    """
+    ymin, ymax = ax.get_ylim()
+    ylim_abs = max(abs(ymin), abs(ymax))
+    ax.set_ylim(-ylim_abs, ylim_abs)
+
+
 
 # -------------------------------------------------------
 # ---------------------- PATHS --------------------------
@@ -225,7 +234,7 @@ ax21.errorbar(co2_time, co2_residuals, yerr=co2_yerr, fmt="ko", markersize=3, el
 ax21.set_xlabel("Year", fontsize=14)
 ax21.set_ylabel("Residuals (ppm)", fontsize=13)
 ax21.set_xlim(1985, 2025)
-ax21.set_ylim(bottom=-3.2)
+set_symmetric_ylim(ax21)
 
 # Lower block: delta13CO2 observed data and fitted model
 ax12.errorbar(d13c_time, d13c_observed, yerr=d13c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
@@ -241,6 +250,7 @@ ax22.errorbar(d13c_time, d13c_residuals, yerr=d13c_yerr, fmt="ko", markersize=3,
 ax22.set_xlabel("Year", fontsize=14)
 ax22.set_ylabel(r"Residuals ($\perthousand$)", fontsize=13)
 ax22.set_xlim(1985, 2025)
+set_symmetric_ylim(ax22)
 
 # Align each fit-panel ylabel with the residual-panel ylabel below it.
 for ax in (ax11, ax21):
