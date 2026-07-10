@@ -244,7 +244,7 @@ python scripts/residual_analysis/residual_signals_co2.py
 
 6. Reconfigure and rerun the appropriate fitting script using the information from the residual analysis, if needed.
 
-When reproducing the paper figures, first run the scripts in `scripts/fit/` for the three IZO records (CO2, δ13CO2 and Δ14CO2) and the two MLO records (CO2 and δ13CO2) with the default configurations, and then generate paper-specific figures using the scripts in `scripts/additional_paper_figures/`.
+When reproducing the paper figures, first run the scripts in `scripts/fit/` for the five series fitted in the paper: CO2, δ13CO2 and Δ14CO2 at IZO, and CO2 and δ13CO2 at MLO. Then generate the paper-specific figures using the scripts in `scripts/additional_paper_figures/`.
 
 ## License
 
