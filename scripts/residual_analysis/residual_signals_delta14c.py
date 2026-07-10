@@ -60,7 +60,7 @@ noise_recompute_monthly_series = True
 noise_polynomial_degree = 3
 noise_include_slow_harmonics = False
 noise_base_period_slow_harmonics = 30
-noise_slow_harmonics = [2]
+noise_slow_harmonics = []
 
 
 

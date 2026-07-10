@@ -26,7 +26,7 @@ Thumbs.db
 *.bak
 *.swp
 
-# Local helper scripts not intended for version control
+# Quick tests not included in the paper and not useful for reusability
 functions/.wdcgg_data_scaletransf.py
 scripts/leastsquares/
 scripts/fit/fit_mcmc_co2_flask.py
@@ -54,5 +54,4 @@ data/**/*
 # Local agent instructions
 AGENTS.md
 
-# Local manuscript draft
-manuscript/
+

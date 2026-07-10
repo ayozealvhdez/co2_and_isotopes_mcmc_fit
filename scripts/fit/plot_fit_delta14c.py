@@ -33,9 +33,9 @@ from functions.paths import find_project_root, run_results_directory, run_plots_
 site_acronym = "IZO"
 recompute_monthly_series = True
 polynomial_degree = 3
-include_slow_harmonics = True
+include_slow_harmonics = False
 base_period_slow_harmonics = 30
-slow_harmonics = [2]
+slow_harmonics = []
 
 timezero = 1985.0  # Must match the value used in the fitting run
 
