@@ -111,11 +111,9 @@ co2_and_isotopes_mcmc_fit/
 
 ### `data/`
 
-Input data directory.
+Input data directory. The content is intentionally not tracked by Git to keep the repository lightweight and avoids redistributing potentially restricted datasets directly through GitHub.
 
-Observational data files are intentionally not tracked by Git. This keeps the repository lightweight and avoids redistributing large or potentially restricted datasets directly through GitHub.
-
-The expected structure is:
+The structure is:
 
 ```text
 data/
@@ -146,7 +144,7 @@ These scripts also generate the main diagnostic plots:
 - trace plots;
 - corner plots;
 
-These scripts are intended to be useful beyond the specific paper application.
+These scripts are useful beyond the specific paper application, and you can use it with your own data.
 
 ### `scripts/residual_analysis/`
 
@@ -168,7 +166,7 @@ This directory is intentionally ignored by Git.
 
 ## Installation
 
-Recommended Python version: 3.13.
+Recommended Python version: 3.14.
 
 Clone the repository:
 
@@ -177,15 +175,13 @@ git clone https://github.com/ayozealvhdez/co2_and_isotopes_mcmc_fit.git
 cd co2_and_isotopes_mcmc_fit
 ```
 
-Create a Python environment, preferably with Python 3.13:
+Create a Python environment:
 
 ```bash
 python -m venv .venv
 ```
 
-Activate it.
-
-On Windows PowerShell:
+Activate it. On Windows PowerShell:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
@@ -208,29 +204,30 @@ python -m pip install -r requirements.txt
 A typical workflow is:
 
 1. Place input data files in the appropriate `data/` subdirectories.
-2. Configure the relevant script in `scripts/fit/` by checking the input file, site, date range, polynomial degree and low-frequency settings.
-3. Run the fitting script from the repository root, for example:
+2. Configure the scripts for the observable you want to analyse in `scripts/fit/` by checking the input file, site, date range, timezero, polynomial degree and low-frequency settings.
+3. Run the fitting script for that specific observable, for example:
 
 ```bash
 python scripts/fit/fit_mcmc_co2.py
 ```
 
-4. Plot the matching fitted result, for example:
+4. Plot the matching fitted result for that specific observable, for example:
 
 ```bash
 python scripts/fit/plot_fit_co2.py
 ```
 
-5. Analyse residuals using the scripts in `scripts/residual_analysis/`, if needed:
+5. Analyse coherent low-frequency signals in the residuals using the scripts in `scripts/residual_analysis/`, if needed:
 
 ```bash
 python scripts/residual_analysis/residual_signals_co2.py
 ```
 
 6. Reconfigure and rerun the appropriate fitting script using the information from the residual analysis, if needed.
-7. (Optionally) When reproducing the paper results, generate paper-specific figures using the scripts in `scripts/additional_paper_figures/`.
 
 Use the corresponding `delta13c` or `delta14c` scripts for the isotope records.
+
+When reproducing the paper results, first run the scripts in `scripts/fit/`  for the three IZO records (CO2, δ13CO2 and Δ14CO2) with the default configurations, and then generate paper-specific figures using the scripts in `scripts/additional_paper_figures/`.
 
 ## License
 
