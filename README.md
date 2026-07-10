@@ -2,7 +2,7 @@
 
 Reusable Python code for fitting atmospheric CO2, δ13CO2 and Δ14CO2 time series using the flexible model framework described in Álvarez-Hernández et al. (2026). The fits are performed with a Bayesian MCMC approach using the `emcee` sampler.
 
-The repository contains both general-purpose analysis tools and paper-specific scripts. The reusable scripts are intended to fit, diagnose and visualise CO2, δ13CO2 and Δ14CO2 time series using the same modelling approach as in Álvarez-Hernández et al. (2026).
+The repository contains both general-purpose analysis tools and paper-specific scripts. The reusable scripts are intended for fitting, model tuning, and visualisation of results.
 
 The paper-specific scripts are included separately to support transparency and reproducibility of the figures and results presented in Álvarez-Hernández et al. (2026).
 
@@ -25,9 +25,9 @@ where:
 - `p(t)` is the smooth long-term component.
 - `s(t)` is the seasonal component.
 - `l(t)` is an optional low-frequency component representing interannual variability.
-- `t` is expressed in decimal years, with `t = 0` corresponding to 1985.0 in the default framework.
+- `t` is expressed in decimal years relative to the reference year specified by the timezero variable.
 
-The same general formulation can be applied to CO2, δ13CO2 and Δ14CO2, while allowing observable-specific configurations.
+The same general formulation can be applied to CO2, δ13CO2 and Δ14CO2, while allowing observable-specific configurations. It could also apply to other species and isotopic variables, but it may require changing the code.
 
 ## Model overview
 
@@ -41,13 +41,11 @@ The seasonal component is represented by a Fourier series up to the fourth annua
 
 ### Low-frequency component
 
-The low-frequency component is optional. When included, it is represented as a Fourier series with a selected base period and set of harmonics. This component is mainly intended to describe interannual variability.
-
-When no low-frequency component is included, this term is set to zero.
+The low-frequency component is optional. When included, it is represented as a Fourier series with a selected base period and set of harmonics. This component is mainly intended to describe coherent interannual variability.
 
 ### Bayesian fitting
 
-The model is fitted using a Bayesian MCMC approach. Derived quantities and uncertainty bands should be computed by propagating joint posterior samples, preserving parameter correlations. A sufficiently large sample of these joint posteriors are saved after each run.
+The model is fitted using a Bayesian MCMC approach, which is particularly useful for consistent uncertainty characterisation. Derived quantities and uncertainty bands are computed by propagating joint posterior samples, preserving parameter correlations.
 
 ## Repository structure
 
@@ -115,7 +113,7 @@ co2_and_isotopes_mcmc_fit/
 
 Input data directory.
 
-Large observational data files are intentionally not tracked by Git. This keeps the repository lightweight and avoids redistributing large or potentially restricted datasets directly through GitHub.
+Observational data files are intentionally not tracked by Git. This keeps the repository lightweight and avoids redistributing large or potentially restricted datasets directly through GitHub.
 
 The expected structure is:
 
@@ -129,29 +127,24 @@ data/
 
 Place the required input files in the corresponding subdirectories before running the fitting or plotting scripts. The expected formats are WDCGG for CO2, NOAA GML for δ13CO2 and Heidelberg Radiocarbon Laboratory format for Δ14CO2. For other formats, the data-reading logic in the scripts must be modified.
 
-The `data/climatic_indexes/` directory contains the small climate-index files used by the paper-specific comparison figures.
+The `data/climatic_indexes/` directory contains the small climate-index files used by the paper-specific comparison figures, which are public and taken from NOAA databases.
 
 ### `functions/`
 
-Reusable functions used by different scripts.
+Reusable functions used by different scripts, grouped by scientific or technical purpose.
 
-These files contain model definitions, MCMC probability functions, plotting utilities, path handling, data loading, data filtering, time-axis utilities and residual-analysis tools.
-
-Functions are grouped by scientific or technical purpose.
-
-Local helper scripts for one-off data transformations are not part of the reusable code and are ignored by Git when listed in `.gitignore`.
+These files contain model definitions, MCMC probability functions, and utilities for path handling, data loading, data filtering, time-axis conversions, plotting and residual-analysis tools.
 
 ### `scripts/fit/`
 
 Reusable scripts for fitting CO2, δ13CO2 and Δ14CO2 time series using the Bayesian MCMC framework.
 
-These scripts also generate the main diagnostic plots, such as:
+These scripts also generate the main diagnostic plots:
 
 - fitted model against data;
 - residuals;
 - trace plots;
 - corner plots;
-- posterior-based model visualisations.
 
 These scripts are intended to be useful beyond the specific paper application.
 
@@ -165,36 +158,17 @@ These are mainly intended for residuals obtained after fitting the model without
 
 Scripts used to generate paper-specific figures.
 
-These scripts are included for transparency and reproducibility of Álvarez-Hernández et al. (2026). They are not intended as general reusable tools, although they may be useful as templates for similar analyses.
+These scripts are included for transparency and reproducibility of Álvarez-Hernández et al. (2026). They are not intended as general reusable tools, although they may be useful as templates or guidance for similar analyses or data visualisation.
 
 ### `results_and_plots/`
 
 Output directory for figures, fitted results and run products. It is created by the scripts when executed.
 
-These files can be large, so this directory is intentionally ignored by Git.
-
-## Data policy
-
-Input data files are not tracked by Git.
-
-This repository only tracks the directory structure and documentation files required to understand where the data should be placed.
-
-Before running the scripts, place the required observational files in:
-
-```text
-data/co2/
-data/climatic_indexes/
-data/delta13c/
-data/delta14c/
-```
-
-The scripts assume that input files follow the expected naming conventions and column formats used in the project.
-
-
-
-
+This directory is intentionally ignored by Git.
 
 ## Installation
+
+Recommended Python version: 3.13.
 
 Clone the repository:
 
@@ -203,18 +177,18 @@ git clone https://github.com/ayozealvhdez/co2_and_isotopes_mcmc_fit.git
 cd co2_and_isotopes_mcmc_fit
 ```
 
-Create and activate a Python environment.
-
-For example, using `venv`:
+Create a Python environment, preferably with Python 3.13:
 
 ```bash
 python -m venv .venv
 ```
 
-On Windows:
+Activate it.
 
-```bash
-.venv\Scripts\activate
+On Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
 ```
 
 On Linux/macOS:
@@ -226,7 +200,7 @@ source .venv/bin/activate
 Install the required dependencies:
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ## Basic workflow
@@ -234,96 +208,44 @@ pip install -r requirements.txt
 A typical workflow is:
 
 1. Place input data files in the appropriate `data/` subdirectories.
-2. Configure and run the relevant fitting script from `scripts/fit/`.
-3. Inspect the generated fit diagnostics.
-4. Analyse residuals using the scripts in `scripts/residual_analysis/`, if needed.
-5. Reconfigure and rerun the relevant fitting script using the information from the residual analysis, if needed.
-6. Optionally, when reproducing the paper results, generate paper-specific figures using the scripts in `scripts/additional_paper_figures/`.
-
-## Running the fits
-
-The main fitting scripts are:
-
-```text
-scripts/fit/fit_mcmc_co2.py
-scripts/fit/fit_mcmc_delta13c.py
-scripts/fit/fit_mcmc_delta14c.py
-```
-
-Each script is dedicated to one observable:
-
-- CO2;
-- δ13CO2;
-- Δ14CO2.
-
-These scripts perform the Bayesian MCMC fit and generate the corresponding output products.
-
-The main numerical outputs include:
-
-- `fit_summary_<model_tag>.txt`, with posterior medians, posterior standard deviations, fit metrics and run configuration.
-- `best_fit_and_residuals.txt`, with observations, fit values and residuals.
-- `samples_for_MC.txt`, with joint posterior samples saved with 10 decimal places for posterior uncertainty propagation.
-
-The fit summary also stores the mean autocorrelation time, when it can be computed, and the mean MCMC acceptance fraction.
-
-Example:
+2. Configure the relevant script in `scripts/fit/` by checking the input file, site, date range, polynomial degree and low-frequency settings.
+3. Run the fitting script from the repository root, for example:
 
 ```bash
 python scripts/fit/fit_mcmc_co2.py
 ```
 
-The exact runtime depends on the selected MCMC configuration, number of walkers, number of steps, input time series and model complexity.
-
-## Plotting fitted results
-
-The main plotting scripts are:
-
-```text
-scripts/fit/plot_fit_co2.py
-scripts/fit/plot_fit_delta13c.py
-scripts/fit/plot_fit_delta14c.py
-```
-
-These scripts are used to visualise the fitted model, observational data and diagnostic quantities.
-
-Example:
+4. Plot the matching fitted result, for example:
 
 ```bash
 python scripts/fit/plot_fit_co2.py
 ```
 
-## Residual analysis
-
-The residual-analysis scripts are:
-
-```text
-scripts/residual_analysis/residual_signals_co2.py
-scripts/residual_analysis/residual_signals_delta13c.py
-scripts/residual_analysis/residual_signals_delta14c.py
-```
-
-These scripts perform Lomb-Scargle periodogram analyses of residuals, mainly to identify candidate low-frequency signals after fitting the model without the low-frequency component.
-
-Example:
+5. Analyse residuals using the scripts in `scripts/residual_analysis/`, if needed:
 
 ```bash
 python scripts/residual_analysis/residual_signals_co2.py
 ```
 
+6. Reconfigure and rerun the appropriate fitting script using the information from the residual analysis, if needed.
+7. (Optionally) When reproducing the paper results, generate paper-specific figures using the scripts in `scripts/additional_paper_figures/`.
 
+Use the corresponding `delta13c` or `delta14c` scripts for the isotope records.
+
+## License
+
+No license has been selected for this repository yet. Before public reuse or redistribution, add a `LICENSE` file and update this section with the selected license.
 
 ## Citation
 
 If you use this code or the model framework, please cite:
 
 ```text
-Álvarez-Hernández et al. (2026)
+Álvarez-Hernández et al. (2026), manuscript submitted to Atmospheric Measurement Techniques.
 ```
 
 Full citation information will be added once the paper is published or publicly available.
 
-
-
 ## Contact
 
-For questions about this repository, please contact the repository maintainer through GitHub.
+For any questions about this repository, please contact the repository maintainer through GitHub.
