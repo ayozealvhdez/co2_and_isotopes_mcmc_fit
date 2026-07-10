@@ -1,9 +1,9 @@
 """
 Tests for posterior-sample uncertainty propagation.
 
-The paper requires derived curves and uncertainty bands to be computed by
-evaluating complete joint posterior parameter vectors. This test demonstrates
-the expected row-wise propagation on synthetic posterior samples.
+Derived curves and uncertainty bands must be computed from complete joint
+posterior parameter vectors. These tests use synthetic samples to protect that
+row-wise propagation.
 """
 
 import numpy as np
@@ -12,7 +12,7 @@ from functions.model import model
 
 
 def posterior_percentile_band(x, samples, polynomial_degree, slow_harmonics=None):
-    """Evaluate the model row by row and return the 16th, 50th and 84th percentiles."""
+    """Propagate complete posterior rows and return the 16th, 50th and 84th percentiles."""
     if slow_harmonics is None:
         slow_harmonics = []
 
@@ -34,7 +34,7 @@ def posterior_percentile_band(x, samples, polynomial_degree, slow_harmonics=None
 
 
 def test_row_wise_posterior_propagation_preserves_joint_samples():
-    """Check that uncertainty bands are computed from complete posterior rows."""
+    """Use complete posterior vectors when forming percentile bands."""
     x = np.asarray([0.0, 0.25, 0.5])
     sample_low = np.asarray([1.0, 0.0, 0.0, -2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     sample_high = np.asarray([3.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])

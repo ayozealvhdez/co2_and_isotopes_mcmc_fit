@@ -1,9 +1,8 @@
 """
 Tests for the mathematical model components.
 
-These tests check that the implementation follows the model definition used in
-the paper: a polynomial long-term term, annual seasonal harmonics up to the
-fourth harmonic with a linearly varying first harmonic, and an optional
+The tests use simple synthetic parameter sets to verify the model definition
+used in the paper: polynomial long-term term, seasonal harmonics, and optional
 low-frequency Fourier component.
 """
 
@@ -13,7 +12,7 @@ from functions.model import model, model_components
 
 
 def build_params(polynomial_coeffs, slow_pairs=None, seasonal_coeffs=None):
-    """Build a parameter vector using the order expected by functions.model."""
+    """Create a parameter vector in the order expected by functions.model."""
     if slow_pairs is None:
         slow_pairs = []
     if seasonal_coeffs is None:
@@ -27,7 +26,7 @@ def build_params(polynomial_coeffs, slow_pairs=None, seasonal_coeffs=None):
 
 
 def test_polynomial_component_uses_configured_degree():
-    """Check that p(t) is evaluated with all terms up to the selected degree."""
+    """Evaluate p(t) with all terms up to the selected polynomial degree."""
     x = np.asarray([0.0, 1.0, 2.0, 3.0])
     polynomial_coeffs = [2.0, -0.5, 0.25, 0.1]
     params = build_params(polynomial_coeffs)
@@ -53,7 +52,7 @@ def test_polynomial_component_uses_configured_degree():
 
 
 def test_first_annual_harmonic_coefficients_vary_linearly_with_time():
-    """Check the b1 + bp1*t and c1 + cp1*t terms of the annual harmonic."""
+    """Use b1 + bp1*t and c1 + cp1*t in the annual harmonic."""
     x = np.asarray([0.125, 0.375, 1.125, 1.375])
     polynomial_coeffs = [0.0, 0.0, 0.0]
     seasonal_coeffs = np.asarray([
@@ -89,7 +88,7 @@ def test_first_annual_harmonic_coefficients_vary_linearly_with_time():
 
 
 def test_seasonal_component_includes_fixed_harmonics_two_to_four():
-    """Check that the fixed annual harmonics k = 2, 3 and 4 are included."""
+    """Include the fixed annual harmonics k = 2, 3 and 4."""
     x = np.asarray([0.1, 0.2, 0.3])
     polynomial_coeffs = [0.0, 0.0, 0.0]
     seasonal_coeffs = np.asarray([
@@ -127,7 +126,7 @@ def test_seasonal_component_includes_fixed_harmonics_two_to_four():
 
 
 def test_low_frequency_component_uses_selected_harmonics_and_base_period():
-    """Check l(t) for selected low-frequency harmonics and a 30-year base period."""
+    """Evaluate l(t) for selected harmonics and a 30-year base period."""
     x = np.asarray([0.0, 1.5, 3.0])
     polynomial_coeffs = [0.0, 0.0, 0.0]
     slow_pairs = [(1.0, -0.5), (0.25, 0.75)]
@@ -156,7 +155,7 @@ def test_low_frequency_component_uses_selected_harmonics_and_base_period():
 
 
 def test_model_equals_sum_of_reported_components():
-    """Check that f(t) equals p(t) + s(t) + l(t)."""
+    """Verify f(t) = p(t) + s(t) + l(t)."""
     x = np.linspace(0.0, 2.0, 6)
     params = build_params(
         polynomial_coeffs=[1.0, 0.2, -0.01],
@@ -185,7 +184,7 @@ def test_model_equals_sum_of_reported_components():
 
 
 def test_low_frequency_component_is_zero_when_disabled():
-    """Check that l(t) is zero when no slow harmonics are included."""
+    """Set l(t) to zero when slow harmonics are disabled."""
     x = np.asarray([0.0, 1.0, 2.0])
     params = build_params(
         polynomial_coeffs=[0.0, 0.0, 0.0],
@@ -205,7 +204,7 @@ def test_low_frequency_component_is_zero_when_disabled():
 
 
 def test_low_frequency_derivative_matches_analytical_expression():
-    """Check the analytical derivative of the low-frequency component."""
+    """Compare d l(t) / dt with the analytical expression."""
     x = np.asarray([0.5, 1.5, 2.5])
     params = build_params(
         polynomial_coeffs=[0.0, 0.0, 0.0],
@@ -229,7 +228,7 @@ def test_low_frequency_derivative_matches_analytical_expression():
 
 
 def test_invalid_polynomial_degree_raises_value_error():
-    """Check that unsupported polynomial degrees are rejected."""
+    """Reject unsupported polynomial degrees."""
     x = np.asarray([0.0, 1.0])
     params = build_params([0.0, 0.0, 0.0])
 

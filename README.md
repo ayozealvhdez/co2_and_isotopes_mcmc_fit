@@ -102,6 +102,10 @@ co2_and_isotopes_mcmc_fit/
       paper_figure_calculations.py
       tests_paper_figures.py
 
+  tests/
+    run_tests.py
+    test_*.py
+
   results_and_plots/
   requirements.txt
   README.md
@@ -157,6 +161,16 @@ These are mainly intended for residuals obtained after fitting the model without
 Scripts used to generate paper-specific figures.
 
 These scripts are included for transparency and reproducibility of Álvarez-Hernández et al. (2026). They are not intended as general reusable tools, although they may be useful as templates or guidance for similar analyses or data visualisation.
+
+### `tests/`
+
+Internal tests for core functions and numerical behaviour. They are included for transparency and to help detect unintended changes.
+
+Run them with:
+
+```bash
+python -m tests.run_tests
+```
 
 ### `results_and_plots/`
 
@@ -229,17 +243,23 @@ When reproducing the paper results, first run the scripts in `scripts/fit/` for 
 
 ## License
 
-No license has been selected for this repository yet. Before public reuse or redistribution, add a `LICENSE` file and update this section with the selected license.
+The source code in this repository is distributed under the MIT License. See `LICENSE` for details.
+
+Input observational data are not distributed with this repository and remain subject to the terms of their original data providers.
 
 ## Citation
 
-If you use this code or the model framework, please cite:
+If you use this code directly, use a modified version of it, or use the model framework, cite both the paper and this repository:
 
 ```text
 Álvarez-Hernández et al. (2026), manuscript submitted to Atmospheric Measurement Techniques.
 ```
 
-Full citation information will be added once the paper is published or publicly available.
+```text
+Álvarez-Hernández, A. (2026). co2_and_isotopes_mcmc_fit. GitHub repository. https://github.com/ayozealvhdez/co2_and_isotopes_mcmc_fit
+```
+
+Full paper citation information will be added once the paper is published or publicly available.
 
 ## Contact
 

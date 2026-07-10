@@ -1,8 +1,8 @@
 """
 Tests for the Bayesian probability functions.
 
-These tests check the flat bounded prior, the Gaussian log-likelihood with its
-normalization term, and the posterior as the sum of prior and likelihood.
+The tests use small synthetic series to verify the flat bounded prior, the
+Gaussian log-likelihood, and the log posterior used by the MCMC scripts.
 """
 
 import numpy as np
@@ -12,7 +12,7 @@ from functions.model import model
 
 
 def test_log_likelihood_matches_normalized_gaussian_expression():
-    """Check the Gaussian log-likelihood, including its normalization term."""
+    """Evaluate the normalized Gaussian log-likelihood explicitly."""
     x = np.asarray([0.0, 0.25, 0.5])
     yerr = np.asarray([0.2, 0.3, 0.4])
     params = np.asarray([
@@ -54,7 +54,7 @@ def test_log_likelihood_matches_normalized_gaussian_expression():
 
 
 def test_log_prior_accepts_complete_parameter_vector_inside_ranges():
-    """Check that a complete parameter vector inside all bounds has log-prior 0."""
+    """Accept a complete parameter vector inside all prior bounds."""
     params = np.asarray([
         350.0,
         2.0,
@@ -99,7 +99,7 @@ def test_log_prior_accepts_complete_parameter_vector_inside_ranges():
 
 
 def test_log_prior_rejects_parameter_outside_any_range():
-    """Check that one parameter outside its allowed range rejects the sample."""
+    """Reject any parameter outside its allowed range."""
     params = np.zeros(13)
     params[0] = 999.0
 
@@ -116,7 +116,7 @@ def test_log_prior_rejects_parameter_outside_any_range():
 
 
 def test_log_prior_rejects_inconsistent_range_lengths():
-    """Check that inconsistent prior-range lists are rejected."""
+    """Reject prior-range lists with inconsistent lengths."""
     params = np.zeros(13)
 
     bad_polynomial_ranges = log_prior(
@@ -141,7 +141,7 @@ def test_log_prior_rejects_inconsistent_range_lengths():
 
 
 def test_log_probability_returns_minus_infinity_when_prior_rejects():
-    """Check that the posterior is -inf when the prior rejects the sample."""
+    """Return -inf posterior probability when the prior rejects a sample."""
     x = np.asarray([0.0, 0.25])
     y = np.asarray([1.0, 1.1])
     yerr = np.asarray([0.1, 0.1])
@@ -165,7 +165,7 @@ def test_log_probability_returns_minus_infinity_when_prior_rejects():
 
 
 def test_log_probability_equals_likelihood_for_valid_flat_prior():
-    """Check that a valid flat prior leaves the posterior equal to the likelihood."""
+    """Leave the posterior equal to the likelihood for an accepted flat prior."""
     x = np.asarray([0.0, 0.25])
     y = np.asarray([1.0, 1.1])
     yerr = np.asarray([0.1, 0.1])

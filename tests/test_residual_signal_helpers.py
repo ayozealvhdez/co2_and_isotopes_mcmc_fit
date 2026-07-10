@@ -1,9 +1,9 @@
 """
 Tests for helper functions used by residual signal analysis.
 
-These tests focus on small deterministic pieces of the residual-analysis logic:
-the Gaussian profile used to refine candidate peaks and the synthetic noise
-generators used for empirical false-alarm calculations.
+The tests cover deterministic pieces of the residual-analysis workflow:
+Gaussian peak profiles, white and red-noise simulations, AR(1) estimates, and
+empirical peak exceedance.
 """
 
 import numpy as np
@@ -18,7 +18,7 @@ from functions.utilities import gauss
 
 
 def test_gaussian_profile_has_requested_amplitude_at_center():
-    """Check that the Gaussian peak model reaches its amplitude at mu."""
+    """Evaluate the Gaussian peak at its centre."""
     x = np.asarray([0.0, 1.0, 2.0])
 
     y = gauss(x, amplitude=5.0, mu=1.0, sigma=0.5)
@@ -29,7 +29,7 @@ def test_gaussian_profile_has_requested_amplitude_at_center():
 
 
 def test_white_noise_simulation_is_reproducible_with_seeded_rng():
-    """Check that white-noise simulations are reproducible with a fixed RNG seed."""
+    """Repeat white-noise simulations with a fixed random seed."""
     rng_1 = np.random.default_rng(123)
     rng_2 = np.random.default_rng(123)
 
@@ -41,7 +41,7 @@ def test_white_noise_simulation_is_reproducible_with_seeded_rng():
 
 
 def test_red_noise_simulation_uses_stationary_ar1_initial_value():
-    """Check that AR(1) simulations start from the stationary distribution."""
+    """Start AR(1) red noise from its stationary distribution."""
     alpha = 0.8
     sigma = 0.5
 
@@ -58,7 +58,7 @@ def test_red_noise_simulation_uses_stationary_ar1_initial_value():
 
 
 def test_red_noise_simulation_rejects_nonstationary_alpha():
-    """Check that non-stationary AR(1) simulations are rejected."""
+    """Reject non-stationary AR(1) coefficients."""
     rng = np.random.default_rng(321)
 
     try:
@@ -70,7 +70,7 @@ def test_red_noise_simulation_rejects_nonstationary_alpha():
 
 
 def test_ar1_parameter_estimate_recovers_known_positive_autocorrelation():
-    """Check that AR(1) estimation detects positive serial correlation."""
+    """Recover positive serial correlation in a simple residual series."""
     residuals = np.asarray([1.0, 0.5, 0.25, 0.125, 0.0625])
 
     alpha, sigma = estimate_red_noise_ar1_parameters(residuals)
@@ -82,7 +82,7 @@ def test_ar1_parameter_estimate_recovers_known_positive_autocorrelation():
 
 
 def test_ar1_parameter_estimate_rejects_constant_residuals():
-    """Check that AR(1) estimation rejects residuals with no variance."""
+    """Reject residuals with zero variance."""
     residuals = np.ones(5)
 
     try:
@@ -94,7 +94,7 @@ def test_ar1_parameter_estimate_rejects_constant_residuals():
 
 
 def fap_test_inputs():
-    """Return a small deterministic setup for empirical FAP tests."""
+    """Return a small deterministic setup for empirical FAP calculations."""
     timestamps = np.linspace(0.0, 20.0, 41)
     residuals_for_noise_parameters = np.asarray([
         0.20, 0.10, 0.15, 0.05, -0.02, -0.06, -0.04, 0.01,
@@ -106,7 +106,7 @@ def fap_test_inputs():
 
 
 def test_peak_exceedance_white_noise_extreme_thresholds():
-    """Check that empirical FAP gives exact limits for white noise."""
+    """Return exact exceedance limits for white-noise thresholds."""
     timestamps, residuals_for_noise_parameters = fap_test_inputs()
 
     exceed_all = compute_peak_exceedance_percentage(
@@ -138,7 +138,7 @@ def test_peak_exceedance_white_noise_extreme_thresholds():
 
 
 def test_peak_exceedance_red_noise_extreme_thresholds():
-    """Check that empirical FAP gives exact limits for AR(1) red noise."""
+    """Return exact exceedance limits for AR(1) red-noise thresholds."""
     timestamps, residuals_for_noise_parameters = fap_test_inputs()
 
     exceed_all = compute_peak_exceedance_percentage(
@@ -170,7 +170,7 @@ def test_peak_exceedance_red_noise_extreme_thresholds():
 
 
 def test_peak_exceedance_decreases_for_larger_peak_power():
-    """Check that exceedance is monotonic with the selected peak power."""
+    """Decrease exceedance when the peak-power threshold increases."""
     timestamps, residuals_for_noise_parameters = fap_test_inputs()
 
     low_threshold_exceedance = compute_peak_exceedance_percentage(
@@ -201,7 +201,7 @@ def test_peak_exceedance_decreases_for_larger_peak_power():
 
 
 def test_peak_exceedance_rejects_unknown_noise_type():
-    """Check that invalid noise models are rejected explicitly."""
+    """Reject unsupported noise-model labels."""
     timestamps, residuals_for_noise_parameters = fap_test_inputs()
 
     try:
