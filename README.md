@@ -14,7 +14,9 @@ This codebase is designed for the analysis of long-term atmospheric carbon recor
 - δ13CO2 carbon isotope time series.
 - Δ14CO2 radiocarbon time series.
 
-The model represents each fitted time series as the sum of three components:
+The aim is to identify coherent long-term, seasonal and low-frequency signals embedded in the data, distinguishing them from noise, short-term variability and episodic deviations.
+
+To achieve this, a common parametric modelling framework is applied, using a model written as the sum of three components:
 
 ```text
 f(t) = p(t) + s(t) + l(t)
@@ -24,10 +26,12 @@ where:
 
 - `p(t)` is the smooth long-term component.
 - `s(t)` is the seasonal component.
-- `l(t)` is an optional low-frequency component representing interannual variability.
+- `l(t)` is a low-frequency component representing coherent interannual variability.
 - `t` is expressed in decimal years relative to the reference year specified by the timezero variable.
 
 The same general formulation can be applied to CO2, δ13CO2 and Δ14CO2, while allowing observable-specific configurations. It could also apply to other species and isotopic variables, but it may require changing the code.
+
+Full details are given in the paper.
 
 ## Model overview
 
@@ -97,8 +101,8 @@ co2_and_isotopes_mcmc_fit/
       fig05.py
       fig06.py
       fig07.py
-      fig08.py
       figA1_periodograms_isotopes.py
+      figC1_MLO_fits.py
       paper_figure_calculations.py
       tests_paper_figures.py
 
@@ -164,7 +168,7 @@ These scripts are included for transparency and reproducibility of Álvarez-Hern
 
 ### `tests/`
 
-Internal tests for core functions and numerical behaviour. They are included for transparency and to help detect unintended fatal changes.
+Internal tests for core functions and numerical behaviour. They are included for transparency and to help detect unintended changes in numerical behaviour.
 
 Run them with:
 
@@ -180,7 +184,7 @@ This directory is intentionally ignored by Git.
 
 ## Installation
 
-Recommended Python version: 3.14.
+Recommended Python version: 3.13.
 
 Clone the repository:
 
@@ -244,8 +248,6 @@ When reproducing the paper results, first run the scripts in `scripts/fit/` for 
 ## License
 
 The source code in this repository is distributed under a custom academic non-commercial license. See `LICENSE` for details.
-
-Input observational data are not distributed with this repository and remain subject to the terms of their original data providers.
 
 ## Citation
 
