@@ -45,7 +45,7 @@ The low-frequency component is optional. When included, it is represented as a F
 
 ### Bayesian fitting
 
-The model is fitted using a Bayesian MCMC approach with the `emcee` package (Foreman-Mackey et al., 2013), which is useful for consistent uncertainty characterisation. Derived quantities and uncertainty bands are computed by propagating joint posterior samples, preserving parameter correlations.
+The model is fitted using a Bayesian MCMC approach with the `emcee` package (Foreman-Mackey et al., 2013), which provides consistent and robust uncertainty characterisation. Derived quantities and uncertainty bands are computed by propagating joint posterior samples, preserving parameter correlations.
 
 ## Repository structure
 
