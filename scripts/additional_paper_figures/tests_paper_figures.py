@@ -3,7 +3,7 @@ Scientific tests for the paper-specific figure calculations.
 
 These tests intentionally live next to the additional paper figure scripts
 rather than in the project-wide tests/ directory. The calculations tested here
-are tied to the paper figures and are not intended to define a reusable API.
+are tied to the paper figures and are not intended to define reusable project functions.
 
 Run from the project root with:
 python -m scripts.additional_paper_figures.tests_paper_figures

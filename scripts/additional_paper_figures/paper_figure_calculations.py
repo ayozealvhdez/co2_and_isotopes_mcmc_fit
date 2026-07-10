@@ -3,7 +3,7 @@ Numerical calculations used by the paper-specific figure scripts.
 
 This module is intentionally local to scripts/additional_paper_figures/. It
 keeps the scientific calculations used by the additional paper figures separate
-from the reusable project API in functions/.
+from the reusable project functions in functions/.
 """
 
 import numpy as np
