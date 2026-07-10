@@ -8,7 +8,7 @@ The paper-specific scripts are included separately to support transparency and r
 
 ## Scientific purpose
 
-This codebase is designed for the analysis of three type of atmospheric CO2 records:
+This codebase is designed for the analysis of three types of atmospheric CO2 records:
 
 - CO2 dry-air mole fraction time series.
 - δ13CO2 carbon isotope time series.
