@@ -262,4 +262,4 @@ You can also add a link to the GitHub repository if useful.
 
 ## Contact
 
-For any questions about this repository, please contact the repository maintainer through GitHub.
+For any questions about this repository, please contact Ayoze Álvarez-Hernández through GitHub or email.
