@@ -8,7 +8,7 @@ The paper-specific scripts are included separately to support transparency and r
 
 ## Scientific purpose
 
-This codebase is designed for the analysis of long-term atmospheric carbon records, including:
+This codebase is designed for the analysis of three type of atmospheric CO2 records:
 
 - CO2 dry-air mole fraction time series.
 - δ13CO2 carbon isotope time series.
@@ -112,6 +112,7 @@ co2_and_isotopes_mcmc_fit/
 
   results_and_plots/
   requirements.txt
+  LICENSE
   README.md
 ```
 
