@@ -164,7 +164,7 @@ These scripts are included for transparency and reproducibility of Álvarez-Hern
 
 ### `tests/`
 
-Internal tests for core functions and numerical behaviour. They are included for transparency and to help detect unintended changes.
+Internal tests for core functions and numerical behaviour. They are included for transparency and to help detect unintended fatal changes.
 
 Run them with:
 
@@ -249,17 +249,13 @@ Input observational data are not distributed with this repository and remain sub
 
 ## Citation
 
-If you use this code directly, use a modified version of it, or use the model framework, cite both the paper and this repository:
+If you use this code directly, a modified version of it, or the model framework, please cite the paper:
 
 ```text
-Álvarez-Hernández et al. (2026), manuscript submitted to Atmospheric Measurement Techniques.
+Álvarez-Hernández et al. (2026), manuscript submitted to Atmospheric Measurement Techniques (to be updated).
 ```
 
-```text
-Álvarez-Hernández, A. (2026). co2_and_isotopes_mcmc_fit. GitHub repository. https://github.com/ayozealvhdez/co2_and_isotopes_mcmc_fit
-```
-
-Full paper citation information will be added once the paper is published or publicly available.
+You can also add a link to the GitHub repository if useful.
 
 ## Contact
 
