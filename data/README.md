@@ -1,14 +1,16 @@
 # Data Directory
 
-Input data files are intentionally not tracked by Git.
+This directory contains the input data expected by the fitting and plotting scripts.
 
-Keep the project data under:
+Observational files are not tracked by Git. Place them in:
 
 ```text
-data/climatic_indexes/
-data/co2/
-data/delta13c/
-data/delta14c/
+data/
+  co2/        WDCGG CO2 files
+  delta13c/   NOAA GML δ13CO2 files
+  delta14c/   Heidelberg Δ14CO2 files
 ```
 
-Only the directory structure and README files are tracked for the main observational data directories. The small climate-index files in `data/climatic_indexes/` are tracked because they are used by the paper-specific figure scripts.
+Keep original observational files unchanged when possible. File names must match those selected in the corresponding scripts.
+
+The `data/climatic_indexes/` directory contains the small public climate-index files used by the paper-specific comparison figures.

@@ -111,7 +111,7 @@ co2_and_isotopes_mcmc_fit/
 
 ### `data/`
 
-Input data directory. The content is intentionally not tracked by Git to keep the repository lightweight and avoids redistributing potentially restricted datasets directly through GitHub.
+Input data directory. The content is intentionally not tracked by Git to keep the repository lightweight and avoid redistributing potentially restricted datasets directly through GitHub.
 
 The structure is:
 
@@ -144,7 +144,7 @@ These scripts also generate the main diagnostic plots:
 - trace plots;
 - corner plots;
 
-These scripts are useful beyond the specific paper application, and you can use it with your own data.
+These scripts are useful beyond the specific paper application, and you can use them with your own data.
 
 ### `scripts/residual_analysis/`
 
@@ -225,7 +225,7 @@ python scripts/residual_analysis/residual_signals_co2.py
 
 6. Reconfigure and rerun the appropriate fitting script using the information from the residual analysis, if needed.
 
-When reproducing the paper results, first run the scripts in `scripts/fit/`  for the three IZO records (CO2, δ13CO2 and Δ14CO2) with the default configurations, and then generate paper-specific figures using the scripts in `scripts/additional_paper_figures/`.
+When reproducing the paper results, first run the scripts in `scripts/fit/` for the three IZO records (CO2, δ13CO2 and Δ14CO2) with the default configurations, and then generate paper-specific figures using the scripts in `scripts/additional_paper_figures/`.
 
 ## License
 
