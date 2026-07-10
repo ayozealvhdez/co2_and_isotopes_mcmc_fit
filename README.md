@@ -201,7 +201,7 @@ python -m pip install -r requirements.txt
 
 ## Basic workflow
 
-A typical workflow is:
+A typical workflow for fitting one record is:
 
 1. Place input data files in the appropriate `data/` subdirectories.
 2. Configure the scripts for the observable you want to analyse in `scripts/fit/` by checking the input file, site, date range, timezero, polynomial degree and low-frequency settings.
@@ -224,8 +224,6 @@ python scripts/residual_analysis/residual_signals_co2.py
 ```
 
 6. Reconfigure and rerun the appropriate fitting script using the information from the residual analysis, if needed.
-
-Use the corresponding `delta13c` or `delta14c` scripts for the isotope records.
 
 When reproducing the paper results, first run the scripts in `scripts/fit/`  for the three IZO records (CO2, δ13CO2 and Δ14CO2) with the default configurations, and then generate paper-specific figures using the scripts in `scripts/additional_paper_figures/`.
 
