@@ -1,6 +1,6 @@
 # co2_and_isotopes_mcmc_fit
 
-Reusable Python code for fitting atmospheric CO2, δ13CO2 and Δ14CO2 time series using the flexible model framework described in Álvarez-Hernández et al. (2026). The fits are performed with a Bayesian MCMC approach using the `emcee` sampler.
+Reusable Python code for fitting atmospheric CO2, δ13CO2 and Δ14CO2 time series using the flexible model framework described in Álvarez-Hernández et al. (2026).
 
 The repository contains both general-purpose analysis tools and paper-specific scripts. The reusable scripts are intended for fitting, model tuning, and visualisation of results.
 
