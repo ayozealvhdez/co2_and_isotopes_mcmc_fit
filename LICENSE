@@ -1,21 +1,33 @@
-MIT License
+Academic Non-Commercial License
 
 Copyright (c) 2026 Ayoze Álvarez-Hernández
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is granted to use, copy, and modify the source code in this
+repository for non-commercial academic research, teaching, and scientific
+publication work, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. The code, or any modified version of it, may not be used for commercial
+   purposes.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. Any publication, report, thesis, presentation, or derived scientific work
+   that uses this code, or a modified version of it, must cite:
+
+   - Álvarez-Hernández et al. (2026), manuscript submitted to Atmospheric
+     Measurement Techniques (details will be updated)
+
+3. The copyright notice and this license notice must be included in all copies
+   or substantial portions of the code.
+
+4. The input observational data are not distributed under this license. They
+   remain subject to the terms of their original data providers.
+
+Commercial use, redistribution for commercial purposes, sublicensing for
+commercial use, or incorporation into commercial products or services requires
+prior written permission from the copyright holder.
+
+THE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+CODE OR THE USE OR OTHER DEALINGS IN THE CODE.

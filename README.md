@@ -243,7 +243,7 @@ When reproducing the paper results, first run the scripts in `scripts/fit/` for 
 
 ## License
 
-The source code in this repository is distributed under the MIT License. See `LICENSE` for details.
+The source code in this repository is distributed under a custom academic non-commercial license. See `LICENSE` for details.
 
 Input observational data are not distributed with this repository and remain subject to the terms of their original data providers.
 
@@ -252,7 +252,7 @@ Input observational data are not distributed with this repository and remain sub
 If you use this code directly, a modified version of it, or the model framework, please cite the paper:
 
 ```text
-Álvarez-Hernández et al. (2026), manuscript submitted to Atmospheric Measurement Techniques (to be updated).
+Álvarez-Hernández et al. (2026), manuscript submitted to Atmospheric Measurement Techniques (details will be updated).
 ```
 
 You can also add a link to the GitHub repository if useful.
