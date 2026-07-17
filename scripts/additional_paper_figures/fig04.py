@@ -410,7 +410,7 @@ plot_component_band(ax22, d13c_decimal_year_grid, d13c_izo_lf_band, d13c_mlo_lf_
 ax21.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
 ax22.axhline(0, color="0.6", linewidth=0.8, linestyle="--", zorder=0)
 
-ax21.set_ylabel("$\ell(t)$ (ppm)", fontsize=15, labelpad=6)
+ax21.set_ylabel(r"$\ell(t)$ (ppm)", fontsize=15, labelpad=6)
 ax22.set_ylabel(r"$\ell(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
 
 # Row (c): p(t) + l(t)
@@ -418,7 +418,7 @@ plot_component_band(ax31, co2_decimal_year_grid, co2_izo_nonseasonal_band, co2_m
 plot_component_band(ax32, d13c_decimal_year_grid, d13c_izo_nonseasonal_band, d13c_mlo_nonseasonal_band, show_labels=True)
 plot_component_band(ax33, d14c_decimal_year_grid, d14c_izo_nonseasonal_band)
 
-ax31.set_ylabel("$p(t)+\ell(t)$ (ppm)", fontsize=15, labelpad=6)
+ax31.set_ylabel(r"$p(t)+\ell(t)$ (ppm)", fontsize=15, labelpad=6)
 ax32.set_ylabel(r"$p(t)+\ell(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
 ax33.set_ylabel(r"$p(t)+\ell(t)$ ($\perthousand$)", fontsize=15, labelpad=6)
 
