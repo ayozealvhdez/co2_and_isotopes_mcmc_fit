@@ -317,7 +317,7 @@ ax.tick_params(
 ax.legend(loc="upper right", fontsize=12)
 ax.set_xlim(fmin, fmax)
 
-fig.savefig(output_path, bbox_inches="tight", pad_inches=0.1)
+fig.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.1)
 plt.close(fig)
 
 print(f"Saved in '{output_path}'")

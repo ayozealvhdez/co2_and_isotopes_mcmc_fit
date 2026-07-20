@@ -249,7 +249,7 @@ ax.minorticks_on()
 ax.tick_params(which="minor", direction="in", top=True, bottom=True, left=True, right=True, length=3, width=0.8)
 ax.set_xlim(fmin, fmax)
 
-fig.savefig(output_path, bbox_inches="tight", pad_inches=0.1)
+fig.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.1)
 plt.show()
 plt.close(fig)
 
