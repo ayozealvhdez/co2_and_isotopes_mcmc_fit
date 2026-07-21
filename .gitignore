@@ -33,10 +33,10 @@ scripts/fit/fit_mcmc_co2_flask.py
 scripts/fit/plot_fit_co2_flask.py
 scripts/additional_paper_figures/co2_residual_inhomogeneity_test.py
 scripts/additional_paper_figures/co2_delta13co2_correlation.py
-scripts/additional_paper_figures/fig04_flasks.py
-scripts/additional_paper_figures/fig04_alternatve.py
 scripts/additional_paper_figures/fig05_flasks.py
-scripts/additional_paper_figures/fig06_delta13co2.py
+scripts/additional_paper_figures/fig05_alternatve.py
+scripts/additional_paper_figures/fig06_flasks.py
+scripts/additional_paper_figures/fig07_delta13co2.py
 scripts/residual_analysis/residual_signals_co2_flask.py
 
 # Project outputs

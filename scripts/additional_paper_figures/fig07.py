@@ -1,22 +1,24 @@
 """
-Compare IZO CO2, delta13CO2, and Delta14CO2 fit residuals.
+Plot the CO2 low-frequency component, its derivative, and climate indices.
 
-Panel (a):
-- Time series of the residuals from the selected MCMC fits.
-- Blue and red shaded windows mark detected sign-coherent multi-month episodes
-  in the smoothed CO2 residuals.
+Panels:
+- Upper: low-frequency component ell(t) for IZO and MLO CO2.
+- Middle: first derivative d ell / dt for IZO and MLO CO2.
+- Lower: monthly Nino 3.4 sea-surface temperature anomaly index and NAO index.
 
-Panel (b):
-- Scatter plots of CO2 residuals against delta13CO2 and Delta14CO2 residuals at
-  common timestamps.
-- Points within the detected CO2 residual windows are overplotted with the same
-  colors used in panel (a).
+The low-frequency components and their derivatives are computed from joint
+posterior Monte Carlo draws saved by the selected CO2 MCMC runs. Shaded regions
+show the 16th-84th percentile range. The script also computes Pearson
+correlations between the climate indices and d ell / dt as a function of lag,
+and between the IZO and MLO low-frequency components.
 
 The script reads:
-- 'best_fit_and_residuals.txt' from the selected paper IZO runs.
+- 'samples_for_MC.txt' from the selected CO2 MCMC runs.
+- 'enso_index.txt', containing the monthly Nino 3.4 anomaly index.
+- 'nao_index.txt', containing the monthly NAO index.
 
 The result is stored in:
-results_and_plots/comparisons/fig07_isotope_residuals/fig07.png
+results_and_plots/comparisons/fig06_correlation_nino34/fig06.png
 """
 
 
@@ -30,6 +32,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from functions.paths import find_project_root, run_results_directory, comparison_directory
+from scripts.additional_paper_figures.paper_figure_calculations import (
+    build_monthly_midpoint_grid,
+    compute_low_frequency_band,
+    load_nao_index,
+    load_nino34_anomaly,
+    map_monthly_series_to_grid,
+    pearson_correlation_by_lag,
+)
 
 
 
@@ -38,229 +48,49 @@ from functions.paths import find_project_root, run_results_directory, comparison
 # -------------------------------------------------------
 
 # ---------- CO2 IZO ----------
-co2_site_acronym = "IZO"
-co2_data_frequency = "monthly"
-co2_polynomial_degree = 2
-co2_include_slow_harmonics = True
-co2_base_period_slow_harmonics = 30
-co2_slow_harmonics = [2,3,4,7,8]
+co2_izo_site_acronym = "IZO"
+co2_izo_data_frequency = "monthly"
+co2_izo_polynomial_degree = 2
+co2_izo_include_slow_harmonics = True
+co2_izo_base_period_slow_harmonics = 30
+co2_izo_slow_harmonics = [2,3,4,7,8]
+co2_izo_timezero = 1985.0
 
-# ---------- delta13CO2 IZO ----------
-d13c_site_acronym = "IZO"
-d13c_recompute_monthly_series = True
-d13c_polynomial_degree = 2
-d13c_include_slow_harmonics = True
-d13c_base_period_slow_harmonics = 30
-d13c_slow_harmonics = [2,3]
-
-# ---------- Delta14CO2 IZO ----------
-d14c_site_acronym = "IZO"
-d14c_recompute_monthly_series = True
-d14c_polynomial_degree = 3
-d14c_include_slow_harmonics = False
-d14c_base_period_slow_harmonics = 30
-d14c_slow_harmonics = [2]
+# ---------- CO2 MLO ----------
+co2_mlo_site_acronym = "MLO"
+co2_mlo_data_frequency = "monthly"
+co2_mlo_polynomial_degree = 2
+co2_mlo_include_slow_harmonics = True
+co2_mlo_base_period_slow_harmonics = 30
+co2_mlo_slow_harmonics = [2,3,4,7,8]
+co2_mlo_timezero = 1985.0
 
 
 
 # -------------------------------------------------------
-# ------------- ANOMALOUS WINDOW CONFIGURATION ----------
+# ---------------- GRID CONFIGURATION -------------------
 # -------------------------------------------------------
 
-window_months = 6
-peak_sigma_threshold = 2.0
-edge_sigma_threshold = 1.5
-min_consecutive_points = 3
+start_year = 1985
+end_year = 2024
 
 xlim_min = 1985
 xlim_max = 2025
 
+max_lag_months = 60
 
 
-# -------------------------------------------------------
-# -------------------- SMALL HELPERS --------------------
-# -------------------------------------------------------
 
-def load_residual_file(filepath):
+def set_symmetric_ylim(ax, curves, extra_fraction=0.08):
     """
-    Load one best_fit_and_residuals.txt file.
+    Set symmetric y limits around zero from the plotted curves.
     """
-    if not os.path.exists(filepath):
-        raise FileNotFoundError(f"Input file not found: {filepath}")
+    max_abs = max(np.nanmax(np.abs(curve)) for curve in curves)
 
-    data = np.loadtxt(filepath, comments="#", ndmin=2)
+    if max_abs == 0:
+        max_abs = 1.0
 
-    time = data[:, 0]
-    observed = data[:, 1]
-    yerr = data[:, 2]
-    fit = data[:, 4]
-    residuals = data[:, 5]
-
-    return time, observed, yerr, fit, residuals
-
-
-def rolling_mean_by_points(values, window_points):
-    """
-    Compute a centered rolling mean using a fixed number of points.
-    """
-    values = np.asarray(values, dtype=float)
-    rolling_mean = np.empty(len(values), dtype=float)
-
-    half_window = window_points // 2
-
-    for i in range(len(values)):
-        start = i - half_window
-        end = start + window_points
-
-        if start < 0:
-            start = 0
-            end = min(window_points, len(values))
-
-        if end > len(values):
-            end = len(values)
-            start = max(0, end - window_points)
-
-        rolling_mean[i] = np.mean(values[start:end])
-
-    return rolling_mean
-
-
-def find_prolonged_anomalous_periods(time, residuals, window_points, peak_sigma_threshold, edge_sigma_threshold, min_consecutive_points):
-    """
-    Detect dominant sign-coherent lobes in the smoothed CO2 residuals.
-    """
-    residuals = np.asarray(residuals, dtype=float)
-    rolling_mean = rolling_mean_by_points(residuals, window_points)
-    rolling_mean_sigma = np.std(rolling_mean, ddof=1)
-    peak_abs_threshold = peak_sigma_threshold * rolling_mean_sigma
-    edge_abs_threshold = edge_sigma_threshold * rolling_mean_sigma
-
-    periods = []
-    i = 0
-
-    while i < len(rolling_mean):
-        if rolling_mean[i] == 0:
-            i += 1
-            continue
-
-        start_idx = i
-        current_sign = np.sign(rolling_mean[i])
-
-        while i + 1 < len(rolling_mean) and np.sign(rolling_mean[i + 1]) == current_sign:
-            i += 1
-
-        end_idx = i
-        n_points = end_idx - start_idx + 1
-
-        if n_points >= min_consecutive_points:
-            period_rolling_mean = rolling_mean[start_idx:end_idx + 1]
-            peak_idx_local = np.argmax(np.abs(period_rolling_mean))
-            peak_idx = start_idx + peak_idx_local
-            peak_rolling_mean = rolling_mean[peak_idx]
-
-            if np.abs(peak_rolling_mean) >= peak_abs_threshold:
-                if current_sign > 0:
-                    sign = "positive"
-                else:
-                    sign = "negative"
-
-                trimmed_start_idx = peak_idx
-                trimmed_end_idx = peak_idx
-
-                while trimmed_start_idx - 1 >= start_idx and current_sign * rolling_mean[trimmed_start_idx - 1] >= edge_abs_threshold:
-                    trimmed_start_idx -= 1
-
-                while trimmed_end_idx + 1 <= end_idx and current_sign * rolling_mean[trimmed_end_idx + 1] >= edge_abs_threshold:
-                    trimmed_end_idx += 1
-
-                trimmed_residuals = residuals[trimmed_start_idx:trimmed_end_idx + 1]
-                trimmed_n_points = trimmed_end_idx - trimmed_start_idx + 1
-
-                if trimmed_n_points >= min_consecutive_points:
-                    periods.append({
-                        "sign": sign,
-                        "start_time": time[trimmed_start_idx],
-                        "end_time": time[trimmed_end_idx],
-                        "n_points": trimmed_n_points,
-                        "peak_time": time[peak_idx],
-                        "peak_rolling_mean": peak_rolling_mean,
-                        "mean_residual": np.mean(trimmed_residuals),
-                        "max_abs_residual": np.max(np.abs(trimmed_residuals)),
-                    })
-
-        i += 1
-
-    periods = sorted(periods, key=lambda period: period["start_time"])
-
-    return periods, rolling_mean, rolling_mean_sigma, peak_abs_threshold, edge_abs_threshold
-
-
-def common_residuals(time_co2, residuals_co2, yerr_co2, time_iso, residuals_iso, yerr_iso):
-    """
-    Return residuals at timestamps common to CO2 and one isotope record.
-    """
-    co2_key = np.round(time_co2, 6)
-    iso_key = np.round(time_iso, 6)
-
-    common_key, idx_co2, idx_iso = np.intersect1d(co2_key, iso_key, return_indices=True)
-    common_time = time_co2[idx_co2]
-
-    return (
-        common_time,
-        residuals_co2[idx_co2],
-        residuals_iso[idx_iso],
-        yerr_co2[idx_co2],
-        yerr_iso[idx_iso],
-    )
-
-
-def anomalous_masks_for_common_times(common_time, periods):
-    """
-    Build positive and negative anomalous-window masks for common timestamps.
-    """
-    positive_mask = np.zeros(len(common_time), dtype=bool)
-    negative_mask = np.zeros(len(common_time), dtype=bool)
-
-    for period in periods:
-        period_mask = (
-            (common_time >= period["start_time"]) &
-            (common_time <= period["end_time"])
-        )
-
-        if period["sign"] == "positive":
-            positive_mask |= period_mask
-        else:
-            negative_mask |= period_mask
-
-    return positive_mask, negative_mask
-
-
-def shade_anomalous_windows(ax, periods, positive_color, negative_color):
-    """
-    Shade the detected anomalous periods in one time-series axis.
-    """
-    for period in periods:
-        if period["sign"] == "positive":
-            color = positive_color
-        else:
-            color = negative_color
-
-        ax.axvspan(
-            period["start_time"] - 0.04,
-            period["end_time"] + 0.04,
-            color=color,
-            alpha=0.25,
-            zorder=0,
-        )
-
-
-def set_symmetric_ylim(ax):
-    """
-    Center zero in a residual axis while preserving the automatic data margin.
-    """
-    ymin, ymax = ax.get_ylim()
-    ylim_abs = max(abs(ymin), abs(ymax))
-    ax.set_ylim(-ylim_abs, ylim_abs)
+    ax.set_ylim(-(1.0 + extra_fraction) * max_abs, (1.0 + extra_fraction) * max_abs)
 
 
 
@@ -270,21 +100,20 @@ def set_symmetric_ylim(ax):
 
 project_root = find_project_root(__file__)
 
-d13c_data_tag = "monthly" if d13c_recompute_monthly_series else "discrete"
-d14c_data_tag = "monthly" if d14c_recompute_monthly_series else "discrete"
+co2_izo_results_dir = run_results_directory(project_root, "co2", co2_izo_site_acronym, co2_izo_data_frequency, co2_izo_include_slow_harmonics, co2_izo_base_period_slow_harmonics, co2_izo_slow_harmonics, polynomial_degree=co2_izo_polynomial_degree)
+co2_mlo_results_dir = run_results_directory(project_root, "co2", co2_mlo_site_acronym, co2_mlo_data_frequency, co2_mlo_include_slow_harmonics, co2_mlo_base_period_slow_harmonics, co2_mlo_slow_harmonics, polynomial_degree=co2_mlo_polynomial_degree)
 
-co2_results_dir = run_results_directory(project_root, "co2", co2_site_acronym, co2_data_frequency, co2_include_slow_harmonics, co2_base_period_slow_harmonics, co2_slow_harmonics, polynomial_degree=co2_polynomial_degree)
-d13c_results_dir = run_results_directory(project_root, "delta13c", d13c_site_acronym, d13c_data_tag, d13c_include_slow_harmonics, d13c_base_period_slow_harmonics, d13c_slow_harmonics, polynomial_degree=d13c_polynomial_degree)
-d14c_results_dir = run_results_directory(project_root, "delta14c", d14c_site_acronym, d14c_data_tag, d14c_include_slow_harmonics, d14c_base_period_slow_harmonics, d14c_slow_harmonics, polynomial_degree=d14c_polynomial_degree)
+co2_izo_samples_path = os.path.join(co2_izo_results_dir, "samples_for_MC.txt")
+co2_mlo_samples_path = os.path.join(co2_mlo_results_dir, "samples_for_MC.txt")
 
-co2_residuals_path = os.path.join(co2_results_dir, "best_fit_and_residuals.txt")
-d13c_residuals_path = os.path.join(d13c_results_dir, "best_fit_and_residuals.txt")
-d14c_residuals_path = os.path.join(d14c_results_dir, "best_fit_and_residuals.txt")
+climatic_indexes_dir = os.path.join(project_root, "data", "climatic_indexes")
+nino34_path = os.path.join(climatic_indexes_dir, "enso_index.txt")
+nao_path = os.path.join(climatic_indexes_dir, "nao_index.txt")
 
-plot_dir = comparison_directory(project_root, "fig07_isotope_residuals")
+plot_dir = comparison_directory(project_root, "fig06_correlation_nino34")
 os.makedirs(plot_dir, exist_ok=True)
 
-output_path = os.path.join(plot_dir, "fig07.png")
+output_path = os.path.join(plot_dir, "fig06.png")
 
 
 
@@ -292,200 +121,132 @@ output_path = os.path.join(plot_dir, "fig07.png")
 # -------------------- MAIN WORKFLOW --------------------
 # -------------------------------------------------------
 
-print("Step 1: Load residual files")
+print("Step 1: Build monthly grid")
 
-co2_time, co2_observed, co2_yerr, co2_fit, co2_residuals = load_residual_file(co2_residuals_path)
-d13c_time, d13c_observed, d13c_yerr, d13c_fit, d13c_residuals = load_residual_file(d13c_residuals_path)
-d14c_time, d14c_observed, d14c_yerr, d14c_fit, d14c_residuals = load_residual_file(d14c_residuals_path)
+dates, decimal_years, grid_keys = build_monthly_midpoint_grid(start_year, end_year)
 
-print(f"Loaded CO2 residuals from: {co2_residuals_path}")
-print(f"Loaded delta13CO2 residuals from: {d13c_residuals_path}")
-print(f"Loaded Delta14CO2 residuals from: {d14c_residuals_path}")
+print(f"Monthly grid from {start_year}-01 to {end_year}-12")
 print("-------------------------------------------------------")
 
 
 
-print("Step 2: Keep only common timestamps for scatter plots")
+print("Step 2: Load posterior samples")
 
-common_time_13, co2_res_common_13, d13c_res_common, co2_yerr_common_13, d13c_yerr_common = common_residuals(
-    co2_time,
-    co2_residuals,
-    co2_yerr,
-    d13c_time,
-    d13c_residuals,
-    d13c_yerr,
-)
+co2_izo_samples = np.loadtxt(co2_izo_samples_path, comments="#", ndmin=2)
+co2_mlo_samples = np.loadtxt(co2_mlo_samples_path, comments="#", ndmin=2)
 
-common_time_14, co2_res_common_14, d14c_res_common, co2_yerr_common_14, d14c_yerr_common = common_residuals(
-    co2_time,
-    co2_residuals,
-    co2_yerr,
-    d14c_time,
-    d14c_residuals,
-    d14c_yerr,
-)
-
-print("Number of common CO2-delta13CO2 timestamps =", len(common_time_13))
-print("Number of common CO2-Delta14CO2 timestamps =", len(common_time_14))
+print(f"Loaded IZO CO2 samples from: {co2_izo_samples_path}")
+print(f"Loaded MLO CO2 samples from: {co2_mlo_samples_path}")
 print("-------------------------------------------------------")
 
 
 
-print("Step 3: Identify multi-month anomalous periods in CO2 residuals")
+print("Step 3: Compute low-frequency components and derivatives")
 
-anomalous_periods, co2_rolling_mean, rolling_mean_sigma, peak_abs_threshold_used, edge_abs_threshold_used = find_prolonged_anomalous_periods(
-    co2_time,
-    co2_residuals,
-    window_months,
-    peak_sigma_threshold,
-    edge_sigma_threshold,
-    min_consecutive_points,
+izo_p16_lf, izo_p50_lf, izo_p84_lf, izo_p16_dlf, izo_p50_dlf, izo_p84_dlf = compute_low_frequency_band(
+    co2_izo_samples,
+    decimal_years,
+    co2_izo_timezero,
+    co2_izo_polynomial_degree,
+    co2_izo_include_slow_harmonics,
+    co2_izo_base_period_slow_harmonics,
+    co2_izo_slow_harmonics,
 )
 
-print(f"Rolling-mean window = {window_months} month(s)")
-print(f"Minimum duration = {min_consecutive_points} point(s)")
-print(f"Rolling-mean sigma = {rolling_mean_sigma:.3f} ppm")
-print(f"Peak threshold = {peak_sigma_threshold:.1f} sigma = {peak_abs_threshold_used:.3f} ppm")
-print(f"Edge threshold = {edge_sigma_threshold:.1f} sigma = {edge_abs_threshold_used:.3f} ppm")
-
-if len(anomalous_periods) == 0:
-    print("No prolonged anomalous periods found.")
-else:
-    print("Prolonged anomalous periods found:")
-    for period in anomalous_periods:
-        print(
-            f"  {period['sign']:>8} | "
-            f"start = {period['start_time']:.3f} | "
-            f"end = {period['end_time']:.3f} | "
-            f"n_points = {period['n_points']} | "
-            f"peak time = {period['peak_time']:.3f} | "
-            f"peak rolling mean = {period['peak_rolling_mean']:.3f} ppm | "
-            f"mean residual = {period['mean_residual']:.3f} ppm | "
-            f"max abs residual = {period['max_abs_residual']:.3f} ppm"
-        )
+mlo_p16_lf, mlo_p50_lf, mlo_p84_lf, mlo_p16_dlf, mlo_p50_dlf, mlo_p84_dlf = compute_low_frequency_band(
+    co2_mlo_samples,
+    decimal_years,
+    co2_mlo_timezero,
+    co2_mlo_polynomial_degree,
+    co2_mlo_include_slow_harmonics,
+    co2_mlo_base_period_slow_harmonics,
+    co2_mlo_slow_harmonics,
+)
 
 print("-------------------------------------------------------")
 
 
 
-print("Step 4: Build anomalous masks for common timestamps")
+print("Step 4: Load climate indices")
 
-window_mask_pos_13, window_mask_neg_13 = anomalous_masks_for_common_times(common_time_13, anomalous_periods)
-window_mask_pos_14, window_mask_neg_14 = anomalous_masks_for_common_times(common_time_14, anomalous_periods)
+n34_years, n34_months, n34_decimal_years, n34 = load_nino34_anomaly(nino34_path, decimal_years[0], decimal_years[-1])
+n34_grid = map_monthly_series_to_grid(n34_years, n34_months, n34, grid_keys)
 
-print(f"Number of positive anomalous CO2-delta13CO2 common points = {np.sum(window_mask_pos_13)}")
-print(f"Number of negative anomalous CO2-delta13CO2 common points = {np.sum(window_mask_neg_13)}")
-print(f"Number of positive anomalous CO2-Delta14CO2 common points = {np.sum(window_mask_pos_14)}")
-print(f"Number of negative anomalous CO2-Delta14CO2 common points = {np.sum(window_mask_neg_14)}")
+nao_years, nao_months, nao_decimal_years, nao = load_nao_index(nao_path, decimal_years[0], decimal_years[-1])
+nao_grid = map_monthly_series_to_grid(nao_years, nao_months, nao, grid_keys)
+
+print(f"Loaded Nino 3.4 data from: {nino34_path}")
+print(f"Loaded NAO data from: {nao_path}")
 print("-------------------------------------------------------")
 
 
 
-print("Step 5: Plot combined figure")
+print("Step 5: Compute Pearson correlations")
 
-positive_color = "tomato"
-negative_color = "royalblue"
+lags, r_izo_n34, best_lag_izo_n34, best_r_izo_n34 = pearson_correlation_by_lag(izo_p50_dlf, n34_grid, max_lag_months)
+_, r_mlo_n34, best_lag_mlo_n34, best_r_mlo_n34 = pearson_correlation_by_lag(mlo_p50_dlf, n34_grid, max_lag_months)
+_, r_izo_nao, best_lag_izo_nao, best_r_izo_nao = pearson_correlation_by_lag(izo_p50_dlf, nao_grid, max_lag_months)
+_, r_mlo_nao, best_lag_mlo_nao, best_r_mlo_nao = pearson_correlation_by_lag(mlo_p50_dlf, nao_grid, max_lag_months)
+_, _, _, r_izo_mlo_lf_zero_lag = pearson_correlation_by_lag(izo_p50_lf, mlo_p50_lf, 0)
+_, r_izo_mlo_lf, best_lag_izo_mlo_lf, best_r_izo_mlo_lf = pearson_correlation_by_lag(izo_p50_lf, mlo_p50_lf, max_lag_months)
 
-fig = plt.figure(figsize=(18, 10))
-gs = fig.add_gridspec(
-    nrows=3,
-    ncols=2,
-    width_ratios=[1.6, 1.0],
-    height_ratios=[1, 1, 1],
-    wspace=0.22,
-    hspace=0.06,
-)
+print(f"IZO d ell / dt vs Nino 3.4: best lag = {best_lag_izo_n34} months; r = {best_r_izo_n34:.3f}")
+print(f"MLO d ell / dt vs Nino 3.4: best lag = {best_lag_mlo_n34} months; r = {best_r_mlo_n34:.3f}")
+print(f"IZO d ell / dt vs NAO: best lag = {best_lag_izo_nao} months; r = {best_r_izo_nao:.3f}")
+print(f"MLO d ell / dt vs NAO: best lag = {best_lag_mlo_nao} months; r = {best_r_mlo_nao:.3f}")
+print(f"IZO ell(t) vs MLO ell(t): zero-lag r = {r_izo_mlo_lf_zero_lag:.3f}")
+print(f"IZO ell(t) vs MLO ell(t): best lag = {best_lag_izo_mlo_lf} months; r = {best_r_izo_mlo_lf:.3f}")
+print("Lag convention: positive lag means the climate index leads d ell / dt.")
+print("Lag convention for IZO ell(t) vs MLO ell(t): positive lag means MLO leads IZO.")
+print("-------------------------------------------------------")
 
-ax1 = fig.add_subplot(gs[0, 0])
-ax2 = fig.add_subplot(gs[1, 0], sharex=ax1)
-ax3 = fig.add_subplot(gs[2, 0], sharex=ax1)
 
-right_gs = gs[:, 1].subgridspec(2, 1, hspace=0.28)
-ax4 = fig.add_subplot(right_gs[0, 0])
-ax5 = fig.add_subplot(right_gs[1, 0])
 
-# Left, upper panel: CO2 residuals
-shade_anomalous_windows(ax1, anomalous_periods, positive_color, negative_color)
-ax1.axhline(0, color="gray", linestyle="--", linewidth=0.8)
-ax1.errorbar(co2_time, co2_residuals, yerr=co2_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
-ax1.set_ylabel("CO$_2$ residual (ppm)", fontsize=16)
-ax1.set_xlim(xlim_min, xlim_max)
-set_symmetric_ylim(ax1)
-plt.setp(ax1.get_xticklabels(), visible=False)
+print("Step 6: Plot the figure")
 
-# Left, middle panel: delta13CO2 residuals
-shade_anomalous_windows(ax2, anomalous_periods, positive_color, negative_color)
-ax2.axhline(0, color="gray", linestyle="--", linewidth=0.8)
-ax2.errorbar(d13c_time, d13c_residuals, yerr=d13c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
-ax2.set_ylabel(r"$\delta^{13}$CO$_2$ residual ($\perthousand$)", fontsize=16)
-ax2.set_xlim(xlim_min, xlim_max)
-set_symmetric_ylim(ax2)
-plt.setp(ax2.get_xticklabels(), visible=False)
+fig, (ax1, ax2, ax3, ax4) = plt.subplots(nrows=4, ncols=1, figsize=(14, 11.5), sharex=True, constrained_layout=True)
+fig.set_constrained_layout_pads(w_pad=0.02, h_pad=0.02, wspace=0.04, hspace=0.04)
 
-# Left, lower panel: Delta14CO2 residuals
-shade_anomalous_windows(ax3, anomalous_periods, positive_color, negative_color)
-ax3.axhline(0, color="gray", linestyle="--", linewidth=0.8)
-ax3.errorbar(d14c_time, d14c_residuals, yerr=d14c_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8)
-ax3.set_xlabel("Year", fontsize=16)
-ax3.set_ylabel(r"$\Delta^{14}$CO$_2$ residual ($\perthousand$)", fontsize=16)
-ax3.set_xlim(xlim_min, xlim_max)
-set_symmetric_ylim(ax3)
+# Upper panel: low-frequency component
+ax1.fill_between(decimal_years, mlo_p16_lf, mlo_p84_lf, color="r", alpha=0.15, linewidth=0, zorder=1)
+ax1.plot(decimal_years, mlo_p50_lf, color="r", linewidth=1.2, alpha=0.50, zorder=4, label="MLO")
+ax1.fill_between(decimal_years, izo_p16_lf, izo_p84_lf, color="0.45", alpha=0.30, linewidth=0, zorder=2)
+ax1.plot(decimal_years, izo_p50_lf, color="k", linewidth=1.2, zorder=5, label="IZO")
+ax1.axhline(0.0, color="0.5", linewidth=0.8, linestyle="--")
+ax1.set_ylabel(r"CO$_2$ $\ell(t)$ (ppm)", fontsize=16)
+set_symmetric_ylim(ax1, [izo_p16_lf, izo_p84_lf, mlo_p16_lf, mlo_p84_lf])
 
-# Right upper panel: CO2 versus delta13CO2 residuals
-ax4.plot(co2_res_common_13, d13c_res_common, "ko", markersize=4, alpha=0.75)
-ax4.plot(co2_res_common_13[window_mask_pos_13], d13c_res_common[window_mask_pos_13], "o", color=positive_color, markersize=5)
-ax4.plot(co2_res_common_13[window_mask_neg_13], d13c_res_common[window_mask_neg_13], "o", color=negative_color, markersize=5)
-ax4.axhline(0, color="gray", linestyle="--", linewidth=0.8)
-ax4.axvline(0, color="gray", linestyle="--", linewidth=0.8)
-ax4.set_xlabel("CO$_2$ residual (ppm)", fontsize=16)
-ax4.set_ylabel(r"$\delta^{13}$CO$_2$ residual ($\perthousand$)", fontsize=16)
-set_symmetric_ylim(ax4)
+# Middle panel: low-frequency derivative
+ax2.fill_between(decimal_years, mlo_p16_dlf, mlo_p84_dlf, color="r", alpha=0.15, linewidth=0, zorder=1)
+ax2.plot(decimal_years, mlo_p50_dlf, color="r", linewidth=1.2, alpha=0.50, zorder=4, label="MLO")
+ax2.fill_between(decimal_years, izo_p16_dlf, izo_p84_dlf, color="0.45", alpha=0.30, linewidth=0, zorder=2)
+ax2.plot(decimal_years, izo_p50_dlf, color="k", linewidth=1.2, zorder=5,label="IZO")
+ax2.axhline(0.0, color="0.5", linewidth=0.8, linestyle="--")
+ax2.set_ylabel(r"CO$_2$ $\mathrm{d}\ell/\mathrm{d}t$ (ppm yr$^{-1}$)", fontsize=16)
+set_symmetric_ylim(ax2, [izo_p16_dlf, izo_p84_dlf, mlo_p16_dlf, mlo_p84_dlf])
 
-# Right lower panel: CO2 versus Delta14CO2 residuals
-ax5.plot(co2_res_common_14, d14c_res_common, "ko", markersize=4, alpha=0.75)
-ax5.plot(co2_res_common_14[window_mask_pos_14], d14c_res_common[window_mask_pos_14], "o", color=positive_color, markersize=5)
-ax5.plot(co2_res_common_14[window_mask_neg_14], d14c_res_common[window_mask_neg_14], "o", color=negative_color, markersize=5)
-ax5.axhline(0, color="gray", linestyle="--", linewidth=0.8)
-ax5.axvline(0, color="gray", linestyle="--", linewidth=0.8)
-ax5.set_xlabel("CO$_2$ residual (ppm)", fontsize=16)
-ax5.set_ylabel(r"$\Delta^{14}$CO$_2$ residual ($\perthousand$)", fontsize=16)
-set_symmetric_ylim(ax5)
+# Third panel: Nino 3.4 anomaly
+ax3.plot(n34_decimal_years, n34, color="k", linewidth=1.0)
+ax3.axhline(0.0, color="0.5", linewidth=0.8, linestyle="--")
+ax3.set_ylabel(r"Nino 3.4 anomaly ($^\circ$C)", fontsize=16)
 
-# Align y-axis labels within each figure column.
-for ax in (ax1, ax2, ax3):
-    ax.yaxis.set_label_coords(-0.09, 0.5)
-
-for ax in (ax4, ax5):
-    ax.yaxis.set_label_coords(-0.11, 0.5)
+# Lower panel: NAO index
+ax4.plot(nao_decimal_years, nao, color="k", linewidth=1.0)
+ax4.axhline(0.0, color="0.5", linewidth=0.8, linestyle="--")
+ax4.set_xlabel("Year", fontsize=16)
+ax4.set_ylabel("NAO index", fontsize=16)
 
 # Axis formatting
-for ax in (ax1, ax2, ax3, ax4, ax5):
+for ax in (ax1, ax2, ax3, ax4):
     ax.tick_params(axis="both", direction="in", top=True, right=True, labelsize=14, length=6, width=1)
     ax.minorticks_on()
     ax.tick_params(which="minor", direction="in", top=True, right=True, length=3, width=0.8)
+    ax.set_xlim(xlim_min, xlim_max)
 
-# Panel identification
-ax1.text(
-    -0.10,
-    1.03,
-    "(a)",
-    transform=ax1.transAxes,
-    fontsize=16,
-    fontweight="bold",
-    va="bottom",
-    ha="left",
-)
+ax1.legend(loc="best")
+ax2.legend(loc="best")
 
-ax4.text(
-    -0.17,
-    1.03,
-    "(b)",
-    transform=ax4.transAxes,
-    fontsize=16,
-    fontweight="bold",
-    va="bottom",
-    ha="left",
-)
+fig.align_ylabels((ax1, ax2, ax3, ax4))
 
 fig.savefig(output_path, dpi=600, bbox_inches="tight", pad_inches=0.1)
 
