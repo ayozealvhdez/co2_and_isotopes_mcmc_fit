@@ -221,11 +221,11 @@ d14c_note_ax = fig.add_subplot(outer_gs[1, 1])
 trend_color = "crimson"
 
 # Upper block: CO2 observed data and fitted model
-ax11.errorbar(co2_time, co2_observed, yerr=co2_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8, label="Observed data")
-ax11.fill_between(co2_decimal_year_grid, co2_p16, co2_p84, color="b", alpha=0.25, linewidth=0, label="68% confidence band")
-ax11.fill_between(co2_decimal_year_grid, co2_trend_p16, co2_trend_p84, color=trend_color, alpha=0.16, linewidth=0, label=r"68% band for trend")
-ax11.plot(co2_decimal_year_grid, co2_p50, "b-", lw=0.8, label="Posterior median model")
-ax11.plot(co2_decimal_year_grid, co2_trend_p50, color=trend_color, lw=1.1, label=r"Thoning-like trend, $p(t)+l(t)$")
+observed_handle = ax11.errorbar(co2_time, co2_observed, yerr=co2_yerr, fmt="ko", markersize=3, elinewidth=0.8, capsize=2, capthick=0.8, label="Monthly values")
+ax11.fill_between(co2_decimal_year_grid, co2_p16, co2_p84, color="b", alpha=0.25, linewidth=0)
+ax11.fill_between(co2_decimal_year_grid, co2_trend_p16, co2_trend_p84, color=trend_color, alpha=0.16, linewidth=0)
+model_handle, = ax11.plot(co2_decimal_year_grid, co2_p50, "b-", lw=0.8, label="Posterior median model f(t)")
+trend_handle, = ax11.plot(co2_decimal_year_grid, co2_trend_p50, color=trend_color, lw=1.1, label="Posterior median p(t)+l(t)")
 ax11.set_ylabel("CO$_2$ (ppm)", fontsize=14)
 
 # CO2 residuals
@@ -272,13 +272,20 @@ d14c_note_ax.set_yticks([])
 d14c_note_ax.text(
     0.45,
     0.5,
-    r"No MLO equivalent $\Delta^{14}$CO$_2$ data",
+    r"No MLO comparison $\Delta^{14}$CO$_2$ data",
     transform=d14c_note_ax.transAxes,
     ha="center",
     va="center",
     fontsize=14,
     color="0.35",
 )
+
+legend_handles = [
+    observed_handle,
+    model_handle,
+    trend_handle,
+]
+ax11.legend(handles=legend_handles, loc="upper left", fontsize=9, frameon=True)
 
 # Axis formatting
 for ax in (ax11, ax12, ax21, ax22):

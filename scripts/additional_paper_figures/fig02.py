@@ -17,7 +17,7 @@ IZO data are shown as black points with error bars.
 MLO data are shown as semitransparent red points with error bars.
 
 The result is stored in:
-results_and_plots/comparisons/fig01_all_paper_records/fig01.png
+results_and_plots/comparisons/fig02_all_paper_records/fig02.png
 """
 
 
@@ -158,10 +158,10 @@ d13c_mlo_file = os.path.join(d13c_mlo_results_dir, "best_fit_and_residuals.txt")
 
 d14c_izo_file = os.path.join(d14c_izo_results_dir, "best_fit_and_residuals.txt")
 
-plot_dir = comparison_directory(project_root, "fig01_all_paper_records")
+plot_dir = comparison_directory(project_root, "fig02_all_paper_records")
 os.makedirs(plot_dir, exist_ok=True)
 
-combined_output = os.path.join(plot_dir, "fig01.png")
+combined_output = os.path.join(plot_dir, "fig02.png")
 
 
 

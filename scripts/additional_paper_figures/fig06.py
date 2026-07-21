@@ -30,7 +30,7 @@ The script reads:
 - 'samples_for_MC.txt', containing posterior samples drawn from the MCMC chains.
 
 The result is stored in:
-results_and_plots/comparisons/fig05_seasonal_component/fig05.png
+results_and_plots/comparisons/fig06_seasonal_component/fig06.png
 """
 
 
@@ -363,10 +363,10 @@ d13c_mlo_samples_path = os.path.join(d13c_mlo_results_dir, "samples_for_MC.txt")
 
 d14c_izo_samples_path = os.path.join(d14c_izo_results_dir, "samples_for_MC.txt")
 
-plot_dir = comparison_directory(project_root, "fig05_seasonal_component")
+plot_dir = comparison_directory(project_root, "fig06_seasonal_component")
 os.makedirs(plot_dir, exist_ok=True)
 
-output_path = os.path.join(plot_dir, "fig05.png")
+output_path = os.path.join(plot_dir, "fig06.png")
 
 
 

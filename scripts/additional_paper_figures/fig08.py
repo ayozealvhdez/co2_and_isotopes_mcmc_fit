@@ -16,7 +16,7 @@ The script reads:
 - 'best_fit_and_residuals.txt' from the selected paper IZO runs.
 
 The result is stored in:
-results_and_plots/comparisons/fig07_isotope_residuals/fig07.png
+results_and_plots/comparisons/fig08_isotope_residuals/fig08.png
 """
 
 
@@ -281,10 +281,10 @@ co2_residuals_path = os.path.join(co2_results_dir, "best_fit_and_residuals.txt")
 d13c_residuals_path = os.path.join(d13c_results_dir, "best_fit_and_residuals.txt")
 d14c_residuals_path = os.path.join(d14c_results_dir, "best_fit_and_residuals.txt")
 
-plot_dir = comparison_directory(project_root, "fig07_isotope_residuals")
+plot_dir = comparison_directory(project_root, "fig08_isotope_residuals")
 os.makedirs(plot_dir, exist_ok=True)
 
-output_path = os.path.join(plot_dir, "fig07.png")
+output_path = os.path.join(plot_dir, "fig08.png")
 
 
 

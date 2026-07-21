@@ -31,7 +31,7 @@ annotated explicitly. The p(t) + l(t) panel is plotted and is identical to
 p(t), because l(t) = 0 for that fit.
 
 The result is stored in:
-results_and_plots/comparisons/fig04_longterm_components/fig04.png
+results_and_plots/comparisons/fig05_longterm_components/fig05.png
 """
 
 
@@ -288,10 +288,10 @@ d13c_mlo_samples_path = os.path.join(d13c_mlo_results_dir, "samples_for_MC.txt")
 
 d14c_izo_samples_path = os.path.join(d14c_izo_results_dir, "samples_for_MC.txt")
 
-plot_dir = comparison_directory(project_root, "fig04_longterm_components")
+plot_dir = comparison_directory(project_root, "fig05_longterm_components")
 os.makedirs(plot_dir, exist_ok=True)
 
-output_path = os.path.join(plot_dir, "fig04.png")
+output_path = os.path.join(plot_dir, "fig05.png")
 
 
 

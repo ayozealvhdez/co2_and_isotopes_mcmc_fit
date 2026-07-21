@@ -18,7 +18,7 @@ The script reads:
 - 'nao_index.txt', containing the monthly NAO index.
 
 The result is stored in:
-results_and_plots/comparisons/fig06_correlation_nino34/fig06.png
+results_and_plots/comparisons/fig07_correlation_nino34/fig07.png
 """
 
 
@@ -110,10 +110,10 @@ climatic_indexes_dir = os.path.join(project_root, "data", "climatic_indexes")
 nino34_path = os.path.join(climatic_indexes_dir, "enso_index.txt")
 nao_path = os.path.join(climatic_indexes_dir, "nao_index.txt")
 
-plot_dir = comparison_directory(project_root, "fig06_correlation_nino34")
+plot_dir = comparison_directory(project_root, "fig07_correlation_nino34")
 os.makedirs(plot_dir, exist_ok=True)
 
-output_path = os.path.join(plot_dir, "fig06.png")
+output_path = os.path.join(plot_dir, "fig07.png")
 
 
 
