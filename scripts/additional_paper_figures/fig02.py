@@ -217,6 +217,10 @@ for ax in (ax1, ax2, ax3):
 ax3.set_xlim(xlim_min, xlim_max)
 fig.align_ylabels([ax1, ax2, ax3])
 
+ax1.text(0.01, 0.96, "(a)", transform=ax1.transAxes, fontsize=16, fontweight="bold", va="top", ha="left")
+ax2.text(0.01, 0.96, "(b)", transform=ax2.transAxes, fontsize=16, fontweight="bold", va="top", ha="left")
+ax3.text(0.01, 0.12, "(c)", transform=ax3.transAxes, fontsize=16, fontweight="bold", va="top", ha="left")
+
 ax1.legend(loc='best')
 ax2.legend(loc='best')
 ax3.legend(loc='best')

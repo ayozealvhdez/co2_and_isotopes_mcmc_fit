@@ -34,7 +34,7 @@ The Thoning-like trend is computed within this model framework; it is not a
 reproduction of the NOAA CCGCRV filtering procedure.
 
 The result is stored in:
-results_and_plots/comparisons/figC1_MLO_fits/figC1_MLO_fits.png
+results_and_plots/comparisons/figC1_MLO_fits/figC1.png
 """
 
 
@@ -147,7 +147,7 @@ d13c_best_fit_and_residuals_path = os.path.join(d13c_results_dir, "best_fit_and_
 plot_dir = comparison_directory(project_root, "figC1_MLO_fits")
 os.makedirs(plot_dir, exist_ok=True)
 
-output_path = os.path.join(plot_dir, "figC1_MLO_fits.png")
+output_path = os.path.join(plot_dir, "figC1.png")
 
 
 
@@ -286,6 +286,10 @@ legend_handles = [
     trend_handle,
 ]
 ax11.legend(handles=legend_handles, loc="upper left", fontsize=9, frameon=True)
+
+ax11.text(-0.05, 1.00, "(a)", transform=ax11.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
+ax12.text(-0.12, 0.98, "(b)", transform=ax12.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
+
 
 # Axis formatting
 for ax in (ax11, ax12, ax21, ax22):

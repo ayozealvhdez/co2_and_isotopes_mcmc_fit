@@ -20,6 +20,9 @@ The posterior median model curve, the Thoning-like seasonally adjusted trend p(t
 
 The Thoning-like trend is computed within this model framework; it is not a reproduction of the NOAA CCGCRV filtering procedure.
 
+The script also prints posterior summaries of the mean CO2 p(t) growth rate
+for the first and last decades of the plotted CO2 range.
+
 The result is stored in:
 results_and_plots/comparisons/fig04_all_observables_fitted/fig04.png
 """
@@ -123,6 +126,109 @@ def set_symmetric_ylim(ax):
     ax.set_ylim(-ylim_abs, ylim_abs)
 
 
+def posterior_summary(values):
+    """
+    Return median, symmetric 68% half-width, and percentile bounds.
+    """
+    p16, p50, p84 = np.percentile(values, [16, 50, 84])
+    half_width = 0.5 * (p84 - p16)
+
+    return p50, half_width, p16, p84
+
+
+def format_posterior_summary(values, unit, decimals):
+    """
+    Format a posterior sample vector for printed manuscript values.
+    """
+    p50, half_width, p16, p84 = posterior_summary(values)
+
+    return (
+        f"{p50:.{decimals}f} +/- {half_width:.{decimals}f} {unit} "
+        f"(16-84%: {p16:.{decimals}f}, {p84:.{decimals}f})"
+    )
+
+
+def polynomial_values_from_samples(
+        samples,
+        decimal_years,
+        timezero,
+        polynomial_degree,
+        include_slow_harmonics,
+        base_period_slow_harmonics,
+        slow_harmonics):
+    """
+    Evaluate p(t) at selected decimal years for all posterior samples.
+    """
+    x = np.asarray(decimal_years, dtype=float) - timezero
+    polynomial_values = np.empty((len(samples), len(x)))
+
+    for i, params in enumerate(samples):
+        polynomial, _, _ = model_components(
+            x,
+            *params,
+            polynomial_degree=polynomial_degree,
+            include_slow_harmonics=include_slow_harmonics,
+            base_period_slow_harmonics=base_period_slow_harmonics,
+            slow_harmonics=slow_harmonics,
+        )
+        polynomial_values[i] = polynomial
+
+    return polynomial_values
+
+
+def print_polynomial_growth_rate_summary(
+        label,
+        samples,
+        first_decade_start,
+        first_decade_end,
+        last_decade_start,
+        last_decade_end,
+        unit,
+        decimals,
+        timezero,
+        polynomial_degree,
+        include_slow_harmonics,
+        base_period_slow_harmonics,
+        slow_harmonics):
+    """
+    Print mean p(t) growth rates for the first and last selected decades.
+    """
+    decimal_years = [
+        first_decade_start,
+        first_decade_end,
+        last_decade_start,
+        last_decade_end,
+    ]
+    polynomial = polynomial_values_from_samples(
+        samples,
+        decimal_years,
+        timezero,
+        polynomial_degree,
+        include_slow_harmonics,
+        base_period_slow_harmonics,
+        slow_harmonics,
+    )
+
+    first_decade_rates = (
+        (polynomial[:, 1] - polynomial[:, 0])
+        / (first_decade_end - first_decade_start)
+    )
+    last_decade_rates = (
+        (polynomial[:, 3] - polynomial[:, 2])
+        / (last_decade_end - last_decade_start)
+    )
+
+    print(f"{label} p(t) mean growth rate")
+    print(
+        f"  first decade ({first_decade_start:.0f}-{first_decade_end:.0f}): "
+        f"{format_posterior_summary(first_decade_rates, unit, decimals)}"
+    )
+    print(
+        f"  last decade ({last_decade_start:.0f}-{last_decade_end:.0f}): "
+        f"{format_posterior_summary(last_decade_rates, unit, decimals)}"
+    )
+
+
 
 # -------------------------------------------------------
 # ---------------------- PATHS --------------------------
@@ -206,6 +312,33 @@ d13c_decimal_year_grid = np.linspace(d13c_range[0], d13c_range[1], n_grid)
 
 d14c_decimal_year_grid = np.linspace(d14c_range[0], d14c_range[1], n_grid)
 (d14c_p16, d14c_p50, d14c_p84), (d14c_trend_p16, d14c_trend_p50, d14c_trend_p84) = compute_model_and_trend_bands(d14c_samples, d14c_decimal_year_grid, d14c_timezero, d14c_polynomial_degree, d14c_include_slow_harmonics, d14c_base_period_slow_harmonics, d14c_slow_harmonics)
+
+print("-------------------------------------------------------")
+
+
+
+print("Step 2b: Print CO2 p(t) mean growth rates")
+
+co2_first_decade_start = co2_range[0]
+co2_first_decade_end = co2_first_decade_start + 10.0
+co2_last_decade_end = co2_range[1]
+co2_last_decade_start = co2_last_decade_end - 10.0
+
+print_polynomial_growth_rate_summary(
+    "CO2",
+    co2_samples,
+    co2_first_decade_start,
+    co2_first_decade_end,
+    co2_last_decade_start,
+    co2_last_decade_end,
+    "ppm/year",
+    3,
+    co2_timezero,
+    co2_polynomial_degree,
+    co2_include_slow_harmonics,
+    co2_base_period_slow_harmonics,
+    co2_slow_harmonics,
+)
 
 print("-------------------------------------------------------")
 
@@ -300,6 +433,10 @@ for ax in (ax12, ax22):
 
 for ax in (ax13, ax23):
     ax.yaxis.set_label_coords(-0.10, 0.5)
+
+ax11.text(-0.05, 1.00, "(a)", transform=ax11.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
+ax12.text(-0.12, 0.95, "(b)", transform=ax12.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
+ax13.text(-0.12, 0.95, "(c)", transform=ax13.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
 
 # Axis formatting
 for ax in (ax11, ax12, ax13, ax21, ax22, ax23):

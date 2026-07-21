@@ -248,6 +248,11 @@ ax2.legend(loc="best")
 
 fig.align_ylabels((ax1, ax2, ax3, ax4))
 
+ax1.text(0.01, 0.98, "(a)", transform=ax1.transAxes, fontsize=16, fontweight="bold", va="top", ha="left")
+ax2.text(0.01, 0.98, "(b)", transform=ax2.transAxes, fontsize=16, fontweight="bold", va="top", ha="left")
+ax3.text(0.01, 0.98, "(c)", transform=ax3.transAxes, fontsize=16, fontweight="bold", va="top", ha="left")
+ax4.text(0.01, 0.98, "(d)", transform=ax4.transAxes, fontsize=16, fontweight="bold", va="top", ha="left")
+
 fig.savefig(output_path, dpi=600, bbox_inches="tight", pad_inches=0.1)
 
 plt.show()

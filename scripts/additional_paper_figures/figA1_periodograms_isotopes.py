@@ -310,6 +310,9 @@ ax2.minorticks_on()
 ax2.tick_params(which="minor", direction="in", top=True, bottom=True, left=True, right=True, length=3, width=0.8)
 ax2.set_xlim(fmin, fmax)
 
+ax1.text(-0.08, 1.02, "(a)", transform=ax1.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
+ax2.text(-0.08, 0.97, "(b)", transform=ax2.transAxes, fontsize=16, fontweight="bold", va="bottom", ha="left")
+
 fig.savefig(output_path, dpi=600, bbox_inches="tight", pad_inches=0.1)
 plt.close(fig)
 
