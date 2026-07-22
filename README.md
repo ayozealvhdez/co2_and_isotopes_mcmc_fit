@@ -101,8 +101,8 @@ co2_and_isotopes_mcmc_fit/
       fig06.py
       fig07.py
       fig08.py
-      figA1_periodograms_isotopes.py
-      figC1_MLO_fits.py
+      figA1.py
+      figC1.py
       paper_figure_calculations.py
       tests_paper_figures.py
 
