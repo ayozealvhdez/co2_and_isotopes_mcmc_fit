@@ -33,6 +33,9 @@ scripts/fit/fit_mcmc_co2_flask.py
 scripts/fit/plot_fit_co2_flask.py
 scripts/additional_paper_figures/co2_residual_inhomogeneity_test.py
 scripts/additional_paper_figures/co2_delta13co2_correlation.py
+scripts/additional_paper_figures/delta13c_flask_sampling_time.py
+scripts/additional_paper_figures/fig02_flasks.py
+scripts/additional_paper_figures/figD1_tentative.py
 scripts/additional_paper_figures/fig05_flasks.py
 scripts/additional_paper_figures/fig05_alternatve.py
 scripts/additional_paper_figures/fig06_flasks.py
