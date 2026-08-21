@@ -88,7 +88,7 @@ lomb_scargle_normalization = "standard"
 fap_levels = [0.1587, 0.00135, 3.17e-5]  # 1 sigma, 3 sigma, 4 sigma
 sigma_labels = [r"$1\sigma$", r"$3\sigma$", r"$4\sigma$"]
 
-n_simulations_for_fap = 10000
+n_simulations_for_fap = 100000
 
 
 

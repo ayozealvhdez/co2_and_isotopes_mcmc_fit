@@ -227,19 +227,19 @@ A typical workflow for fitting one record is:
 3. Run the fitting script for that specific observable, for example:
 
 ```bash
-python scripts/fit/fit_mcmc_co2.py
+python -m scripts.fit.fit_mcmc_co2
 ```
 
 4. Plot the matching fitted result for that specific observable, for example:
 
 ```bash
-python scripts/fit/plot_fit_co2.py
+python -m scripts.fit.plot_fit_co2
 ```
 
 5. Analyse coherent low-frequency signals in the residuals using the scripts in `scripts/residual_analysis/`, if needed:
 
 ```bash
-python scripts/residual_analysis/residual_signals_co2.py
+python -m scripts.residual_analysis.residual_signals_co2
 ```
 
 6. Reconfigure and rerun the appropriate fitting script using the information from the residual analysis, if needed.
